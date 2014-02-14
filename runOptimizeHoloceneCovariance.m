@@ -5,8 +5,10 @@
 % first optimize only tide gauge data
 
 thetTG2 = thetTGG;
-subfixed=subfixedTGG;
 ubTG2=ubTGG; lbTG2=lbTGG;
+
+thetTG2(8)=0; % not asymptotic term
+subfixed=union(subfixedTGG,8:10);
 
 subnotfixed=setdiff(1:length(thetTG2),subfixed);
 Mfixed=sparse(length(subnotfixed),length(thetTG2));
@@ -21,11 +23,14 @@ dy1y1 = dDist([lat(trainsub) long(trainsub)],[lat(trainsub) long(trainsub)]);
 fp1fp1=bsxfun(@times,obsGISfp(trainsub)-1,obsGISfp(trainsub)'-1);
 for doglob=[0 1]
 	[thetTG2(subnotfixed),minima] = SLGPOptimize(Y(trainsub),@(x) traincvTGG(meantime(trainsub),meantime(trainsub),dt1t1,x*Mfixed+fixedvect,Ycv0(trainsub,trainsub),dy1y1,bedmsk(trainsub,trainsub),fp1fp1),thetTG2(subnotfixed),lbTG2(subnotfixed),ubTG2(subnotfixed),doglob);
-	disp(sprintf('%0.3f ',thetTG2(subnotfixed)));
+	disp(sprintf('%0.3f ',thetTG2));
 end
 
 lbTGG(1:5) = thetTG2(1:5); % set lower bound of amplitudes and temporal scale
+
+thetTGG0=thetTGG;
 thetTGG=thetTG2;
+thetTG2(8)=thetTGG0(8);
 
 % optimize ignoring geochronological uncertainty
 
@@ -33,7 +38,7 @@ thetTGG2 = [thetTGG .1];
 ubTGG2 = [ubTGG 5];
 lbTGG2 = [lbTGG 0];
 
-subfixed=union(subfixedTGG,[7 10]); % fix length scales at those determined from the tide gauge data
+subfixed=union(subfixedTGG,[7 12]); % fix length scales at those determined from the tide gauge data
 subnotfixed=setdiff(1:length(thetTGG),subfixed);
 Mfixed=sparse(length(subnotfixed),length(thetTGG));
 for i=1:length(subnotfixed)

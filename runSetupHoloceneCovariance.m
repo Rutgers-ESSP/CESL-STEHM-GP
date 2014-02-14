@@ -1,4 +1,5 @@
-% Last updated by  Bob Kopp, robert-dot-kopp-at-rutgers-dot-edu, Tue Feb 11 18:56:57 EST 2014
+% Last updated by  Bob Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri Feb 14 18:35:14 EST 2014
+
 
 % define some covariance functions
 
@@ -116,12 +117,9 @@ kASYMPT=@(years1,years2,thetas) thetas(1).^2*exp((2*thetas(2)-bsxfun(@plus,years
 %%subfixedTGG=1:9;
 %subfixedTGG=[8 10:13]; % fix GIA factors, local amplitude, regional length scale 
 
-cvfuncTGG = @(t1,t2,dt1t2,thetas,ad,bedmask,fp1fp2) kMatG(dt1t2,[1 thetas([5 6])]) .*(thetas(1).^2 + thetas(2).^2*(thetas(12)+thetas(13)*fp1fp2) + kGEOG(ad,thetas([3 7])) + kDELTAG(ad,thetas(4))) + kDP(t1,t2,1).*(kGEOG(ad,thetas([8 10])) + bedmask.*kDELTAG(ad,thetas(9))) + kDELTAG(ad,thetas(11));
+%cvfuncTGG = @(t1,t2,dt1t2,thetas,ad,bedmask,fp1fp2) kMatG(dt1t2,[1 thetas([5 6])]) .*(thetas(1).^2 + thetas(2).^2*(thetas(12)+thetas(13)*fp1fp2) + kGEOG(ad,thetas([3 7])) + kDELTAG(ad,thetas(4))) + kDP(t1,t2,1).*(kGEOG(ad,thetas([8 10])) + bedmask.*kDELTAG(ad,thetas(9))) + kDELTAG(ad,thetas(11));
 
-% TBD!!
-%cvfuncTGG = @(t1,t2,dt1t2,thetas,ad,bedmask,fp1fp2) kMatG(dt1t2,[1 thetas([5 6])]) .*(thetas(1).^2 + thetas(2).^2*(thetas(12)+thetas(13)*fp1fp2) + kGEOG(ad,thetas([3 7])) + kDELTAG(ad,thetas(4))) +
-%kASYMPT(t1,t2,thetas([8:10])).*kGEOG(ad,[1 thetas(11))
-% kDP(t1,t2,1).*(kGEOG(ad,thetas([8 10])) + bedmask.*kDELTAG(ad,thetas(9))) + kDELTAG(ad,thetas(11));
+cvfuncTGG = @(t1,t2,dt1t2,thetas,ad,bedmask,fp1fp2) kMatG(dt1t2,[1 thetas([5 6])]) .*(thetas(1).^2 + thetas(2).^2*(thetas(15)+thetas(16)*fp1fp2) + kGEOG(ad,thetas([3 7])) + kDELTAG(ad,thetas(4))) + (kASYMPT(t1,t2,thetas([8:10]))+kDP(t1,t2,thetas(11))).*kGEOG(ad,[1 thetas(12)])+kDELTAG(ad,thetas(13)).*kDP(t1,t2,1) + kDELTAG(ad,thetas(14)); 
 
 
 traincvTGG = @(t1,t2,dt1t2,thetas,errcv,ad,bedmask,fp1fp2) cvfuncTGG(t1,t2,dt1t2,thetas,ad,bedmask,fp1fp2) + errcv;
@@ -138,9 +136,13 @@ thetTG(8) 0 1e4 % local amplitude
 
 thetTG(13) 1 10 % geographic length scale
 
+1e4 0 1e7 % asymptotic amplitude
+2500 2000 10000 % asymptotic end time
+7000 1000 50e3 % asymptotic timescale
+
 thetTG(10) 0 100 % linear regional amplitude
+thetTG(11) .5 15 % asympotic and linear regional length scale
 thetTG(7) 0 100 % linear local amplitude
-thetTG(11) .5 15 % linear regional length scale
 
 100 0 1e4 % local offset
 
@@ -161,4 +163,4 @@ ubTGG = tluTGG(:,3)';
 %subfixedTGG=setdiff(subfixedTGG,[1 5 7]);
 %subfixedTGG=1:9;
 %subfixedTGG=[ 8:9]; % fix GIA length scale 
-subfixedTGG=[12 13]; % fix GIS switches
+subfixedTGG=[length(thetTGG)-[1 0]]; % fix GIS switches
