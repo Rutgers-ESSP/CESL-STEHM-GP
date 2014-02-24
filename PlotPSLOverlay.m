@@ -1,6 +1,6 @@
 function [hp,hl,hl2,df,dsd,dV,outtable,difftimes,diffreg]=PlotPSLOverlay(years,regions,selregions,slf,slV,colrs,starttimes,endtimes,do2s,difftimestep)
 
-% Last updated by  Bob Kopp, robert-dot-kopp-at-rutgers-dot-edu, Jan 13 2014
+% Last updated by  Bob Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Feb 16 19:46:51 EST 2014
 
 
 defval('regions',ones(size(years)));
@@ -72,7 +72,7 @@ if difftimestep>0
 	dsd=sqrt(diag(dV));
 
 	for i=1:length(selregions)
-		outtable = [outtable sprintf('\nRegion %0.0f',selregions(i)) sprintf('\nYear\tmm/y\t1s')];
+		outtable = [outtable sprintf('\nRegion %0.0f',selregions(i)) sprintf('\nYear\tmm/y\t1s\tP>0')];
 	sub=find((difftimes>=starttimes(i)).*(difftimes<=endtimes(i)).*(diffreg==selregions(i)));
 		hl2(i)=plot(difftimes(sub),df(sub),[colrs{i}],'linew',2); hold on;
 		if do2s>-1
@@ -85,7 +85,7 @@ if difftimestep>0
 		end
 		
 		for jj=1:length(sub)
-			outtable=[outtable sprintf('\n%0.0f',difftimes(sub(jj))) sprintf('\t%0.3f', [df(sub(jj)) dsd(sub(jj))])];
+			outtable=[outtable sprintf('\n%0.0f',difftimes(sub(jj))) sprintf('\t%0.3f', [df(sub(jj)) dsd(sub(jj))]) sprintf('\t%0.3f',normcdf(df(sub(jj))./dsd(sub(jj))))];
 		end
 
 	end

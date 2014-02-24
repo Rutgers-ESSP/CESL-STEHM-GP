@@ -1,7 +1,9 @@
-% Last updated by  Bob Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri Dec 20 21:16:46 EST 2013
+% Last updated by  Bob Kopp, robert-dot-kopp-at-rutgers-dot-edu, Tue Feb 18 00:03:43 EST 2014
 
 thinyrs=10;
 minlen=50;
+
+%%%%%%%%%%%
 
 latNC1 =34.97; longNC1=-76.38; %Tump Point, NC
 latNC2 = 35.89; longNC2=-75.64; %Sand Point, NC
@@ -20,49 +22,37 @@ idFL = 3e4;
 idNS = 4e4;
 idHolo = 2e5;
 
+%%%%%%%%%%%%%%%
+
 % First load tide gauge data
 
-addlsites=[96 195 427 392 393]; % addl long Nova Scotia records
-[TGcoords,TGrsl,TGrslunc,TGid,TGsiteid,sitenames,TGsitecoords,sitelen]=ReadPSMSLData(960,960,[],[],[],addlsites);
-TGsitelat=TGsitecoords(:,1);
+[TG,cvfuncTG,notbedrock]=ImportSmoothedTideGaugeDataSet(1,thinyrs,minlen); 
+[TGNOCW]=ImportSmoothedTideGaugeDataSet(0,thinyrs,minlen);
 
-notbedrock = union(TGsiteid(find(TGsitelat<39.266)),[1654 180 366 1637 519 875 848 362 856 430 351 776 367 1111 775]);
-notbedrock = union(notbedrock,[idNJ idNC idNC+1 idNC+2 (idHolo+(7:16)*1e3) idFL ]);
+TG.limiting=zeros(size(TG.Y));
+TG.compactcorr=zeros(size(TG.Y));
+TG.istg=ones(size(TG.Y));
+TG.time1=TG.years; TG.time2=TG.years;
 
-notbedrock=setdiff(notbedrock,368);
-bedrocksiteids=setdiff(TGsiteid,notbedrock);
+TGNOCW.limiting=zeros(size(TGNOCW.Y));
+TGNOCW.compactcorr=zeros(size(TGNOCW.Y));
+TGNOCW.istg=ones(size(TGNOCW.Y));
+TGNOCW.time1=TGNOCW.years; TGNOCW.time2=TGNOCW.years;
+
+% set up bedrockMask
+
+notbedrock = union(notbedrock,[idNJ idNJ+1 idNJ+2 idNC idNC+1 idNC+2 (idHolo+(7:16)*1e3) idFL ]);
+bedrocksiteids=setdiff(TG.siteid,notbedrock);
 
 bedrockMask = @(r1,r2) [repmat(sparse(~ismember(r1,bedrocksiteids)),1,length(r2)).*(repmat(sparse(~ismember(r2,bedrocksiteids))',length(r1),1))]';
 
-% process tide gauge data
+%%%%%%%%%%%%%%%%
 
-% 18 Apr: tide gauge
-thetTG = [1.6585 36.1312 1e3 0.05 0 1.0217 0.5970   28.6848   11.9728    1.2888    5.7005   26.6414    4.1376   28.2188    7.3826];
-
-%exclsites=[447 126 144 201 951 192];
-exclsites=[];
-
-[TGcoords,TGrsl,TGrslcv,TGrslunc,TGid,TGsiteid,sitenames,TGsitecoords,sitelen,cvfuncTG] = ReadDenoisedPSMSLData(960,960,thetTG,bedrocksiteids,thinyrs,minlen,[],[],addlsites,exclsites);
-TGyears=TGcoords(:,3);
-TGlat=TGcoords(:,1);
-TGlong=TGcoords(:,2);
-
-% set up data structure
-
+% import proxy data
 
 datid=[]; time1=[]; time2=[]; limiting=[]; Y=[]; dY = []; compactcorr = [];
 istg = []; lat=[]; long=[];
-
-datid = [datid ; TGid];
-time1 = [time1 ; TGyears];
-time2 = [time2 ; TGyears];
-limiting = [limiting ; 0*TGrsl];
-Y = [Y ; TGrsl];
-dY = [dY ; TGrslunc];
-compactcorr = [compactcorr ; 0*TGrsl];
-istg = [istg ; ones(size(TGrsl))];
-lat = [lat ; TGlat];
-long = [long ; TGlong];
+siteid=[]; sitenames={};
 
 % process geological data
 
@@ -94,6 +84,9 @@ compactcorr = [compactcorr ; wcompactcorr];
 istg = [istg ; 0 * wY];
 lat = [lat ; wlat];
 long = [long ; wlong];
+
+siteid=[siteid ; idNJ];
+sitenames={sitenames{:}, 'New Jersey (H13)'};
 
 % NJ hi-res
 
@@ -128,6 +121,9 @@ compactcorr = [compactcorr ; wcompactcorr];
 istg = [istg ; 0 * wY];
 lat = [lat ; wlat];
 long = [long ; wlong];
+
+siteid=[siteid ; idNJ+1 ; idNJ+2];
+sitenames={sitenames{:}, 'Cape May', 'Leeds Point'};
 
 
 % NC
@@ -164,6 +160,10 @@ istg = [istg ; 0 * wY];
 lat = [lat ; wlat];
 long = [long ; wlong];
 
+siteid=[siteid ; idNC+1 ; idNC+2];
+sitenames={sitenames{:}, 'Tump Point', 'Sand Point'};
+
+
 % FL
 
 datFL=importdata(fullfile(IFILES,'NassauFL_July2013.csv'));
@@ -191,6 +191,10 @@ istg = [istg ; 0 * wY];
 lat = [lat ; wlat];
 long = [long ; wlong];
 
+siteid=[siteid ; idFL];
+sitenames={sitenames{:}, 'Nassau'};
+
+
 % NS Gehrels et al. 2005
 
 datNS=importdata(fullfile(IFILES,'Gehrels2005_NS.csv'));
@@ -217,6 +221,10 @@ compactcorr = [compactcorr ; wcompactcorr];
 istg = [istg ; 0 * wY];
 lat = [lat ; wlat];
 long = [long ; wlong];
+
+siteid=[siteid ; idNS];
+sitenames={sitenames{:}, 'Chezzetcook'};
+
 
 % Engelhart & Horton database
 
@@ -247,43 +255,106 @@ for curreg=1:length(HoloRegions)
 	lat = [lat ; wlat];
 	long = [long ; wlong];
 end
+siteid=[siteid ; [idHolo+HoloRegions*1e3]'];
+for i=1:length(HoloRegions)
+    sitenames={sitenames{:}, ['EH12_' num2str(HoloRegions(i))]};
+end
 
-meantime=mean([time1 time2],2);
-dt = abs(time1-time2)/4;
+PX.datid=datid;
+PX.time1=time1;
+PX.time2=time2;
+PX.limiting=limiting;
+PX.Y=Y;
+PX.dY = dY;
+PX.compactcorr=compactcorr;
+PX.istg = istg;
+PX.lat=lat;
+PX.long=long;
+PX.Ycv=sparse(diag(dY.^2));
+PX.siteid=siteid;
+PX.sitenames=sitenames;
 
-Ycv = sparse(diag(dY.^2));
-Ycv(1:length(TGrsl),1:length(TGrsl)) = TGrslcv;
-
-dY0=dY;
-Ycv0 = Ycv;
-
-compactcorr=sparse(compactcorr);
-
-% subtract GIA model
+%%%%%% load GIA model
 
 giamodel.gia=ncread(fullfile(IFILES,'dsea250.1grid.ICE5Gv1.3_VM2_L90_2012.nc'),'Dsea_250');
 giamodel.lat=ncread(fullfile(IFILES,'dsea250.1grid.ICE5Gv1.3_VM2_L90_2012.nc'),'Lat');
 giamodel.long=ncread(fullfile(IFILES,'dsea250.1grid.ICE5Gv1.3_VM2_L90_2012.nc'),'Lon');
 
-ICE5Gin=giamodel.gia;
+ICE5Ggia=giamodel.gia;
 ICE5Glat=giamodel.lat;
 ICE5Glon=giamodel.long;
 sub=find(ICE5Glon>180); ICE5Glon(sub)=ICE5Glon(sub)-360;
-[ICE5Glon,si]=sort(ICE5Glon); ICE5Gin=ICE5Gin(si,:);
+[ICE5Glon,si]=sort(ICE5Glon); ICE5Ggia=ICE5Ggia(si,:);
 
-[regionsu,regionsusi]=unique(datid);
-sitecoords=[lat(regionsusi) long(regionsusi)];
-GIAproju=zeros(size(regionsu));
-GIAproj=zeros(size(Y));
-for i=1:length(GIAproju)
-	if regionsu(i)>0
-		GIAproju(i)=interp2(ICE5Glat,ICE5Glon,ICE5Gin,sitecoords(i,1),sitecoords(i,2));
-		sub=find(datid==regionsu(i));
-		GIAproj(sub)=GIAproju(i).*(meantime(sub)-1970);
-	end
+% fingerprint
+
+[GISfp,GISfplong,GISfplat]=readFingerprintInd('gis',IFILES);
+sub=find(GISfplong>180); GISfplong(sub)=GISfplong(sub)-360;
+[GISfplong,si]=sort(GISfplong); GISfp=GISfp(:,si);
+GISfp=GISfp*1000;
+
+%%%%%%
+
+clear datasets;
+datasets{1}=MergeDataStructures(TG,PX);
+datasets{2}=MergeDataStructures(TGNOCW,PX);
+datasets{3}=PX;
+datasets{4}=TG;
+datasets{5}=TGNOCW;
+
+datasets{1}.label='TG+GSL+PX';
+datasets{2}.label='TG+PX';
+datasets{3}.label='PX';
+datasets{4}.label='TG+GSL';
+datasets{5}.label='TG';
+
+
+for ii=1:length(datasets)
+    t1=datasets{ii}.time1; t2=datasets{ii}.time2;
+    datasets{ii}.meantime=mean([t1 t2],2);
+    datasets{ii}.dt = abs(t1-t2)/4;
+    datasets{ii}.dY0=datasets{ii}.dY;
+    datasets{ii}.Ycv0 = datasets{ii}.Ycv;
+    datasets{ii}.compactcorr=sparse(datasets{ii}.compactcorr);
+    datasets{ii}.bedrockMask=bedrockMask;
+    datasets{ii}.bedmsk=bedrockMask(datasets{ii}.datid,datasets{ii}.datid);
+
+
+    datasets{ii}.obsGISfp = interp2(GISfplong,GISfplat,GISfp,datasets{ii}.long,datasets{ii}.lat,'linear');
+    datasets{ii}.obsGISfp(find(datasets{ii}.lat>100))=1;
+    
+    % subtract GIA model
+    
+    ider = datasets{ii}.lat*1e5+datasets{ii}.long;
+    [ideru,iderui]=unique(ider);
+    
+%    [regionsu,regionsusi]=unique(datasets{ii}.datid);
+%    sitecoords=[datasets{ii}.lat(regionsusi) datasets{ii}.long(regionsusi)];
+%    GIAproju=zeros(size(regionsu));
+%    GIAproj=zeros(size(datasets{ii}.Y));
+    GIAproju=zeros(size(ideru));
+    GIAproj=zeros(size(datasets{ii}.Y));
+
+    for jj=1:length(ideru)
+        if datasets{ii}.datid(iderui(jj))>0
+            GIAproju(jj)=interp2(ICE5Glat,ICE5Glon,ICE5Ggia,datasets{ii}.lat(iderui(jj)),datasets{ii}.long(iderui(jj)));
+            sub=find(ider==ideru(jj));
+            GIAproj(sub)=GIAproju(jj).*(datasets{ii}.meantime(sub)-refyear);
+        end
+    end
+    for jj=1:length(datasets{ii}.siteid)
+        datasets{ii}.siteGIA(jj)=0;
+        sub=find(datasets{ii}.datid == datasets{ii}.siteid(jj));
+        if length(sub)>0
+            datasets{ii}.siteGIA(jj) = GIAproj(sub(1));
+        end
+    end
+    datasets{ii}.GIAproj=GIAproj;
+    datasets{ii}.Y0=datasets{ii}.Y;
+    %datasets{ii}.Y=datasets{ii}.Y0-GIAproj;
 end
-Y0=Y;
-Y=Y0-GIAproj;
+
+
 
 % indices
 
@@ -311,13 +382,5 @@ datNAO = importdata(fullfile(IFILES,'nao-trouet2009.txt'));
 	Mann_T=importdata(fullfile(IFILES,'glglfulihad_smxx.txt'));
 	Mann_yr = [[1:length(Mann_T)]-1]';
 
-% fingerprint
-
-[GISfp,GISfplong,GISfplat]=readFingerprintInd('gis',IFILES);
-sub=find(GISfplong>180); GISfplong(sub)=GISfplong(sub)-360;
-[GISfplong,si]=sort(GISfplong); GISfp=GISfp(:,si);
-GISfp=GISfp*1000;
 
 
-obsGISfp = interp2(GISfplong,GISfplat,GISfp,long,lat,'linear');
-obsGISfp(find(lat>100))=1;

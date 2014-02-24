@@ -1,6 +1,5 @@
-% Last updated by  Bob Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Feb 16 20:58:30 EST 2014
+% Last updated by  Bob Kopp, robert-dot-kopp-at-rutgers-dot-edu, Tue Feb 18 00:04:18 EST 2014
 
-% TO DO: training w/ and w/o GSL curve, fitting w/ and w/o GSL curve, fitting w/ only tide gauge (± GSL) and w/ only proxy
 
 addpath('~/Dropbox/Code/TGAnalysis/MFILES');
 addpath([pwd '/MFILES']);
@@ -15,72 +14,57 @@ cd(WORKDIR);
 
 
 %
-includeCW=0;
 runImportHoloceneDataSets;
 runSetupHoloceneCovariance;
 
-trainsubsubset=find(meantime>=-1000); % everything since 1000 BCE
-runOptimizeHoloceneCovariance;
+trainsets=[1:3]; % train w/TG+GSL+PX, w/TG+PX, w/PX
+trainspecs=ones(size(trainsets));
 
-disp(['thetTGG2 = [' sprintf('%0.3f ',thetTGG2) ']']);
+clear thetTGG trainsubsubset;
+for ii=1:length(trainsets)
+    [thetTGG{ii},trainsubsubset{ii}]=OptimizeHoloceneCovariance(datasets{trainsets(ii)},modelspec(trainspecs(ii)));
+end
 
-fid=fopen('thetTGG2.tsv','w');
-fprintf(fid,'%0.3f\t',thetTGG2);
+%%%%%%%%
+
+fid=fopen('thetTGG.tsv','w');
+for ii=1:length(datasets)
+    fprintf(fid,[datasets{ii}.label '\t']);
+    fprintf(fid,'%0.3f\t',thetTGG{ii});
+    fprintf(fid,'\n');
+end
 fclose(fid);
 
 
 %%%%
 
-compactcorr=full(compactcorr);
 fid=fopen('TGandProxyData.tsv','w');
 fprintf(fid,'ID\t1ime1\ttime2\tlimiting\tY-GIAproj\tY\tdY\tcompactcorr\tistg\tlat\tlong\n');
-for i=1:size(datid,1)
-	fprintf(fid,'%d\t',datid(i));
-	fprintf(fid,'%0.1f\t',time1(i));
-	fprintf(fid,'%0.1f\t',time2(i));
-	fprintf(fid,'%d\t',limiting(i));
-	fprintf(fid,'%0.2f\t',Y(i));
-	fprintf(fid,'%0.2f\t',Y(i)+GIAproj(i));
-	fprintf(fid,'%0.2f\t',dY(i));
+ii=1;
+for i=1:size(datasets{ii}.datid,1)
+    compactcorr=full(datasets{ii}.compactcorr);
+	fprintf(fid,'%d\t',datasets{ii}.datid(i));
+	fprintf(fid,'%0.1f\t',datasets{ii}.time1(i));
+	fprintf(fid,'%0.1f\t',datasets{ii}.time2(i));
+	fprintf(fid,'%d\t',datasets{ii}.limiting(i));
+	fprintf(fid,'%0.2f\t',datasets{ii}.Y(i));
+	fprintf(fid,'%0.2f\t',datasets{ii}.Y(i)+datasets{ii}.GIAproj(i));
+	fprintf(fid,'%0.2f\t',datasets{ii}.dY(i));
 	fprintf(fid,'%0.2f\t',compactcorr(i));
-	fprintf(fid,'%d\t',istg(i));
-	fprintf(fid,'%0.2f\t',lat(i));
-	fprintf(fid,'%0.2f\n',long(i));
+	fprintf(fid,'%d\t',datasets{ii}.istg(i));
+	fprintf(fid,'%0.2f\t',datasets{ii}.lat(i));
+	fprintf(fid,'%0.2f\n',datasets{ii}.long(i));
 end
 fclose(fid)
 
-%  21 December 2013
-% thetTGG2 = [138.548 37.565 59.492 44.370 360.619 1.195 3.435 0.482 0.178 2.020 0.009 1.000 1.000 0.713 ]
-% 14 February 2014
-% thetTGG2 = [140.644 37.754 62.846 40.425 381.102 1.174 3.379 0.000 2498.381 6995.994 0.481 2.064 0.194 0.000 1.000 1.000 0.692 ]
-% 16 February 2014
-% thetTGG2 = [138.550 37.571 59.495 44.374 360.605 1.195 3.436 0.482 2.020 0.178 0.004 1.000 1.000 0.713 ]
-
-
-dY = sqrt(dY0.^2 + (thetTGG2(end)*compactcorr).^2);
-Ycv = Ycv0 + diag(thetTGG2(end)*compactcorr).^2;
-thetTGG=thetTGG2(1:end-1);
-
+for ii=1:length(datasets)
+    datasets{ii}.dY = sqrt(datasets{ii}.dY0.^2 + (thetTGG{ii}(end)*datasets{ii}.compactcorr).^2);
+    datasets{ii}.Ycv = datasets{ii}.Ycv0 + diag(thetTGG{ii}(end)*datasets{ii}.compactcorr).^2;
+end
 
 %% now do a regression
 
-trainsub = find((limiting==0).*(datid>0)); % only index points, and drop the global curve
-trainsub=intersect(trainsub,trainsubsubset);
-trainsubTG=intersect(trainsub,find(istg));
-trainsubPX=intersect(trainsub,find(~istg));
-
-
-dt1t1=dYears(meantime(trainsub),meantime(trainsub));
-dy1y1 = dDist([lat(trainsub) long(trainsub)],[lat(trainsub) long(trainsub)]);
-fp1fp1=bsxfun(@times,obsGISfp(trainsub)-1,obsGISfp(trainsub)'-1);
-
-wcvfunc = @(x1,x2,thet) cvfuncTGG(x1,x2,dYears(x1,x2),thet,dy1y1,bedmsk(trainsub,trainsub),fp1fp1);
-
-dt = abs(time2-time1)/4;
-
-[dK,df,d2f,yoffset] = GPRdx(meantime(trainsub),Y(trainsub),dt(trainsub),dY(trainsub),@(x1,x2) wcvfunc(x1,x2,thetTGG),2);
-
-testsites=[
+testsitedef.sites=[
 0   1e6   1e6
 idFL latFL longFL
 idNC+1 latNC1 longNC1
@@ -91,74 +75,10 @@ idNJ latNJ longNJ
 idNJ+2 latNJ2 longNJ2
 idNS latNS longNS
 ];
+testsitedef.names={'GSL','FL','NC_TP','NC','NC_SP','NJ_CM','NJ','NJ_LP','NS'};
+testsitedef.names2={'GSL','Nassau','Tump Point','North Carolina','Sand Point','Cape May','New Jersey','Leeds Point','Chezzetcook'};
 
-
-testsitefp = interp2(GISfplong,GISfplat,GISfp,testsites(:,3),testsites(:,2),'linear');
-testsitefp(find(testsites(:,2)>100))=1;
-
-testnames={'GSL','FL','NC_TP','NC','NC_SP','NJ_CM','NJ','NJ_LP','NS'};
-testnames2={'GSL','Nassau','Tump Point','North Carolina','Sand Point','Cape May','New Jersey','Leeds Point','Chezzetcook'};
-for i=1:size(testsites,1)
-	sub=find(floor(datid/1000)==floor(testsites(i,1)/1000));
-	minagesite(i)=min(time1(sub));
-end
-
-testt = [-2000:10:2010]';
-testX=[];
-testreg=[];
-testfp=[];
-for i=1:size(testsites,1)
-	testX = [testX; ones(size(testt))*testsites(i,2) ones(size(testt))*testsites(i,3) testt];
-	testreg = [testreg ; ones(size(testt))*testsites(i,1)];
-	testfp=[testfp ; ones(size(testt))*testsitefp(i)];
-end
-
-refyear=2000;
-Mref = eye(size(testX,1));
-for i=1:size(testsites,1)
-	
-	sub1=find(testreg==testsites(i,1));
-	sub2=intersect(sub1,find(testX(:,3)==2010));
-	
-	Mref(sub1,sub2)=Mref(sub1,sub2)-1;
-
-end
-
-testGIAproju=zeros(size(testsites,1),1);
-testGIAproj=zeros(size(testX,1),1);
-for i=1:size(testsites,1)
-	if testsites(i,1)>0
-		testGIAproju(i)=interp2(ICE5Glat,ICE5Glon,ICE5Gin,testsites(i,2),testsites(i,3));
-		sub=find(testreg==testsites(i,1));
-		testGIAproj(sub)=testGIAproju(i).*(testX(sub,3)-1970);
-	end
-end
-
-
-X1 = [lat long meantime];
-
-dt1t2 = dYears(X1(trainsub,3),testX(:,3));
-dt2t2 = dYears(testX(:,3),testX(:,3));
-
-dy1y2 = dDist(X1(trainsub,1:2),testX(:,1:2));
-dy2y2 = dDist(testX(:,1:2),testX(:,1:2));
-
-fp1fp2=bsxfun(@times,obsGISfp(trainsub)-1,testfp'-1)';
-
-fp2fp2=bsxfun(@times,testfp-1,testfp'-1);
-
-
-t1=X1(trainsub,3);
-t2=testX(:,3);
-
-testcv = @(thetas) cvfuncTGG(t1,t2,dt1t2,thetas,dy1y2,bedrockMask(datid(trainsub),testreg),fp1fp2);
-testcv2 = @(thetas) cvfuncTGG(t2,t2,dt2t2,thetas,dy2y2,bedrockMask(testreg,testreg),fp2fp2) ;
-
-dY2=sqrt(dY(trainsub).^2+dK);
-Ycv2=Ycv(trainsub,trainsub)+diag(dK);
-
-
-noiseMasks = ones(8,length(thetTGG));
+noiseMasks = ones(8,length(thetTGG{1}));
 noiseMasks(2,[8 10] )=0; %without linear
 noiseMasks(3,[1 12])=0; %only regional and local
 noiseMasks(4,[1 12 8 10])=0; %only regional and local non-linear
@@ -166,54 +86,104 @@ noiseMasks(5,[1 2 3 4])=0; %only regional and local linear
 noiseMasks(6,[1 3 4 8 10 13])=0; %Greenland only
 noiseMasks(7,[1 12 11 4 10])=0; %only regional
 noiseMasks(8,[1 12 11 4 10 8])=0; %only regional non-linear
-
 noiseMasklabels={'full','nonlin','regloc','reglocnonlin','regloclin','gis','reg','regnonlin'};
 
-[f1,V1,logp] = GaussianProcessRegression([],Y(trainsub),[],traincvTGG(t1,t1,dt1t1,thetTGG,Ycv(trainsub,trainsub),dy1y1,bedmsk(trainsub,trainsub),fp1fp1),testcv(thetTGG)',testcv2(thetTGG));
-sd1=sqrt(diag(V1));
+GISfpt.lat=GISfplat;
+GISfpt.long=GISfplong;
+GISfpt.fp=GISfp;
+
+ICE5G.lat=ICE5Glat;
+ICE5G.long=ICE5Glon;
+ICE5G.gia=ICE5Ggia;
 
 
-clear f2s V2s sd2s;
-parfor i=1:size(noiseMasks,1)
-	disp(i);
-	[f2s(:,i),V2s(:,:,i),logp] = GaussianProcessRegression([],Y(trainsub)-yoffset,[],traincvTGG(t1,t1,dt1t1,thetTGG,Ycv2,dy1y1,bedmsk(trainsub,trainsub),fp1fp1),testcv(thetTGG.*noiseMasks(i,:))',testcv2(thetTGG.*noiseMasks(i,:)));
-	sd2s(:,i)=sqrt(diag(V2s(:,:,i)));
+testt = [-2000:10:2010];
 
-% only with TG
-	[f2sTG(:,i),V2sTG(:,:,i),logp] = GaussianProcessRegression([],Y(trainsubTG)-yoffset,[],traincvTGG(t1,t1,dt1t1,thetTGG,Ycv2,dy1y1,bedmsk(trainsub,trainsub),fp1fp1),testcv(thetTGG.*noiseMasks(i,:))',testcv2(thetTGG.*noiseMasks(i,:)));
-	sd2sTG(:,i)=sqrt(diag(V2sTG(:,:,i)));
+for ii=1:length(datasets)
+for jj=1:length(trainsets)
 
-% only with proxies
-	[f2sPX(:,i),V2sPX(:,:,i),logp] = GaussianProcessRegression([],Y(trainsubPX)-yoffset,[],traincvTGG(t1,t1,dt1t1,thetTGG,Ycv2,dy1y1,bedmsk(trainsub,trainsub),fp1fp1),testcv(thetTGG.*noiseMasks(i,:))',testcv2(thetTGG.*noiseMasks(i,:)));
-	sd2sPX(:,i)=sqrt(diag(V2sPX(:,:,i)));
+    labls{ii,jj}=['_' datasets{ii}.label '_tr' datasets{trainsets(jj)}.label];
+    disp(labls{ii,jj});
+
+    trainsub = find((datasets{ii}.limiting==0)); % only index points
+    [f2s{ii,jj},sd2s{ii,jj},V2s{ii,jj},testlocs{ii,jj}]=RegressHoloceneDataSets(datasets{ii},testsitedef,modelspec(trainspecs(jj)),thetTGG{jj},GISfpt,ICE5G,trainsub,trainsubsubset{ii},noiseMasks,testt,refyear)
 
 end
-
-Y=Y0;
-f1=f1+testGIAproj;
-for i=1:size(noiseMasks,1)
-	if noiseMasks(i,8)==1
-		f2s(:,i)=f2s(:,i)+testGIAproj;
-	end
 end
 
 save ~/tmp/CESL
 
 %%
 
-makeplots_sldecomp
+for ii=1:length(datasets)
+for jj=1:length(trainsets)
 
-%%
+    labl=labls{ii,jj}; disp(labl);
+   makeplots_sldecomp(datasets{ii},f2s{ii,jj},sd2s{ii,jj},V2s{ii,jj},testlocs{ii,jj},labl);
+    
+    testreg=testlocs{ii,jj}.reg;
+    testsites=testlocs{ii,jj}.sites;
+    testX=testlocs{ii,jj}.X;
+    testnames2=testlocs{ii,jj}.names2;
 
-% slopes plot
-for ii=1:size(testsites,1)
-	sub=find((testreg==testsites(ii,1)).*(testX(:,3)>=900).*(testX(:,3)<=1900));
-	M = zeros(1,length(sub)); M(1)=-1; M(end)=1; 
-	M=M/(testX(sub(end),3)-testX(sub(1),3));
-	fslope(ii) = M*f2s(sub,5);
-	Vslope = M*V2s(sub,sub,5)*M';
-	sdslope(ii)=sqrt(diag(Vslope));
+    firstyears=[800 0 -500 1800 1900];
+    lastyears=[1800 1800 1700 1900 2000];
+
+    for kk=1:size(testsites,1)
+        for pp=1:length(firstyears)
+            sub=find((testreg==testsites(kk,1)).*(testX(:,3)>=firstyears(pp)).*(testX(:,3)<=lastyears(pp)));
+            M = zeros(1,length(sub)); M(1)=-1; M(end)=1; 
+            M=M/(testX(sub(end),3)-testX(sub(1),3));
+
+            if pp==1
+                fslopelin(kk,ii,jj) = M*f2s{ii,jj}(sub,5);
+                Vslope = M*V2s{ii,jj}(sub,sub,5)*M';
+                sdslopelin(kk,ii,jj)=sqrt(diag(Vslope));
+            end
+
+            fslopeavg(kk,ii,jj,pp) = M*f2s{ii,jj}(sub,1);
+            Vslope = M*V2s{ii,jj}(sub,sub,1)*M';
+            sdslopeavg(kk,ii,jj,pp)=sqrt(diag(Vslope));
+
+            fslopeavglessGSL(kk,ii,jj,pp) = M*f2s{ii,jj}(sub,3);
+            Vslope = M*V2s{ii,jj}(sub,sub,3)*M';
+            sdslopeavglessGSL(kk,ii,jj,pp)=sqrt(diag(Vslope));
+
+       end
+
+    end
+    
+    
+    fid=fopen(['linrates' labl '.tsv'],'w');
+    fprintf(fid,['Regional+Local Linear Rates (mm/y), ' labl '\n']);
+    fprintf(fid,'Site\tRate (linear)\t2s');
+    for pp=1:length(firstyears)
+        fprintf(fid,'\tRate (avg, %0.0f-%0.0f)\t2s',[firstyears(pp) lastyears(pp)]);
+    end
+    for pp=1:length(firstyears)
+        fprintf(fid,'\tRate (avg w/o GSL, %0.0f-%0.0f)\t2s',[firstyears(pp) lastyears(pp)]);
+    end
+    fprintf(fid,'\n');
+    for kk=1:size(testsites,1)
+        fprintf(fid,testnames2{kk});
+        fprintf(fid,'\t%0.2f',[fslopelin(kk,ii,jj) 2*sdslopelin(kk,ii,jj)]);
+        for pp=1:length(firstyears)
+            fprintf(fid,'\t%0.2f',[fslopeavg(kk,ii,jj,pp) 2*sdslopeavg(kk,ii,jj,pp)]);
+        end
+        for pp=1:length(firstyears)
+            fprintf(fid,'\t%0.2f',[fslopeavglessGSL(kk,ii,jj,pp) 2*sdslopeavglessGSL(kk,ii,jj,pp)]);
+        end
+        fprintf(fid,'\n');
+    end
+    fclose(fid);
+
+        
 end
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% slopes plot -- TBD
 
 fslope=fslope(:);
 sub=find(testsites(:,2)<1e3);
@@ -252,16 +222,6 @@ colorbar;
 box on;
 %title('Sea level anomaly rates, 900-1900 CE (mm/y)');
 pdfwrite('map_linrates');
-
-fid=fopen('linrates.tsv','w');
-fprintf(fid,'Regional+Local Linear Rates (mm/y)\n');
-fprintf(fid,'Site\tRate\t2s\n');
-for ii=1:size(testsites,1)
-	fprintf(fid,testnames2{ii});
-	fprintf(fid,'\t%0.2f',[fslope(ii) 2*sdslope(ii)]);
-	fprintf(fid,'\n');
-end
-fclose(fid);
 
 
 

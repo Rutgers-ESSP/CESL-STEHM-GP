@@ -1,5 +1,4 @@
-% Last updated by  Bob Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sat Dec 21 10:03:10 EST 2013
-
+% Last updated by  Bob Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Feb 17 19:49:48 EST 2014
 
 
 % first optimize only tide gauge data
@@ -7,8 +6,7 @@
 thetTG2 = thetTGG;
 ubTG2=ubTGG; lbTG2=lbTGG;
 
-thetTG2(8)=0; % not asymptotic term
-subfixed=union(subfixedTGG,8:10);
+subfixed=subfixedTGG;
 
 subnotfixed=setdiff(1:length(thetTG2),subfixed);
 Mfixed=sparse(length(subnotfixed),length(thetTG2));
@@ -30,7 +28,6 @@ lbTGG(1:5) = thetTG2(1:5); % set lower bound of amplitudes and temporal scale
 
 thetTGG0=thetTGG;
 thetTGG=thetTG2;
-thetTG2(8)=thetTGG0(8);
 
 % optimize ignoring geochronological uncertainty
 
@@ -38,7 +35,7 @@ thetTGG2 = [thetTGG .1];
 ubTGG2 = [ubTGG 5];
 lbTGG2 = [lbTGG 0];
 
-subfixed=union(subfixedTGG,[7 12]); % fix length scales at those determined from the tide gauge data
+subfixed=union(subfixedTGG,[7 9]); % fix length scales at those determined from the tide gauge data
 subnotfixed=setdiff(1:length(thetTGG),subfixed);
 Mfixed=sparse(length(subnotfixed),length(thetTGG));
 for i=1:length(subnotfixed)

@@ -1,4 +1,7 @@
-% Last updated by  Bob Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sat Dec 21 17:40:33 EST 2013
+function makeplots_sldecomp(dataset,f2s,sd2s,V2s,testloc,labl)
+
+% Last updated by  Bob Kopp, robert-dot-kopp-at-rutgers-dot-edu, Tue Feb 18 23:13:46 EST 2014
+
 
 
 % SL component plots
@@ -6,6 +9,32 @@
 % (b) regional + local record
 % (c-d) corresponding average rates of change
 
+defval('labl','');
+
+angd= @(Lat0,Long0,lat,long) (180/pi)*(atan2(sqrt((cosd(lat).*sind(long-Long0)).^2+(cosd(Lat0).*sind(lat)-sind(Lat0).*cosd(lat).*cosd(long-Long0)).^2),(sind(Lat0).*sind(lat)+cosd(Lat0).*cosd(lat).*cosd(long-Long0))));
+
+dYears=@(years1,years2) abs(bsxfun(@minus,years1',years2));
+dDist=@(x1,x2)angd(repmat(x1(:,1),1,size(x2,1)),repmat(x1(:,2),1,size(x2,1)),repmat(x2(:,1)',size(x1,1),1),repmat(x2(:,2)',size(x1,1),1))'+1e6*(bsxfun(@plus,x1(:,1)',x2(:,1))>1000);
+
+testreg=testloc.reg;
+testsites=testloc.sites;
+testnames=testloc.names;
+testnames2=testloc.names2;
+testX=testloc.X;
+
+istg = dataset.istg;
+meantime=dataset.meantime;
+lat=dataset.lat;
+long=dataset.long;
+Y=dataset.Y0;
+Ycv0=dataset.Ycv0;
+bedmsk=dataset.bedmsk;
+limiting=dataset.limiting;
+obsGISfp=dataset.obsGISfp;
+compactcorr=dataset.compactcorr;
+time1=dataset.time1;
+time2=dataset.time2;
+dY=dataset.dY;
 
 for i=1:size(testsites,1)
 
@@ -35,14 +64,6 @@ for i=1:size(testsites,1)
 		plot(testX(subA,3),f2s(subA,j)+2*sd2s(subA,j)+offsetA,'r:');
 		plot(testX(subA,3),f2s(subA,j)-2*sd2s(subA,j)+offsetA,'r:');
 
-		if (testsites(i,1)==0) && (j==1)
-			plot(testX(subA,3),f3s(subA,j)+offsetA,'m');
-			plot(testX(subA,3),f3s(subA,j)+sd3s(subA,j)+offsetA,'m--');
-			plot(testX(subA,3),f3s(subA,j)-sd3s(subA,j)+offsetA,'m--');
-			plot(testX(subA,3),f3s(subA,j)+2*sd3s(subA,j)+offsetA,'m:');
-			plot(testX(subA,3),f3s(subA,j)-2*sd3s(subA,j)+offsetA,'m:');
-		end
-		
 		if k==1
 			for nn=1:length(subB)
 				plot([1 1]*meantime(subB(nn)),Y(subB(nn))+[-1 1]*dY(subB(nn)));
@@ -61,10 +82,7 @@ for i=1:size(testsites,1)
 
 		ylabel('mm');
 		xlim([-1000 2010]);
-		
-%		j=js(1,k);
-%		ylim([min(-50,floor(min(slf(subA,j)-2*sqrt(diag(slV(subA,subA,j)))+offsetA)/50)*50) max(50,ceil(max(slf(subA,j)+2*sqrt(diag(slV(subA,subA,j)))+offsetA)/50)*50)]);
-		
+				
 	end
 	
 	difftimestep=100;
@@ -76,27 +94,16 @@ for i=1:size(testsites,1)
 	difftimes=bsxfun(@rdivide,abs(Mdiff)*testX(:,3),sum(abs(Mdiff),2));;
 	diffreg=bsxfun(@rdivide,abs(Mdiff)*testreg,sum(abs(Mdiff),2));;
 	Mdiff=bsxfun(@rdivide,Mdiff,Mdiff*testX(:,3));
-	df1=Mdiff*f1;
-	dV1=Mdiff*V1*Mdiff';
-	dsd1=sqrt(diag(dV1));
 
 	clear df2s dV2s dsd2s;
-	for n=1:size(noiseMasks,1)
+	for n=1:size(f2s,2)
 		df2s(:,n)=Mdiff*f2s(:,n);
 		dV2s(:,:,n)=Mdiff*V2s(:,:,n)*Mdiff';
 		dsd2s(:,n)=sqrt(diag(dV2s(:,:,n)));
 	end
 	
-	clear df3s dV3s dsd3s;
-	n=1;
-	df3s(:,n)=Mdiff*f3s(:,n);
-	dV3s(:,:,n)=Mdiff*V3s(:,:,n)*Mdiff';
-	dsd3s(:,n)=sqrt(diag(dV3s(:,:,n)));
-	
-
 	subA2 = find(diffreg == testsites(i,1));
 
-	
 	for k=1:length(js)
 		offsetA=0;
 		hp(k+length(js))=subplot(2,length(js),k+length(js));
@@ -110,26 +117,15 @@ for i=1:size(testsites,1)
 		plot(difftimes(subA2),df2s(subA2,j)+2*dsd2s(subA2,j),'r:');
 		plot(difftimes(subA2),df2s(subA2,j)-2*dsd2s(subA2,j),'r:');
 
-		if (testsites(i,1)==0)&&(j==1)
-			plot(difftimes(subA2),df3s(subA2,j),'m');
-			plot(difftimes(subA2),df3s(subA2,j)+dsd3s(subA2,j),'m--');
-			plot(difftimes(subA2),df3s(subA2,j)-dsd3s(subA2,j),'m--');
-			plot(difftimes(subA2),df3s(subA2,j)+2*dsd3s(subA2,j),'m:');
-			plot(difftimes(subA2),df3s(subA2,j)-2*dsd3s(subA2,j),'m:');
-		end
-		
 		ylabel(['mm/y (' num2str(difftimestep) '-y)']);
 		xlim([-1000 2010]);
-		
-%		j=js(1,k);
-%		ylim([min(-50,floor(min(slf(subA,j)-2*sqrt(diag(slV(subA,subA,j)))+offsetA)/50)*50) max(50,ceil(max(slf(subA,j)+2*sqrt(diag(slV(subA,subA,j)))+offsetA)/50)*50)]);
 		
 	end
 	title(hp(1),testnames2{i})
 	longticks(hp);
 	[bh,th]=label(hp,'ul',12,[],0,1,1,1.5,1.5); 
 	
-	pdfwrite(['sldecomp_' testnames{i}])
+	pdfwrite(['sldecomp_' testnames{i} labl])
 
 end
 
