@@ -1,20 +1,33 @@
 function [thetTGG,trainsub]=OptimizeHoloceneCovariance(dataset,modelspec,optimizesteps,mintime)
 
-% Last updated by  Bob Kopp, robert-dot-kopp-at-rutgers-dot-edu, Tue Feb 18 09:08:43 EST 2014
+% Last updated by  Bob Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Feb 24 17:20:33 EST 2014
 
 istg = dataset.istg;
-meantime=dataset.meantime;
 lat=dataset.lat;
 long=dataset.long;
 Y=dataset.Y;
 Ycv0=dataset.Ycv0;
-bedmsk=dataset.bedmsk;
 limiting=dataset.limiting;
-obsGISfp=dataset.obsGISfp;
 compactcorr=dataset.compactcorr;
 time1=dataset.time1;
 time2=dataset.time2;
 dY=dataset.dY;
+if isfield(dataset,'meantime')
+    meantime=dataset.meantime;
+else
+    meantime=mean([dataset.time1(:) dataset.time2(:)],2);
+end
+if isfield(dataset,'bedmsk')
+    bedmsk=dataset.bedmsk;
+else
+    bedmsk=@(a,b) [];
+end
+if isfield(dataset,'obsGISfp')
+    obsGISfp=dataset.obsGISfp;
+else
+    obsGISfp=ones(size(lat));
+end
+
 
 cvfuncTGG=modelspec.cvfunc;
 traincvTGG=modelspec.traincv;
@@ -59,11 +72,10 @@ for nnn=1:length(optimizesteps)
                 doglobs=0;
             end
             for doglob=doglobs
-                [thetTGG(subnotfixed),minima] = SLGPOptimize(Y(trainsub),@(x) traincvTGG(meantime(trainsub),meantime(trainsub),dt1t1,x*Mfixed+fixedvect,Ycv0(trainsub,trainsub),dy1y1,bedmsk(trainsub,trainsub),fp1fp1),thetTGG(subnotfixed),lbTGG(subnotfixed),ubTGG(subnotfixed),doglob);
+                [thetTGG(subnotfixed)] = SLGPOptimize(Y(trainsub),@(x) traincvTGG(meantime(trainsub),meantime(trainsub),dt1t1,x*Mfixed+fixedvect,Ycv0(trainsub,trainsub),dy1y1,bedmsk(trainsub,trainsub),fp1fp1),thetTGG(subnotfixed),lbTGG(subnotfixed),ubTGG(subnotfixed),doglob);
                 disp(sprintf('%0.3f ',thetTGG));
             end
 
-            lbTGG(1:5) = thetTGG(1:5); % set lower bound of amplitudes and temporal scale
             donetg=1;
             
         end
@@ -71,7 +83,9 @@ for nnn=1:length(optimizesteps)
      elseif floor(optimizesteps(nnn))==2
 
         % optimize ignoring geochronological uncertainty
-
+        if donetg
+            lbTGG(1:5) = thetTGG(1:5); % set lower bound of amplitudes and temporal scale
+        end
         thetTGG = [thetTGG .1];
         ubTGG = [ubTGG 5];
         lbTGG = [lbTGG 0];
@@ -100,7 +114,7 @@ for nnn=1:length(optimizesteps)
             doglobs=[0 1];
         end
         for doglob=doglobs
-            [thetTGG(subnotfixed),minima] = SLGPOptimize(Y(trainsub),@(x) traincvTGG(meantime(trainsub),meantime(trainsub),dt1t1,x(1:end-1)*Mfixed+fixedvect,Ycv0(trainsub,trainsub)+diag(x(end)*compactcorr(trainsub)).^2,dy1y1,bedmsk(trainsub,trainsub),fp1fp1),thetTGG(subnotfixed),lbTGG(subnotfixed),ubTGG(subnotfixed),doglob);
+            [thetTGG(subnotfixed)] = SLGPOptimize(Y(trainsub),@(x) traincvTGG(meantime(trainsub),meantime(trainsub),dt1t1,x(1:end-1)*Mfixed+fixedvect,Ycv0(trainsub,trainsub)+diag(x(end)*compactcorr(trainsub)).^2,dy1y1,bedmsk(trainsub,trainsub),fp1fp1),thetTGG(subnotfixed),lbTGG(subnotfixed),ubTGG(subnotfixed),doglob);
             disp(sprintf('%0.3f ',thetTGG));
         end
         
@@ -114,7 +128,7 @@ for nnn=1:length(optimizesteps)
             [dK,df,d2f,yoffset] = GPRdx(meantime(trainsub),Y(trainsub),dt(trainsub),sqrt(dY(trainsub).^2+(thetTGG(end)*compactcorr(trainsub)).^2),@(x1,x2) wcvfunc(x1,x2,thetTGG),2);
 
             for doglob=[0]
-                [thetTGG(subnotfixed),minima] = SLGPOptimize(Y(trainsub),@(x) traincvTGG(meantime(trainsub),meantime(trainsub),dt1t1,x(1:end-1)*Mfixed+fixedvect,Ycv0(trainsub,trainsub)+diag(x(end)*compactcorr(trainsub)).^2+diag(dK),dy1y1,bedmsk(trainsub,trainsub),fp1fp1),thetTGG(subnotfixed),lbTGG(subnotfixed),ubTGG(subnotfixed),doglob);
+                [thetTGG(subnotfixed)] = SLGPOptimize(Y(trainsub),@(x) traincvTGG(meantime(trainsub),meantime(trainsub),dt1t1,x(1:end-1)*Mfixed+fixedvect,Ycv0(trainsub,trainsub)+diag(x(end)*compactcorr(trainsub)).^2+diag(dK),dy1y1,bedmsk(trainsub,trainsub),fp1fp1),thetTGG(subnotfixed),lbTGG(subnotfixed),ubTGG(subnotfixed),doglob);
                 disp(sprintf('%0.3f ',thetTGG));
 
             end

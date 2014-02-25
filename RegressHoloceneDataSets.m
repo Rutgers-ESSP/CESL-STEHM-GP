@@ -164,9 +164,13 @@ for i=1:size(noiseMasks,1)
 end
 
 parfor i=1:size(noiseMasks,1)
-	if noiseMasks(i,8)==1
-		f2s(:,i)=f2s(:,i)+testGIAproj;
-	end
+    if size(noiseMasks,2)<8
+        f2s(:,i)=f2s(:,i)+testGIAproj;
+	else
+        if noiseMasks(i,8)==1
+            f2s(:,i)=f2s(:,i)+testGIAproj;
+        end
+    end
 end
 
 testlocs=testsitedef;
