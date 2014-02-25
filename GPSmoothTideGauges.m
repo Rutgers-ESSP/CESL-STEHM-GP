@@ -1,4 +1,4 @@
-function [TGdata2,TGdata,thetL,TGmodellocal] = GPSmoothTideGauges(targcoords,addlsites,thetL0,thetG,winlength,thinlength,minlength,minlength0,giafile,psmsldir,gslfile,ROOTDIR)
+function [TGdata2,TGdata,thetL,TGmodellocal] = GPSmoothTideGauges(targcoords,addlsites,thetL0,winlength,thinlength,minlength,minlength0,optimizemode,giafile,psmsldir,gslfile,ROOTDIR)
 
 % Find tide gauge sites to include, based on length and proximity criteria, then
 % fit GP model to them in order to interpolate and take running averge.
@@ -11,11 +11,11 @@ function [TGdata2,TGdata,thetL,TGmodellocal] = GPSmoothTideGauges(targcoords,add
 
 defval('minlength',70);  % minimum length for most purposes
 defval('minlength0',20);  % absolute minimum length
-defval('thetG',[1.621 11.966 40.225 0.549]);
 defval('thetL0',[]);
 defval('winlength',11);
 defval('thinlength',winlength-1);
 defval('GIAanchoryear',2005);
+defval('optimizemode',1.1); % set to 1.0 for local optimization only
 
 defval('targcoords',[
 34.97  -76.38; %Tump Point, NC
@@ -150,7 +150,7 @@ for nn=1:length(TGdata.siteid)
     TGdatasub.Ycv=sparse(diag(TGdatasub.dY.^2));
     TGdatasub.Ycv0=sparse(diag(TGdatasub.dY.^2));
     if length(thetL0)==0
-        [thetL(nn,:)]=OptimizeHoloceneCovariance(TGdatasub,TGmodellocal,1.1)
+        [thetL(nn,:)]=OptimizeHoloceneCovariance(TGdatasub,TGmodellocal,optimizemode)
     elseif size(thetL0,1)>1
         thetL(nn,:)=thetL0(nn,:);
     else
