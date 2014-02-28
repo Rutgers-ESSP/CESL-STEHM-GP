@@ -15,9 +15,9 @@ kDP = @(years1,years2,thetas) thetas(1).^2 * bsxfun(@times,(years1-refyear)',(ye
 %kASYMPT=@(years1,years2,thetas) thetas(1).^2*exp((2*thetas(2)-bsxfun(@plus,years1,years2'))/thetas(3));
 
 
-modelspec(1).cvfunc = @(t1,t2,dt1t2,thetas,ad,bedmask,fp1fp2) kMatG(dt1t2,[1 thetas([5 6])]) .*(thetas(1).^2 + thetas(2).^2*(thetas(12)+thetas(13)*fp1fp2) + kGEOG(ad,thetas([3 7])) + kDELTAG(ad,thetas(4))) + kDP(t1,t2,1).*(kGEOG(ad,thetas([8 9])) + bedmask.*kDELTAG(ad,thetas(10))) + kDELTAG(ad,thetas(11));
+modelspec(1).cvfunc = @(t1,t2,dt1t2,thetas,ad,fp1fp2) kMatG(dt1t2,[1 thetas([5 6])]) .*(thetas(1).^2 + thetas(2).^2*(thetas(12)+thetas(13)*fp1fp2) + kGEOG(ad,thetas([3 7])) + kDELTAG(ad,thetas(4))) + kDP(t1,t2,1).*(kGEOG(ad,thetas([8 9])) + kDELTAG(ad,thetas(10))) + kDELTAG(ad,thetas(11));
 
-modelspec(1).traincv = @(t1,t2,dt1t2,thetas,errcv,ad,bedmask,fp1fp2) modelspec(1).cvfunc(t1,t2,dt1t2,thetas,ad,bedmask,fp1fp2) + errcv;
+modelspec(1).traincv = @(t1,t2,dt1t2,thetas,errcv,ad,fp1fp2) modelspec(1).cvfunc(t1,t2,dt1t2,thetas,ad,fp1fp2) + errcv;
 
 tluTGG = [
 
@@ -49,5 +49,5 @@ thetTG(7) 0 100 % linear local amplitude
 modelspec(1).thet0=tluTGG(:,1)';
 modelspec(1).lb = tluTGG(:,2)';
 modelspec(1).ub = tluTGG(:,3)';
-modelspec(1).subfixed=[length(modelspec(1).thet)-[1 0]]; % fix GIS switches
+modelspec(1).subfixed=[length(modelspec(1).thet0)-[1 0]]; % fix GIS switches
 modelspec(1).sublength=[7 9];

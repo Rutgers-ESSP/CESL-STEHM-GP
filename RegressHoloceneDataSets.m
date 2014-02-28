@@ -2,13 +2,12 @@ function [f2s,sd2s,V2s,testlocs]=RegressHoloceneDataSets(dataset,testsitedef,mod
 
 %
 % 
-% Last updated by  Bob Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Feb 24 09:50:36 EST 2014
+% Last updated by  Bob Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri Feb 28 10:20:43 EST 2014
 
-
-
-defval('testt',[-2000:10:2010]);
+defval('testt',[-2010:20:2010]);
 defval('refyear',2010);
 defval('GISfp',[]);
+defval('ICE5G',[]);
 
 if ~iscell(testt)
     testt=testt(:);
@@ -19,11 +18,6 @@ end
 
 cvfuncTGG=modelspec.cvfunc;
 traincvTGG=modelspec.traincv;
-if isfield(dataset,'bedrockMask')
-    bedrockMask=dataset.bedrockMask;
-else
-    bedrockMask=@(a,b) [];
-end
 
 datid = dataset.datid;
 istg = dataset.istg;
@@ -36,11 +30,6 @@ lat=dataset.lat;
 long=mod(dataset.long,360);
 Y=dataset.Y;
 Ycv=dataset.Ycv;
-if isfield(dataset,'bedmsk')
-    bedmsk=dataset.bedmsk;
-else
-    bedmsk=@(a,b) [];
-end
 
 limiting=dataset.limiting;
 if isfield(dataset,'obsGISfp')
@@ -57,6 +46,11 @@ testsites=testsitedef.sites;
 testsites(:,3)=mod(testsites(:,3),360);
 testnames=testsitedef.names;
 testnames2=testsitedef.names2;
+if isfield(testsitedef,'firstage')
+    firstage=testsitedef.firstage;
+else
+    firstage=-Inf*ones(size(testsites));
+end
 
 defval('trainsub',find((limiting==0).*(datid>0))); % only index points, and drop the global curve
 defval('trainsubsubset',trainsub);
@@ -72,7 +66,7 @@ dt1t1=dYears(meantime(trainsub),meantime(trainsub));
 dy1y1 = dDist([lat(trainsub) long(trainsub)],[lat(trainsub) long(trainsub)]);
 fp1fp1=bsxfun(@times,obsGISfp(trainsub)-1,obsGISfp(trainsub)'-1);
 
-wcvfunc = @(x1,x2,thet) cvfuncTGG(x1,x2,dYears(x1,x2),thet,dy1y1,bedmsk(trainsub,trainsub),fp1fp1);
+wcvfunc = @(x1,x2,thet) cvfuncTGG(x1,x2,dYears(x1,x2),thet,dy1y1,fp1fp1);
 
 dt = abs(time2-time1)/4;
 
@@ -96,9 +90,10 @@ for i=1:size(testsites,1)
     if iscell(testts)
         testt=testts{i}(:);
     end
-	testX = [testX; ones(size(testt))*testsites(i,2) ones(size(testt))*testsites(i,3) testt];
-	testreg = [testreg ; ones(size(testt))*testsites(i,1)];
-	testfp=[testfp ; ones(size(testt))*testsitefp(i)];
+    subtimes=find(testt>=firstage(i));
+	testX = [testX; ones(size(testt(subtimes)))*testsites(i,2) ones(size(testt(subtimes)))*testsites(i,3) testt(subtimes)];
+	testreg = [testreg ; ones(size(testt(subtimes)))*testsites(i,1)];
+	testfp=[testfp ; ones(size(testt(subtimes)))*testsitefp(i)];
 end
 
 Mref = eye(size(testX,1));
@@ -113,22 +108,28 @@ end
 
 testGIAproju=zeros(size(testsites,1),1);
 testGIAproj=zeros(size(testX,1),1);
-
-for i=1:size(testsites,1)
-	if testsites(i,1)>0
-		testGIAproju(i)=interp2(ICE5G.lat,ICE5G.long,ICE5G.gia,testsites(i,2),testsites(i,3));
-		sub=find(testreg==testsites(i,1));
-		testGIAproj(sub)=testGIAproju(i).*(testX(sub,3)-refyear);
-	end
-end
-
 GIAproj=zeros(size(Y));
 
-for jj=1:length(dataset.siteid)
-    if dataset.siteid(jj)>0
-        sub=find(datid==dataset.siteid(jj));       
-        GIAproju(jj)=interp2(ICE5G.lat,ICE5G.long,ICE5G.gia,lat(sub(jj)),long(sub(jj)));
-        GIAproj(sub)=GIAproju(jj).*(meantime(sub)-refyear);
+if isstruct(ICE5G)
+    for i=1:size(testsites,1)
+        if testsites(i,1)>0
+            testGIAproju(i)=interp2(ICE5G.lat,ICE5G.long,ICE5G.gia,testsites(i,2),testsites(i,3));
+            sub=find(testreg==testsites(i,1));
+            testGIAproj(sub)=testGIAproju(i).*(testX(sub,3)-refyear);
+        end
+    end
+
+
+    for jj=1:length(dataset.siteid)
+        if dataset.siteid(jj)>0
+            sub=find(datid==dataset.siteid(jj));    
+            if length(sub)>0   
+                GIAproju(jj)=interp2(ICE5G.lat,ICE5G.long,ICE5G.gia,lat(sub(1)),long(sub(1)));
+                GIAproj(sub)=GIAproju(jj).*(meantime(sub)-refyear);
+            else
+                GIAproju(jj)=NaN;
+            end
+        end
     end
 end
 
@@ -149,8 +150,8 @@ fp2fp2=bsxfun(@times,testfp-1,testfp'-1);
 t1=X1(trainsub,3);
 t2=testX(:,3);
 
-testcv = @(thetas) cvfuncTGG(t1,t2,dt1t2,thetas,dy1y2,bedrockMask(datid(trainsub),testreg),fp1fp2);
-testcv2 = @(thetas) cvfuncTGG(t2,t2,dt2t2,thetas,dy2y2,bedrockMask(testreg,testreg),fp2fp2) ;
+testcv = @(thetas) cvfuncTGG(t1,t2,dt1t2,thetas,dy1y2,fp1fp2);
+testcv2 = @(thetas) cvfuncTGG(t2,t2,dt2t2,thetas,dy2y2,fp2fp2) ;
 
 dY2=sqrt(dY(trainsub).^2+dK);
 Ycv2=Ycv(trainsub,trainsub)+diag(dK);
@@ -158,7 +159,7 @@ Ycv2=Ycv(trainsub,trainsub)+diag(dK);
 clear f2s V2s sd2s;
 for i=1:size(noiseMasks,1)
 	disp(i);
-	[f2s(:,i),V2s(:,:,i),logp] = GaussianProcessRegression([],Y(trainsub)-GIAproj(trainsub)-yoffset,[],traincvTGG(t1,t1,dt1t1,thetTGG,Ycv2,dy1y1,bedmsk(trainsub,trainsub),fp1fp1),testcv(thetTGG.*noiseMasks(i,:))',testcv2(thetTGG.*noiseMasks(i,:)));
+	[f2s(:,i),V2s(:,:,i),logp] = GaussianProcessRegression([],Y(trainsub)-GIAproj(trainsub)-yoffset,[],traincvTGG(t1,t1,dt1t1,thetTGG,Ycv2,dy1y1,fp1fp1),testcv(thetTGG.*noiseMasks(i,:))',testcv2(thetTGG.*noiseMasks(i,:)));
 	sd2s(:,i)=sqrt(diag(V2s(:,:,i)));
 
 end

@@ -17,11 +17,6 @@ if isfield(dataset,'meantime')
 else
     meantime=mean([dataset.time1(:) dataset.time2(:)],2);
 end
-if isfield(dataset,'bedmsk')
-    bedmsk=dataset.bedmsk;
-else
-    bedmsk=@(a,b) [];
-end
 if isfield(dataset,'obsGISfp')
     obsGISfp=dataset.obsGISfp;
 else
@@ -72,7 +67,7 @@ for nnn=1:length(optimizesteps)
                 doglobs=0;
             end
             for doglob=doglobs
-                [thetTGG(subnotfixed)] = SLGPOptimize(Y(trainsub),@(x) traincvTGG(meantime(trainsub),meantime(trainsub),dt1t1,x*Mfixed+fixedvect,Ycv0(trainsub,trainsub),dy1y1,bedmsk(trainsub,trainsub),fp1fp1),thetTGG(subnotfixed),lbTGG(subnotfixed),ubTGG(subnotfixed),doglob);
+                [thetTGG(subnotfixed)] = SLGPOptimize(Y(trainsub),@(x) traincvTGG(meantime(trainsub),meantime(trainsub),dt1t1,x*Mfixed+fixedvect,Ycv0(trainsub,trainsub),dy1y1,fp1fp1),thetTGG(subnotfixed),lbTGG(subnotfixed),ubTGG(subnotfixed),doglob);
                 disp(sprintf('%0.3f ',thetTGG));
             end
 
@@ -114,21 +109,21 @@ for nnn=1:length(optimizesteps)
             doglobs=[0 1];
         end
         for doglob=doglobs
-            [thetTGG(subnotfixed)] = SLGPOptimize(Y(trainsub),@(x) traincvTGG(meantime(trainsub),meantime(trainsub),dt1t1,x(1:end-1)*Mfixed+fixedvect,Ycv0(trainsub,trainsub)+diag(x(end)*compactcorr(trainsub)).^2,dy1y1,bedmsk(trainsub,trainsub),fp1fp1),thetTGG(subnotfixed),lbTGG(subnotfixed),ubTGG(subnotfixed),doglob);
+            [thetTGG(subnotfixed)] = SLGPOptimize(Y(trainsub),@(x) traincvTGG(meantime(trainsub),meantime(trainsub),dt1t1,x(1:end-1)*Mfixed+fixedvect,Ycv0(trainsub,trainsub)+diag(x(end)*compactcorr(trainsub)).^2,dy1y1,fp1fp1),thetTGG(subnotfixed),lbTGG(subnotfixed),ubTGG(subnotfixed),doglob);
             disp(sprintf('%0.3f ',thetTGG));
         end
         
         if optimizesteps(nnn)>=2.1
             % now include geochronological uncertainty, one iteration
 
-             wcvfunc = @(x1,x2,thet) cvfuncTGG(x1,x2,dYears(x1,x2),thet,dy1y1,bedmsk(trainsub,trainsub),fp1fp1);
+             wcvfunc = @(x1,x2,thet) cvfuncTGG(x1,x2,dYears(x1,x2),thet,dy1y1,fp1fp1);
 
             dt = abs(time2-time1)/4;
 
             [dK,df,d2f,yoffset] = GPRdx(meantime(trainsub),Y(trainsub),dt(trainsub),sqrt(dY(trainsub).^2+(thetTGG(end)*compactcorr(trainsub)).^2),@(x1,x2) wcvfunc(x1,x2,thetTGG),2);
 
             for doglob=[0]
-                [thetTGG(subnotfixed)] = SLGPOptimize(Y(trainsub),@(x) traincvTGG(meantime(trainsub),meantime(trainsub),dt1t1,x(1:end-1)*Mfixed+fixedvect,Ycv0(trainsub,trainsub)+diag(x(end)*compactcorr(trainsub)).^2+diag(dK),dy1y1,bedmsk(trainsub,trainsub),fp1fp1),thetTGG(subnotfixed),lbTGG(subnotfixed),ubTGG(subnotfixed),doglob);
+                [thetTGG(subnotfixed)] = SLGPOptimize(Y(trainsub),@(x) traincvTGG(meantime(trainsub),meantime(trainsub),dt1t1,x(1:end-1)*Mfixed+fixedvect,Ycv0(trainsub,trainsub)+diag(x(end)*compactcorr(trainsub)).^2+diag(dK),dy1y1,fp1fp1),thetTGG(subnotfixed),lbTGG(subnotfixed),ubTGG(subnotfixed),doglob);
                 disp(sprintf('%0.3f ',thetTGG));
 
             end

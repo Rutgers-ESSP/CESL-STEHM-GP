@@ -1,4 +1,4 @@
-function [TGdata2,TGdata,thetL,TGmodellocal] = GPSmoothTideGauges(targcoords,addlsites,thetL0,winlength,thinlength,minlength,minlength0,optimizemode,giafile,psmsldir,gslfile,ROOTDIR)
+function [TGdata2,TGdata,thetL,TGmodellocal] = GPSmoothTideGauges(targcoords,addlsites,thetL0,winlength,thinlength,minlength,optimizemode,psmsldir,gslfile,ROOTDIR)
 
 % Find tide gauge sites to include, based on length and proximity criteria, then
 % fit GP model to them in order to interpolate and take running averge.
@@ -6,11 +6,10 @@ function [TGdata2,TGdata,thetL,TGmodellocal] = GPSmoothTideGauges(targcoords,add
 % Should tweak to use proxy data set rather than prescribed list of sites to look for 
 % tide gauges near.
 %
-% Last updated by  Bob Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Feb 24 11:25:42 EST 2014
+% Last updated by  Bob Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri Feb 28 10:23:00 EST 2014
 %
 
-defval('minlength',70);  % minimum length for most purposes
-defval('minlength0',20);  % absolute minimum length
+defval('minlength',[120 70 20]);  % minimum length for global curves, most purposes and minimum
 defval('thetL0',[]);
 defval('winlength',11);
 defval('thinlength',winlength-1);
@@ -26,37 +25,22 @@ defval('targcoords',[
 44.72  -63.23; % Chezzetcook, Nova Scotia
 ]);
 
-defval('addlsites',[
-350 % Portsmouth, UK
-429 % New London, CT
-1453 % Rarotonga, Cook Islands
-638 % Reyjkavik
-503 % Alexandria, Egypt
-440 % Eugene Island, LA
-183 % Portland, ME
-235 % Boston, MA
-150 % Auckland, NZ
-826 % Simons Bay, South Africa
-488 % Tarifa, Spain
-65  % Sydney, Australia
-1216 % Spring Bay, Tasmania
-983 % Cocos Island
-]);
+defval('addlsites',[]);
 
 defval('ROOTDIR','~/Dropbox/Consulting/Risky Business/Code/RiskyBusinessScience/slr');
 addpath(fullfile(ROOTDIR,'MFILES'));
 IFILES=fullfile(ROOTDIR,'../../IFILES/slr/');
 
-defval('giafile',fullfile(IFILES,'dsea250.1grid.ICE5Gv1.3_VM2_L90_2012.nc'));
+%defval('giafile',fullfile(IFILES,'dsea250.1grid.ICE5Gv1.3_VM2_L90_2012.nc'));
 defval('psmsldir',fullfile(IFILES,'rlr_annual'));
 defval('gslfile',fullfile(IFILES,'CSIRO_Recons_gmsl_yr_2011.csv'));
 
-giamodel.gia=ncread(giafile,'Dsea_250');
-giamodel.lat=ncread(giafile,'Lat');
-giamodel.long=ncread(giafile,'Lon');
+%giamodel.gia=ncread(giafile,'Dsea_250');
+%giamodel.lat=ncread(giafile,'Lat');
+%giamodel.long=ncread(giafile,'Lon');
 
-[TGcoords,TGrsl,TGrslunc,TGid,TGsiteid,sitenames,TGsitecoords,sitelen]=ReadPSMSLData(1,1000,minlength0,psmsldir,gslfile);
-sub1=find((sitelen>130));
+[TGcoords,TGrsl,TGrslunc,TGid,TGsiteid,sitenames,TGsitecoords,sitelen]=ReadPSMSLData(1,1000,minlength(3),psmsldir,gslfile);
+sub1=find((sitelen>minlength(1)));
 sub1=union(sub1,find(TGsiteid==0));
 
 angd= @(Lat0,Long0,lat,long) (180/pi)*(atan2(sqrt((cosd(lat).*sind(long-Long0)).^2+(cosd(Lat0).*sind(lat)-sind(Lat0).*cosd(lat).*cosd(long-Long0)).^2),(sind(Lat0).*sind(lat)+cosd(Lat0).*cosd(lat).*cosd(long-Long0))));
@@ -67,7 +51,7 @@ sub2=[];
 for ii=1:size(targcoords,1)
     TGdist=dDist(TGsitecoords,targcoords(ii,:));
     [m,mi]=min(TGdist);
-    mi=union(mi,find((TGdist<2).*(sitelen'>minlength)));
+    mi=union(mi,find((TGdist<2).*(sitelen'>minlength(2))));
     sub2=union(sub2,mi);
 end
 
@@ -100,18 +84,18 @@ TGdata.sitelen=sitelen(sitesub);
 
 GPSLDefineCovFuncs;
 
-TGmodellocal.cvfunc=@(t1,t2,dt1t2,thetas,dy1y2,bedMsk,fp1fp2) kDP(t1,t2,thetas(1)) + kMatG(dt1t2,thetas(2:4)) + kDELTAG(dy1y2,thetas(5));
-TGmodellocal.traincv = @(t1,t2,dt1t2,thetas,errcv,ad,bedmask,fp1fp2) TGmodellocal.cvfunc(t1,t2,dt1t2,thetas,ad,bedmask,fp1fp2) + errcv;
+TGmodellocal.cvfunc=@(t1,t2,dt1t2,thetas,dy1y2,fp1fp2) kDP(t1,t2,thetas(1)) + kMatG(dt1t2,thetas(2:4)) + kDELTAG(dy1y2,thetas(5));
+TGmodellocal.traincv = @(t1,t2,dt1t2,thetas,errcv,ad,fp1fp2) TGmodellocal.cvfunc(t1,t2,dt1t2,thetas,ad,fp1fp2) + errcv;
 
 
 tluL = [
-1   0    100 % DP
+1   0.1    100 % DP
 
-5   0   1e3   % MatG
+5   0.1   1e3   % MatG
 1   .1  300
 1.5  .5  5.5
 
-10  0  1e5 % offset
+1  0  1e4 % offset
 
 ];
 
@@ -165,7 +149,15 @@ for nn=1:length(TGdata.siteid)
     noiseMasks = ones(1,size(thetL,2));
     noiseMasklabels={'full'};
     trainsub=find(TGdatasub.limiting==0);
-    [TGf,TGsd,TGV,TGtestlocs]=RegressHoloceneDataSets(TGdatasub,TGtestsitedef,TGmodellocal,thetL(nn,:),[],giamodel,trainsub,[],noiseMasks,TGtestsitedef.t,GIAanchoryear);
+    [TGf,TGsd,TGV,TGtestlocs]=RegressHoloceneDataSets(TGdatasub,TGtestsitedef,TGmodellocal,thetL(nn,:),[],[],trainsub,[],noiseMasks,TGtestsitedef.t,GIAanchoryear);
+    
+    % check for bad fit, and do a global optimization if need me
+    if min(diag(TGV))<0
+        if (length(thetL0)==0) .* (optimizemode<1.1)
+             [thetL(nn,:)]=OptimizeHoloceneCovariance(TGdatasub,TGmodellocal,1.1)
+             [TGf,TGsd,TGV,TGtestlocs]=RegressHoloceneDataSets(TGdatasub,TGtestsitedef,TGmodellocal,thetL(nn,:),[],[],trainsub,[],noiseMasks,TGtestsitedef.t,GIAanchoryear);
+        end
+    end
 
     % now take running averages
     Mop=abs(bsxfun(@minus,TGtestlocs.X(:,3),TGtestlocs.X(:,3)'))<(winlength/2);
@@ -198,6 +190,7 @@ for nn=1:length(TGdata.siteid)
 
     TGdata2.compactcorr=zeros(size(TGdata2.datid));
     TGdata2.time2=TGdata2.time1;
+    TGdata2.meantime=TGdata2.time1;
     TGdata2.limiting=zeros(size(TGdata2.datid));
     TGdata2.istg = ones(size(TGdata2.datid));
     TGdata2.siteid=TGdata.siteid;
