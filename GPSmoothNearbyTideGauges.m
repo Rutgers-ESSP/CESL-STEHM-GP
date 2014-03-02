@@ -1,4 +1,4 @@
-function [TGdata2,TGdata,thetL,TGmodellocal] = GPSmoothTideGauges(targcoords,addlsites,thetL0,winlength,thinlength,minlength,optimizemode,psmsldir,gslfile,ROOTDIR)
+function [TGdata2,TGdata,thetL,TGmodellocal] = GPSmoothNearbyTideGauges(targcoords,addlsites,thetL0,winlength,thinlength,minlength,optimizemode,psmsldir,gslfile,ROOTDIR)
 
 % Find tide gauge sites to include, based on length and proximity criteria, then
 % fit GP model to them in order to interpolate and take running averge.
@@ -45,7 +45,7 @@ sub1=union(sub1,find(TGsiteid==0));
 
 angd= @(Lat0,Long0,lat,long) (180/pi)*(atan2(sqrt((cosd(lat).*sind(long-Long0)).^2+(cosd(Lat0).*sind(lat)-sind(Lat0).*cosd(lat).*cosd(long-Long0)).^2),(sind(Lat0).*sind(lat)+cosd(Lat0).*cosd(lat).*cosd(long-Long0))));
 
-dDist=@(x1,x2)angd(repmat(x1(:,1),1,size(x2,1)),repmat(x1(:,2),1,size(x2,1)),repmat(x2(:,1)',size(x1,1),1),repmat(x2(:,2)',size(x1,1),1))'+1e6*(bsxfun(@plus,x1(:,1)',x2(:,1))>1000);
+dDist=@(x1,x2)angd(repmat(x1(:,1),1,size(x2,1)),repmat(mod(x1(:,2),360),1,size(x2,1)),repmat(x2(:,1)',size(x1,1),1),repmat(mod(x2(:,2),360)',size(x1,1),1))'+1e6*(bsxfun(@plus,x1(:,1)',x2(:,1))>1000);
 
 sub2=[];
 for ii=1:size(targcoords,1)
@@ -134,7 +134,7 @@ for nn=1:length(TGdata.siteid)
     TGdatasub.Ycv=sparse(diag(TGdatasub.dY.^2));
     TGdatasub.Ycv0=sparse(diag(TGdatasub.dY.^2));
     if length(thetL0)==0
-        [thetL(nn,:)]=OptimizeHoloceneCovariance(TGdatasub,TGmodellocal,optimizemode)
+        [thetL(nn,:)]=OptimizeHoloceneCovariance(TGdatasub,TGmodellocal,optimizemode);
     elseif size(thetL0,1)>1
         thetL(nn,:)=thetL0(nn,:);
     else

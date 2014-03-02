@@ -7,7 +7,7 @@ firsttime=-1000;
 %%%%%%%%%%
 datid=[]; time1=[]; time2=[]; mediantime=[]; limiting=[]; Y=[]; dY = []; compactcorr = [];
 istg = []; lat=[]; long=[];
-siteid=[]; sitenames={};
+siteid=[]; sitenames={}; sitecoords=[];
 
 datPX = importdata(fullfile(IFILES,'RSL_Feb2014.csv'));
 datPX.textdata=datPX.textdata(2:end,:);
@@ -43,6 +43,9 @@ for ii=1:length(uStudy)
         wlat=datPX.data(sub2,1);
         wlong=datPX.data(sub2,2);
         
+        wY=wY*1000;
+        wdY=wdY*1000;
+        
         datid = [datid ; wdatid];
         time1 = [time1 ; wtime1];
         time2 = [time2 ; wtime2];
@@ -57,6 +60,7 @@ for ii=1:length(uStudy)
 
         siteid=[siteid ; curid];
         sitenames={sitenames{:}, curstudysite};
+        sitecoords=[sitecoords; mean(wlat) mean(wlong)];
 
     end
 end 
@@ -337,6 +341,7 @@ PX.Ycv=sparse(diag(dY.^2));
 PX.siteid=siteid;
 PX.sitenames=sitenames;
 PX.meantime=(PX.time1+PX.time2)/2;
+PX.sitecoords = sitecoords;
 
 PX0=PX;
 sub=find(PX.time1>=firsttime);
@@ -352,10 +357,8 @@ PX.Ycv0=sparse(diag(PX.dY.^2));
 
 % First load tide gauge data
 
-[u,ui]=unique(PX.datid);
-
 optimizemode=1.0;
-[TG,TG0,thetL,TGmodellocal] = GPSmoothTideGauges([lat(ui) long(ui)],[],[],[],[],[],optimizemode);
+[TG,TG0,thetL,TGmodellocal] = GPSmoothNearbyTideGauges(PX.sitecoords,[],[],[],[],[],optimizemode);
 
 sub=find(TG.datid~=0); subS = find(TG.siteid~=0);
 TGNOCW=TG;

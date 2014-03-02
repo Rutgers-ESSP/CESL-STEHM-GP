@@ -1,8 +1,8 @@
-function [f2s,sd2s,V2s,testlocs]=RegressHoloceneDataSets(dataset,testsitedef,modelspec,thetTGG,GISfp,ICE5G,trainsub,trainsubsubset,noiseMasks,testt,refyear)
+function [f2s,sd2s,V2s,testlocs,logp]=RegressHoloceneDataSets(dataset,testsitedef,modelspec,thetTGG,GISfp,ICE5G,trainsub,trainsubsubset,noiseMasks,testt,refyear)
 
 %
 % 
-% Last updated by  Bob Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri Feb 28 10:20:43 EST 2014
+% Last updated by  Bob Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sat Mar 1 08:25:36 EST 2014
 
 defval('testt',[-2010:20:2010]);
 defval('refyear',2010);
@@ -111,6 +111,7 @@ testGIAproj=zeros(size(testX,1),1);
 GIAproj=zeros(size(Y));
 
 if isstruct(ICE5G)
+    ICE5G.long=mod(ICE5G.long,360);
     for i=1:size(testsites,1)
         if testsites(i,1)>0
             testGIAproju(i)=interp2(ICE5G.lat,ICE5G.long,ICE5G.gia,testsites(i,2),testsites(i,3));
@@ -161,7 +162,7 @@ for i=1:size(noiseMasks,1)
 	disp(i);
 	[f2s(:,i),V2s(:,:,i),logp] = GaussianProcessRegression([],Y(trainsub)-GIAproj(trainsub)-yoffset,[],traincvTGG(t1,t1,dt1t1,thetTGG,Ycv2,dy1y1,fp1fp1),testcv(thetTGG.*noiseMasks(i,:))',testcv2(thetTGG.*noiseMasks(i,:)));
 	sd2s(:,i)=sqrt(diag(V2s(:,:,i)));
-
+	
 end
 
 parfor i=1:size(noiseMasks,1)
@@ -180,3 +181,4 @@ testlocs.reg=testreg;
 testlocs.fp=testfp;
 testlocs.GIAproju=testGIAproju;
 testlocs.GIAproj=testGIAproj;
+

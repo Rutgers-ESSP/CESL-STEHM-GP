@@ -1,11 +1,11 @@
-% Last updated by  Bob Kopp, robert-dot-kopp-at-rutgers-dot-edu, Wed Feb 26 14:45:11 EST 2014
+% Last updated by  Bob Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sat Mar 1 08:34:02 EST 2014
 
 addpath('~/Dropbox/Code/TGAnalysis/MFILES');
 addpath([pwd '/MFILES']);
 IFILES=[pwd '/IFILES'];
 addpath(pwd)
 
-WORKDIR='140226';
+WORKDIR='140301';
 if ~exist(WORKDIR,'dir')
 	mkdir(WORKDIR);
 end
@@ -16,7 +16,7 @@ cd(WORKDIR);
 runSetupHoloceneCovariance;
 runImportHoloceneDataSets;
 
-trainsets=[1]; % train w/TG+GSL+PX
+trainsets=1:3; % train w/TG+GSL+PX, w/TG+PX, w/PX
 trainspecs=ones(size(trainsets));
 
 clear thetTGG trainsubsubset;
@@ -60,8 +60,6 @@ for i=1:size(datasets{ii}.datid,1)
 	fprintf(fid,'%0.2f\n',datasets{ii}.long(i));
 end
 fclose(fid)
-
-%%%%%%%%%% I GOT UP TO HERE
 
 %% now do a regression
 clear Loc cnt oldest testsitedef;
@@ -112,7 +110,8 @@ GISfpt.fp=GISfp;
 
 ICE5G.lat=ICE5Glat;
 ICE5G.long=ICE5Glon;
-ICE5G.gia=ICE5Ggia;
+[ICE5G.long,si]=sort(mod(ICE5Glon,360));
+ICE5G.gia=ICE5Ggia(si,:);
 
 
 testt = [-1000:20:2000 2010];
@@ -129,14 +128,13 @@ for jj=1:length(trainsets)
     wdataset.dY = sqrt(wdataset.dY0.^2 + (thetTGG{jj}(end)*wdataset.compactcorr).^2);
     wdataset.Ycv = wdataset.Ycv0 + diag(thetTGG{jj}(end)*wdataset.compactcorr).^2;
     subtimes=find(testt>=min(union(wdataset.time1,wdataset.time2)));
-    [f2s{ii,jj},sd2s{ii,jj},V2s{ii,jj},testlocs{ii,jj}]=RegressHoloceneDataSets(wdataset,testsitedef,modelspec(trainspecs(jj)),thetTGG{jj},GISfpt,ICE5G,trainsub,[],noiseMasks,testt(subtimes),refyear)
+    [f2s{ii,jj},sd2s{ii,jj},V2s{ii,jj},testlocs{ii,jj},logp(ii,jj)]=RegressHoloceneDataSets(wdataset,testsitedef,modelspec(trainspecs(jj)),thetTGG{jj},GISfpt,ICE5G,trainsub,[],noiseMasks,testt(subtimes),refyear)
 
 end
 end
 
 save ~/tmp/CESL
 
-%% I GOT UP TO HERE
 %%
 
 for ii=1:length(datasets)
@@ -150,29 +148,47 @@ for jj=1:length(trainsets)
     testX=testlocs{ii,jj}.X;
     testnames2=testlocs{ii,jj}.names2;
 
-    firstyears=[800 0 -500 1800 1900];
-    lastyears=[1800 1800 1700 1900 2000];
+    firstyears=[800 0 0 -500 1800 1900];
+    lastyears=[1800 1700 1800 1700 1900 2000];
 
     for kk=1:size(testsites,1)
         for pp=1:length(firstyears)
             sub=find((testreg==testsites(kk,1)).*(testX(:,3)>=firstyears(pp)).*(testX(:,3)<=lastyears(pp)));
-            M = zeros(1,length(sub)); M(1)=-1; M(end)=1; 
-            M=M/(testX(sub(end),3)-testX(sub(1),3));
+            if length(sub)>1
+            
+                M = zeros(1,length(sub)); M(1)=-1; M(end)=1; 
+                M=M/(testX(sub(end),3)-testX(sub(1),3));
 
-            if pp==1
-                fslopelin(kk,ii,jj) = M*f2s{ii,jj}(sub,5);
-                Vslope = M*V2s{ii,jj}(sub,sub,5)*M';
-                sdslopelin(kk,ii,jj)=sqrt(diag(Vslope));
+                if pp==1
+                    fslopelin(kk,ii,jj) = M*f2s{ii,jj}(sub,5);
+                    Vslope = M*V2s{ii,jj}(sub,sub,5)*M';
+                    sdslopelin(kk,ii,jj)=sqrt(diag(Vslope));
+                end
+
+                fslopeavg(kk,ii,jj,pp) = M*f2s{ii,jj}(sub,1);
+                Vslope = M*V2s{ii,jj}(sub,sub,1)*M';
+                sdslopeavg(kk,ii,jj,pp)=sqrt(diag(Vslope));
+
+                fslopeavglessGSL(kk,ii,jj,pp) = M*f2s{ii,jj}(sub,3);
+                Vslope = M*V2s{ii,jj}(sub,sub,3)*M';
+                sdslopeavglessGSL(kk,ii,jj,pp)=sqrt(diag(Vslope));
+            else
+                sub=find((testreg==testsites(kk,1)));
+                M = zeros(1,length(sub)); M(1)=-1; M(end)=1; 
+                M=M/(testX(sub(end),3)-testX(sub(1),3));
+                if pp==1
+                    fslopelin(kk,ii,jj) = M*f2s{ii,jj}(sub,5);
+                    Vslope = M*V2s{ii,jj}(sub,sub,5)*M';
+                    sdslopelin(kk,ii,jj)=sqrt(diag(Vslope));
+                end
+
+                fslopeavg(kk,ii,jj,pp) = NaN;
+                sdslopeavg(kk,ii,jj,pp)= NaN;
+
+                fslopeavglessGSL(kk,ii,jj,pp) = NaN;
+                sdslopeavglessGSL(kk,ii,jj,pp)= NaN;
+
             end
-
-            fslopeavg(kk,ii,jj,pp) = M*f2s{ii,jj}(sub,1);
-            Vslope = M*V2s{ii,jj}(sub,sub,1)*M';
-            sdslopeavg(kk,ii,jj,pp)=sqrt(diag(Vslope));
-
-            fslopeavglessGSL(kk,ii,jj,pp) = M*f2s{ii,jj}(sub,3);
-            Vslope = M*V2s{ii,jj}(sub,sub,3)*M';
-            sdslopeavglessGSL(kk,ii,jj,pp)=sqrt(diag(Vslope));
-
        end
 
     end
@@ -209,39 +225,39 @@ end
 
 % slopes plot -- TBD
 
-fslope=fslope(:);
+ii=1; jj=1;
+fslope=fslopelin(:,ii,jj); fslope=fslope(:);
 sub=find(testsites(:,2)<1e3);
-sub=setdiff(sub,[4 7]);
 
 figure;
 % plot observation sites
-scatter((testsites(sub,3)),testsites(sub,2),100,fslope(sub),'filled'); hold on;
-
-xl=xlim;
-yl=ylim;
 
 clf;
-usstates = shaperead('usastatehi', 'UseGeoCoords', true);
-plot(([usstates.Lon]),[usstates.Lat],'k','linew',.5); hold on;
+
+%scatter(testsites(sub,3),testsites(sub,2),100,fslope(sub),'filled'); hold on;
+%
+%xl=xlim;
+%yl=ylim;
+%usstates = shaperead('usastatehi', 'UseGeoCoords', true);
+%plot(([usstates.Lon]),[usstates.Lat],'k','linew',.5); hold on;
 
 % Canadian province boundaries from http://www.nws.noaa.gov/geodata/catalog/national/html/province.htm
 
-if exist([IFILES '/province/PROVINCE.SHP']); canada = shaperead([IFILES '/province/PROVINCE.SHP'],'UseGeoCoords',true); else; canada=[]; end
-if length(canada)>0 ; plot(([canada.Lon]),[canada.Lat],'k','linew',.5); end
+%if exist([IFILES '/province/PROVINCE.SHP']); canada = shaperead([IFILES '/province/PROVINCE.SHP'],'UseGeoCoords',true); else; canada=[]; end
+%if length(canada)>0 ; plot(([canada.Lon]),[canada.Lat],'k','linew',.5); end
+plotcont; hold on;
 
 % plot tide gauge locations
-trainsub2=find((istg==1).*(lat<1000));
-[u,ui]=unique(datid(trainsub2));
-scatter(long(trainsub2(ui)),lat(trainsub2(ui)),30,'k','filled'); hold on;
+scatter(mod(TGNOCW.sitecoords(:,2),360),TGNOCW.sitecoords(:,1),10,[.3 .3 .3],'filled'); hold on;
 
 % plot observation sites
-scatter((testsites(sub,3)),testsites(sub,2),100,fslope(sub),'filled'); hold on;
+scatter(mod(testsites(sub,3),360),testsites(sub,2),30,fslope(sub),'filled'); hold on;
 
 
 %[~,handl]=plotcont([xl(1) yl(2)],[xl(2) yl(1)],1); hold on; set(handl,'linew',.5);
 axis tight;
-xlim(xl);
-ylim(yl);
+%xlim(xl);
+%ylim(yl);
 colorbar;
 box on;
 %title('Sea level anomaly rates, 900-1900 CE (mm/y)');

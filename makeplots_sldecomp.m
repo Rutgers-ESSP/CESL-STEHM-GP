@@ -10,6 +10,7 @@ function makeplots_sldecomp(dataset,f2s,sd2s,V2s,testloc,labl)
 % (c-d) corresponding average rates of change
 
 defval('labl','');
+xlim0=[-1000 2010];
 
 angd= @(Lat0,Long0,lat,long) (180/pi)*(atan2(sqrt((cosd(lat).*sind(long-Long0)).^2+(cosd(Lat0).*sind(lat)-sind(Lat0).*cosd(lat).*cosd(long-Long0)).^2),(sind(Lat0).*sind(lat)+cosd(Lat0).*cosd(lat).*cosd(long-Long0))));
 
@@ -28,7 +29,6 @@ lat=dataset.lat;
 long=dataset.long;
 Y=dataset.Y0;
 Ycv0=dataset.Ycv0;
-bedmsk=dataset.bedmsk;
 limiting=dataset.limiting;
 obsGISfp=dataset.obsGISfp;
 compactcorr=dataset.compactcorr;
@@ -37,6 +37,7 @@ time2=dataset.time2;
 dY=dataset.dY;
 
 for i=1:size(testsites,1)
+    wxlim=[];
 
 	figure;
 	subA = find(testreg == testsites(i,1));
@@ -81,7 +82,11 @@ for i=1:size(testsites,1)
 
 
 		ylabel('mm');
-		xlim([-1000 2010]);
+		if length(wxlim)=0
+    		wxlim = xlim0;
+    		wxlim(1) = max(floor(min(testX(subA,3))/100)*100,xlim0(1));
+        end
+		xlim(wxlim);
 				
 	end
 	
@@ -118,7 +123,7 @@ for i=1:size(testsites,1)
 		plot(difftimes(subA2),df2s(subA2,j)-2*dsd2s(subA2,j),'r:');
 
 		ylabel(['mm/y (' num2str(difftimestep) '-y)']);
-		xlim([-1000 2010]);
+		xlim(wxlim);
 		
 	end
 	title(hp(1),testnames2{i})
