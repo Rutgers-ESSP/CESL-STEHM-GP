@@ -1,6 +1,6 @@
 function [thetTGG,trainsub]=OptimizeHoloceneCovariance(dataset,modelspec,optimizesteps,mintime)
 
-% Last updated by  Bob Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Mar 2 22:37:51 EST 2014
+% Last updated by  Bob Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Mar 2 23:29:36 EST 2014
 
 istg = dataset.istg;
 lat=dataset.lat;
@@ -84,9 +84,9 @@ for nnn=1:length(optimizesteps)
      elseif floor(optimizesteps(nnn))==2
 
         % optimize ignoring geochronological uncertainty
-        if donetg
-            lbTGG(1:5) = thetTGG(1:5); % set lower bound of amplitudes and temporal scale
-        end
+%        if donetg
+%            lbTGG(1:5) = thetTGG(1:5); % set lower bound of amplitudes and temporal scale
+%        end
         thetTGG = [thetTGG .1];
         ubTGG = [ubTGG 5];
         lbTGG = [lbTGG 0];
