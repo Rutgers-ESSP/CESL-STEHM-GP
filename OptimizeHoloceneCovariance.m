@@ -1,6 +1,6 @@
 function [thetTGG,trainsub]=OptimizeHoloceneCovariance(dataset,modelspec,optimizesteps,mintime)
 
-% Last updated by  Bob Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Feb 24 17:20:33 EST 2014
+% Last updated by  Bob Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Mar 2 22:37:51 EST 2014
 
 istg = dataset.istg;
 lat=dataset.lat;
@@ -38,11 +38,10 @@ angd= @(Lat0,Long0,lat,long) (180/pi)*(atan2(sqrt((cosd(lat).*sind(long-Long0)).
 dYears=@(years1,years2) abs(bsxfun(@minus,years1',years2));
 dDist=@(x1,x2)angd(repmat(x1(:,1),1,size(x2,1)),repmat(x1(:,2),1,size(x2,1)),repmat(x2(:,1)',size(x1,1),1),repmat(x2(:,2)',size(x1,1),1))'+1e6*(bsxfun(@plus,x1(:,1)',x2(:,1))>1000);
 
-defval('optimizesteps',[1.1 2.1]);
+defval('optimizesteps',[1.1 2.11]);
 defval('mintime',-1000);
 
 donetg=0;
-
 for nnn=1:length(optimizesteps)
 
     if floor(optimizesteps(nnn))==1
@@ -60,8 +59,15 @@ for nnn=1:length(optimizesteps)
             dt1t1=dYears(meantime(trainsub),meantime(trainsub));
             dy1y1 = dDist([lat(trainsub) long(trainsub)],[lat(trainsub) long(trainsub)]);
             fp1fp1=bsxfun(@times,obsGISfp(trainsub)-1,obsGISfp(trainsub)'-1);
-            if optimizesteps(nnn)>=1.1
+            opttype = floor((optimizesteps(nnn)-1+1e-6)*10)/10;
+            if (opttype==0.1)
                 doglobs=[0 1];
+                doneglob=1;
+            elseif opttype==0.3
+                doglobs=2;
+                doneglob=1;
+            elseif opttype==0.4
+                doglobs=3;
                 doneglob=1;
             else
                 doglobs=0;
@@ -103,17 +109,44 @@ for nnn=1:length(optimizesteps)
         dy1y1 = dDist([lat(trainsub) long(trainsub)],[lat(trainsub) long(trainsub)]);
         fp1fp1=bsxfun(@times,obsGISfp(trainsub)-1,obsGISfp(trainsub)'-1);
 
-        if doneglob
-            doglobs=0;
-        else
-            doglobs=[0 1];
+        % move points away from edges        
+        dublb=ubTGG-lbTGG;
+        subadj=find(abs(thetTGG(subnotfixed)-ubTGG(subnotfixed))<min(.01,.01*dublb(subnotfixed)));
+        if length(subadj)>0
+            thetTGG(subnotfixed(subadj))=thetTGG(subnotfixed(subadj))-min(.01,.01*dublb(subnotfixed(subadj)));
         end
+        subadj=find(abs(thetTGG(subnotfixed)-lbTGG(subnotfixed))<min(.01,.01*dublb(subnotfixed)));
+        if length(subadj)>0
+            thetTGG(subnotfixed(subadj))=thetTGG(subnotfixed(subadj))+min(.01,.01*dublb(subnotfixed(subadj)));
+        end
+  
+        opttype = floor((optimizesteps(nnn)-2+1e-6)*10)/10;
+        if opttype==0.1
+            if doneglob
+                doglobs=0;
+            else
+                doglobs=[0 1];
+            end
+            doneglob=1;
+        elseif opttype==0.2
+            doglobs=[0 1];
+            doneglob=1;
+        elseif opttype==0.3
+            doglobs=2;
+            doneglob=1;
+       elseif opttype==0.4
+            doglobs=3;
+            doneglob=1;
+        else
+            doglobs=0;
+        end
+
         for doglob=doglobs
             [thetTGG(subnotfixed)] = SLGPOptimize(Y(trainsub),@(x) traincvTGG(meantime(trainsub),meantime(trainsub),dt1t1,x(1:end-1)*Mfixed+fixedvect,Ycv0(trainsub,trainsub)+diag(x(end)*compactcorr(trainsub)).^2,dy1y1,fp1fp1),thetTGG(subnotfixed),lbTGG(subnotfixed),ubTGG(subnotfixed),doglob);
             disp(sprintf('%0.3f ',thetTGG));
         end
         
-        if optimizesteps(nnn)>=2.1
+        if mod(optimizesteps(nnn),0.1)>0.001
             % now include geochronological uncertainty, one iteration
 
              wcvfunc = @(x1,x2,thet) cvfuncTGG(x1,x2,dYears(x1,x2),thet,dy1y1,fp1fp1);

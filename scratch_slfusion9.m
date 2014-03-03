@@ -1,4 +1,4 @@
-% Last updated by  Bob Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Mar 2 15:41:03 EST 2014
+% Last updated by  Bob Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Mar 2 21:39:33 EST 2014
 
 addpath('~/Dropbox/Code/TGAnalysis/MFILES');
 addpath([pwd '/MFILES']);
@@ -26,7 +26,7 @@ for ii=1:length(trainsets)
     if ii>1
         modelspec(trainspecs(ii)).thet0=thetTGG{1}(1:length(modelspec(trainspecs(ii)).thet0));
     end
-    [thetTGG{ii},trainsubsubset{ii}]=OptimizeHoloceneCovariance(datasets{trainsets(ii)},modelspec(trainspecs(ii)));
+    [thetTGG{ii},trainsubsubset{ii}]=OptimizeHoloceneCovariance(datasets{trainsets(ii)},modelspec(trainspecs(ii)),[1.0 2.01]);
 end
 
 save thetTGG thetTGG trainsubsubset
