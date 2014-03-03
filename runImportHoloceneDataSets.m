@@ -70,7 +70,7 @@ end
     
 % Engelhart & Horton database
 
-datHolo=importdata(fullfile(IFILES,'Engelhart_Horton_2012_v3.csv'));
+datHolo=importdata(fullfile(IFILES,'Engelhart_Horton_2012_v4.csv'));
 HoloRegions=[1:16];
 for curreg=1:length(HoloRegions)
 	sub=find((datHolo.data(:,1)==HoloRegions(curreg)).*(datHolo.data(:,2)==0));
