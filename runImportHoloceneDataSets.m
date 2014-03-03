@@ -30,8 +30,8 @@ for ii=1:length(uStudy)
         sub2=sub(find(strcmpi(uSite{jj},site)));
         wdatid=ones(length(sub2),1)*curid;
         wmediantime=datPX.data(sub2,6);
-        wtime1=wmediantime-datPX.data(sub2,8);
-        wtime2=wmediantime+datPX.data(sub2,7);
+        wtime1=wmediantime-datPX.data(sub2,8)+(1:length(sub2))'/1e5;
+        wtime2=wmediantime+datPX.data(sub2,7)+(1:length(sub2))'/1e5;
         
         wlimiting=zeros(length(sub2),1);
         wYmedian=datPX.data(sub2,3);
@@ -291,39 +291,44 @@ end
 %sitenames={sitenames{:}, 'Chezzetcook'};
 %
 %
-%% Engelhart & Horton database
-%
-%datHolo=importdata(fullfile(IFILES,'Engelhart_Horton_2012.csv'));
-%HoloRegions=[1:7 9:16];
-%for curreg=1:length(HoloRegions)
-%	sub=find((datHolo.data(:,1)==HoloRegions(curreg)).*(datHolo.data(:,2)==0));
-%
-%	count=[1:length(sub)]';
-%	wdatid = ones(length(sub),1)*(idHolo+HoloRegions(curreg)*1e3);
-%	wtime1=1950-datHolo.data(sub,8) + count/1e5;
-%	wtime2=1950-datHolo.data(sub,9) + count/1e5;
-%	wlimiting=datHolo.data(sub,2);
-%	wY=datHolo.data(sub,10)*1000;
-%	wdY=datHolo.data(sub,11)*1000;
-%	wlat=datHolo.data(sub,3);
-%	wlong=-datHolo.data(sub,4);
-%	wcompactcorr = wY*.1;
-%	
-%	datid = [datid ; wdatid];
-%	time1 = [time1 ; wtime1];
-%	time2 = [time2 ; wtime2];
-%	limiting = [limiting ; wlimiting];
-%	Y = [Y ; wY];
-%	dY = [dY ; wdY];
-%	compactcorr = [compactcorr ; wcompactcorr];
-%	istg = [istg ; 0 * wY];
-%	lat = [lat ; wlat];
-%	long = [long ; wlong];
-%end
-%siteid=[siteid ; [idHolo+HoloRegions*1e3]'];
-%for i=1:length(HoloRegions)
-%    sitenames={sitenames{:}, ['EH12_' num2str(HoloRegions(i))]};
-%end
+% Engelhart & Horton database
+
+datHolo=importdata(fullfile(IFILES,'Engelhart_Horton_2012_Mar2014.csv'));
+HoloRegions=[1:16];
+for curreg=1:length(HoloRegions)
+	sub=find((datHolo.data(:,1)==HoloRegions(curreg)).*(datHolo.data(:,2)==0));
+
+	count=[1:length(sub)]';
+	wdatid = ones(length(sub),1)*(1e6+HoloRegions(curreg)*1e3);
+	wtime1=1950-datHolo.data(sub,8) + count/1e5;
+	wtime2=1950-datHolo.data(sub,9) + count/1e5;
+	wlimiting=datHolo.data(sub,2);
+	wY=datHolo.data(sub,10)*1000;
+	wdY=datHolo.data(sub,11)*1000;
+	wlat=datHolo.data(sub,3);
+	wlong=-datHolo.data(sub,4);
+	wcompactcorr = wY*.1;
+	
+	datid = [datid ; wdatid];
+	time1 = [time1 ; wtime1];
+	time2 = [time2 ; wtime2];
+	limiting = [limiting ; wlimiting];
+	Y = [Y ; wY];
+	dY = [dY ; wdY];
+	compactcorr = [compactcorr ; wcompactcorr];
+	istg = [istg ; 0 * wY];
+	lat = [lat ; wlat];
+	long = [long ; wlong];
+
+        sitecoords=[sitecoords; mean(wlat) mean(wlong)];
+
+end
+siteid=[siteid ; [1e6+HoloRegions*1e3]'];
+for i=1:length(HoloRegions)
+    sitenames={sitenames{:}, ['EH12_' num2str(HoloRegions(i))]};
+    sub=find(datid==(1e6+HoloRegions(i)*1e3));
+    sitecoords = [sitecoords; mean(lat(sub)) mean(long(sub))];
+end
 
 %%%%
 

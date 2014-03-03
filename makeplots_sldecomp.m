@@ -82,7 +82,7 @@ for i=1:size(testsites,1)
 
 
 		ylabel('mm');
-		if length(wxlim)=0
+		if length(wxlim)==0
     		wxlim = xlim0;
     		wxlim(1) = max(floor(min(testX(subA,3))/100)*100,xlim0(1));
         end
