@@ -1,11 +1,12 @@
-% Last updated by  Bob Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Mar 2 21:39:33 EST 2014
+% Last updated by  Bob Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri Mar 7 16:52:39 EST 2014
+
 
 addpath('~/Dropbox/Code/TGAnalysis/MFILES');
 addpath([pwd '/MFILES']);
 IFILES=[pwd '/IFILES'];
 addpath(pwd)
 
-WORKDIR='140302';
+WORKDIR='140307';
 if ~exist(WORKDIR,'dir')
 	mkdir(WORKDIR);
 end
@@ -81,7 +82,11 @@ for ii=1:length(PX.sitenames)
     Loc{ii}=Loc{ii}(setdiff(1:length(Loc{ii}),sub));
     sub=find(PX.datid==PX.siteid(ii));
     cnt(ii)=length(sub);
-    oldest(ii)=min(union(PX.time1(sub),PX.time2(sub)));
+    if length(sub)>0
+        oldest(ii)=min(union(PX.time1(sub),PX.time2(sub)));
+    else
+        oldest(ii)=2000;
+    end
 end
 [uLoc,ui]=unique(Loc);
 
@@ -91,24 +96,16 @@ testsitedef.names2={'GSL'};
 testsitedef.firstage=min(oldest);
 
 for ii=1:length(uLoc)
-    sub=strmatch(uLoc{ii},Loc);
+    sub=find(strcmpi(uLoc{ii},Loc));
     [m,mi]=max(cnt(sub));
-    si=find(PX.datid==PX.siteid(sub(mi))); si=si(1);
-    testsitedef.sites(end+1,:)=[PX.datid(si) PX.lat(si) PX.long(si)];
-    testsitedef.names2={testsitedef.names2{:}, PX.sitenames{sub(mi)}};
-    testsitedef.names={testsitedef.names{:}, uLoc{ii}};
-    testsitedef.firstage = [testsitedef.firstage min(oldest(sub))];
+    if m>0
+        si=find(PX.datid==PX.siteid(sub(mi))); si=si(1);
+        testsitedef.sites(end+1,:)=[PX.datid(si) PX.lat(si) PX.long(si)];
+        testsitedef.names2={testsitedef.names2{:}, PX.sitenames{sub(mi)}};
+        testsitedef.names={testsitedef.names{:}, uLoc{ii}};
+        testsitedef.firstage = [testsitedef.firstage min(oldest(sub))];
+    end
 end
-
-noiseMasks = ones(8,length(thetTGG{1}));
-noiseMasks(2,[8 10] )=0; %without linear
-noiseMasks(3,[1 12])=0; %only regional and local
-noiseMasks(4,[1 12 8 10])=0; %only regional and local non-linear
-noiseMasks(5,[1 2 3 4])=0; %only regional and local linear
-noiseMasks(6,[1 3 4 8 10 13])=0; %Greenland only
-noiseMasks(7,[1 12 11 4 10])=0; %only regional
-noiseMasks(8,[1 12 11 4 10 8])=0; %only regional non-linear
-noiseMasklabels={'full','nonlin','regloc','reglocnonlin','regloclin','gis','reg','regnonlin'};
 
 GISfpt.lat=GISfplat;
 GISfpt.long=GISfplong;
@@ -119,11 +116,21 @@ ICE5G.long=ICE5Glon;
 [ICE5G.long,si]=sort(mod(ICE5Glon,360));
 ICE5G.gia=ICE5Ggia(si,:);
 
-
 testt = [-1000:20:2000 2010];
 
 for ii=1:length(datasets)
 for jj=1:length(trainsets)
+
+    noiseMasks = ones(8,length(thetTGG{trainspecs(jj)}));
+    noiseMasks(2,[modelspec(trainspecs(jj)).subamplinear modelspec(trainspecs(jj)).subampoffset]  )=0; %without linear
+    noiseMasks(3,[modelspec(trainspecs(jj)).subampglobal modelspec(trainspecs(jj)).subampoffset])=0; %only regional and local
+    noiseMasks(4,[modelspec(trainspecs(jj)).subamplinear modelspec(trainspecs(jj)).subampglobal  modelspec(trainspecs(jj)).subampoffset])=0; %only regional and local non-linear
+    noiseMasks(5,[modelspec(trainspecs(jj)).subampglobal modelspec(trainspecs(jj)).subampnonlinear modelspec(trainspecs(jj)).subampoffset])=0; %only regional and local linear
+    noiseMasks(6,setdiff(modelspec(trainspecs(jj)).subamp,modelspec(trainspecs(jj)).subampGIS))=0; %Greenland only
+    noiseMasks(7,[modelspec(trainspecs(jj)).subampglobal modelspec(trainspecs(jj)).subamplocal modelspec(trainspecs(jj)).subampoffset])=0; %only regional
+    noiseMasks(8,[modelspec(trainspecs(jj)).subampglobal modelspec(trainspecs(jj)).subamplocal modelspec(trainspecs(jj)).subamplinear modelspec(trainspecs(jj)).subampoffset])=0; %only regional non-linear
+    noiseMasklabels={'full','nonlin','regloc','reglocnonlin','regloclin','gis','reg','regnonlin'};
+
 
     wdataset=datasets{ii};
 
@@ -134,7 +141,9 @@ for jj=1:length(trainsets)
     wdataset.dY = sqrt(wdataset.dY0.^2 + (thetTGG{jj}(end)*wdataset.compactcorr).^2);
     wdataset.Ycv = wdataset.Ycv0 + diag(thetTGG{jj}(end)*wdataset.compactcorr).^2;
     subtimes=find(testt>=min(union(wdataset.time1,wdataset.time2)));
-    [f2s{ii,jj},sd2s{ii,jj},V2s{ii,jj},testlocs{ii,jj},logp(ii,jj)]=RegressHoloceneDataSets(wdataset,testsitedef,modelspec(trainspecs(jj)),thetTGG{jj},GISfpt,ICE5G,trainsub,[],noiseMasks,testt(subtimes),refyear)
+    
+    collinear=modelspec(trainspecs(jj)).subamplinear(1);
+    [f2s{ii,jj},sd2s{ii,jj},V2s{ii,jj},testlocs{ii,jj},logp(ii,jj)]=RegressHoloceneDataSets(wdataset,testsitedef,modelspec(trainspecs(jj)),thetTGG{jj},GISfpt,ICE5G,trainsub,[],noiseMasks,testt(subtimes),refyear,collinear);
 
     labl=labls{ii,jj}; disp(labl);
    makeplots_sldecomp(datasets{ii},f2s{ii,jj},sd2s{ii,jj},V2s{ii,jj},testlocs{ii,jj},labl);
@@ -270,10 +279,6 @@ for jj=1:length(trainsets)
 
     end
     Mref=sparse(Mref);
-
-
-    ii=1; jj=1;
-
     selsitenames={'GSL','Florida','NorthCarolina-SandPoint','NewJersey-LeedsPoint','Connecticut','Massachusetts','NovaScotia'};
     sitesub=[];
     for kk=1:length(selsitenames)
@@ -297,7 +302,7 @@ for jj=1:length(trainsets)
         wf=Mref*f2s{ii,jj}(:,selmask);
         wV=Mref*V2s{ii,jj}(:,:,selmask)*Mref';
         wsd=sqrt(diag(wV));
-        [hp,hl,~,~,~,~,outtable]=PlotPSLOverlay(testX(datsub,3),testreg(datsub),testsites(sitesub,1),wf(datsub),wsd(datsub),colrs,testsitedef.firstage(sitesub),testt(end),0,160);
+        [hp,hl,~,~,~,~,outtable]=PlotPSLOverlay(testX(datsub,3),testreg(datsub),testsites(sitesub,1),wf(datsub),wsd(datsub),colrs,testsitedef.firstage(sitesub),testt(end),0,160,testnames2(sitesub));
     
         if selmask==1
             legend(hl,testnames2{sitesub},'Location','Southwest');
@@ -329,7 +334,7 @@ for jj=1:length(trainsets)
         wsd=sqrt(diag(wV));
     
         clf;
-        [hp,hl,~,~,~,~,outtable]=PlotPSLOverlay(testX(datsub,3),testreg(datsub),testsites(sitesub,1),wf(datsub),wsd(datsub),colrs,starttimes(sitesub),endtimes(sitesub),0,160);
+        [hp,hl,~,~,~,~,outtable]=PlotPSLOverlay(testX(datsub,3),testreg(datsub),testsites(sitesub,1),wf(datsub),wsd(datsub),colrs,testsitedef.firstage(sitesub),testt(end),0,160,testnames2(sitesub));
 
         legend(hl,testnames2{sitesub},'Location','Southwest');
 
@@ -365,7 +370,7 @@ for jj=1:length(trainsets)
     for timesteps=[100 1000 160 40 20 1800]
 
         clf;
-        [hp,hl,hl2,dGSL,dGSLsd,dGSLV,outtable,difftimes,diffreg]=PlotPSLOverlay(testX(datsub,3),testreg(datsub),testsites(sitesub,1),wf(datsub),wV(datsub,datsub),colrs,starttimes(sitesub),endtimes(sitesub),0,timesteps);
+        [hp,hl,hl2,dGSL,dGSLsd,dGSLV,outtable,difftimes,diffreg]=PlotPSLOverlay(testX(datsub,3),testreg(datsub),testsites(sitesub,1),wf(datsub),wsd(datsub),colrs,testsitedef.firstage(sitesub),testt(end),0,timesteps,{'GSL'});
         set(hp,'xlim',[-1000 2010]);
 
         pdfwrite(['GSL_' num2str(timesteps) 'y' labl]);
@@ -377,21 +382,23 @@ for jj=1:length(trainsets)
 
         Nsamps=10000;
         sub1=find((difftimes<=1800).*(difftimes>=1500)); sub2=find(difftimes>1800);
-        sub1a=find((difftimes<=1800).*(difftimes>=0)); sub2=find(difftimes>1800);   
-        samps=mvnrnd(dGSL,dGSLV,Nsamps);
-        if (length(sub1)>0).*(length(sub2)>0)
-            [max1,max1i]=max(samps(:,sub1),[],2);
-            [max1a,max1ia]=max(samps(:,sub1a),[],2);
-            difr=bsxfun(@minus,samps(:,sub2),max1);
-            difra=bsxfun(@minus,samps(:,sub2),max1a);
-            Ppositive = sum(samps(:,sub2)>0,1)/size(samps,1);
-            q=cumprod((samps(:,sub2(end:-1:1))>0)*1,2); q=q(:,end:-1:1);
-            Ppositiveseries = sum(q,1)/size(samps,1);
-            Plarger = sum(difr>0,1)/size(samps,1);
-            Plargera = sum(difra>0,1)/size(samps,1);
-            fprintf(fid,'\n\nProbability faster than during fastest interval\n');
-            fprintf(fid,'Central year\tP > 0\tP all subsequent > 0\tP centered 1500-1800\tP centered 0-1800');
-            fprintf(fid,'\n%0.0f\t%0.3f\t%0.3f\t%0.3f\t%0.3f',[difftimes(sub2)' ; Ppositive; Ppositiveseries ; Plarger ; Plargera]);
+        sub1a=find((difftimes<=1800).*(difftimes>=0)); sub2=find(difftimes>1800); 
+        if ((length(sub1a))>0).*(length(sub1)>0)
+            samps=mvnrnd(dGSL,dGSLV,Nsamps);
+            if (length(sub1)>0).*(length(sub2)>0)
+                [max1,max1i]=max(samps(:,sub1),[],2);
+                [max1a,max1ia]=max(samps(:,sub1a),[],2);
+                difr=bsxfun(@minus,samps(:,sub2),max1);
+                difra=bsxfun(@minus,samps(:,sub2),max1a);
+                Ppositive = sum(samps(:,sub2)>0,1)/size(samps,1);
+                q=cumprod((samps(:,sub2(end:-1:1))>0)*1,2); q=q(:,end:-1:1);
+                Ppositiveseries = sum(q,1)/size(samps,1);
+                Plarger = sum(difr>0,1)/size(samps,1);
+                Plargera = sum(difra>0,1)/size(samps,1);
+                fprintf(fid,'\n\nProbability faster than during fastest interval\n');
+                fprintf(fid,'Central year\tP > 0\tP all subsequent > 0\tP centered 1500-1800\tP centered 0-1800');
+                fprintf(fid,'\n%0.0f\t%0.3f\t%0.3f\t%0.3f\t%0.3f',[difftimes(sub2)' ; Ppositive; Ppositiveseries ; Plarger ; Plargera]);
+            end
         end
         
         suboverallyrs=find(mod(difftimes,timesteps)==timesteps/2);
@@ -448,7 +455,7 @@ for jj=1:length(trainsets)
     for timesteps=[100 600]
 
         clf;
-        [hp,hl,hl2,dGSL,dGSLsd,dGSLV,outtable,difftimes,diffreg]=PlotPSLOverlay(testX(datsub,3),testreg(datsub),testsites(sitesub,1),wf(datsub),wV(datsub,datsub),colrs,starttimes(sitesub),endtimes(sitesub),0,timesteps);
+        [hp,hl,hl2,dGSL,dGSLsd,dGSLV,outtable,difftimes,diffreg]=PlotPSLOverlay(testX(datsub,3),testreg(datsub),testsites(sitesub,1),wf(datsub),wsd(datsub),colrs,testsitedef.firstage(sitesub),testt(end),0,timesteps,{'GIS'});
         set(hp,'xlim',[-1000 2010]);
 
         pdfwrite(['GIS_' num2str(timesteps) 'y' labl]);
@@ -472,8 +479,6 @@ for jj=1:length(trainsets)
             sitesub=[sitesub q(1)];
         end
     end
-
-    ii=1; jj=1;
 
     selmask=2;
 
@@ -503,12 +508,12 @@ for jj=1:length(trainsets)
     for timesteps=[100 600 160 40 20]
 
         clf;
-        [hp,hl,hl2,dGSL,dGSLsd,dGSLV,outtable,difftimes,diffreg]=PlotPSLOverlay(gradt,gradpair,1:length(diffpairs),gradf,gradV,colrs,gradstarttimes,2010,0,timesteps);
+        [hp,hl,hl2,dGSL,dGSLsd,dGSLV,outtable,difftimes,diffreg]=PlotPSLOverlay(gradt,gradpair,1:length(diffpairs),gradf,gradV,colrs,gradstarttimes,2010,0,timesteps,pairnames);
         set(hp,'xlim',[-1000 2010]);
         legend(hl,pairnames,'Location','Southwest');
         pdfwrite(['RSLgrad_' num2str(timesteps) 'y' labl]);
 
-        fid=fopen(['RSLgrad_' num2str(timesteps) labl '.tsv'],'w');
+        fid=fopen(['RSLgrad_' num2str(timesteps) labl 'y.tsv'],'w');
         fprintf(fid,outtable);
         fclose(fid);
     end

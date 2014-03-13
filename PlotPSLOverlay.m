@@ -1,7 +1,6 @@
-function [hp,hl,hl2,df,dsd,dV,outtable,difftimes,diffreg]=PlotPSLOverlay(years,regions,selregions,slf,slV,colrs,starttimes,endtimes,do2s,difftimestep)
+function [hp,hl,hl2,df,dsd,dV,outtable,difftimes,diffreg]=PlotPSLOverlay(years,regions,selregions,slf,slV,colrs,starttimes,endtimes,do2s,difftimestep,regionlabels)
 
-% Last updated by  Bob Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Feb 16 19:46:51 EST 2014
-
+% Last updated by  Bob Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri Mar 7 16:34:43 EST 2014
 
 defval('regions',ones(size(years)));
 defval('selregions',unique(regions));
@@ -11,6 +10,7 @@ defval('colrs',repmat({'b'},size(slf,2)));
 defval('do2s',0);
 defval('difftimestep',0);
 defval('havecov',0);
+defval('regionlabels',[]);
 
 defval('hl',[]); defval('df',[]); defval('dV',[]);
 defval('dsd',[]); defval('hl2',[]);
@@ -77,22 +77,27 @@ if difftimestep>0
 	dsd=sqrt(diag(dV));
 
 	for i=1:length(selregions)
-		outtable = [outtable sprintf('\nRegion %0.0f',selregions(i)) sprintf('\nYear\tmm/y\t1s\tP>0')];
-	sub=find((difftimes>=starttimes(i)).*(difftimes<=endtimes(i)).*(diffreg==selregions(i)));
-		hl2(i)=plot(difftimes(sub),df(sub),[colrs{i}],'linew',2); hold on;
-		if do2s>-1
-			plot(difftimes(sub),df(sub)+dsd(sub),[colrs{i} '--']);
-			plot(difftimes(sub),df(sub)-dsd(sub),[colrs{i} '--']);
-		end
-		if do2s>0
-			plot(difftimes(sub),df(sub)+2*dsd(sub),[colrs{i} ':']);
-			plot(difftimes(sub),df(sub)-2*dsd(sub),[colrs{i} ':']);
-		end
-		
-		for jj=1:length(sub)
-			outtable=[outtable sprintf('\n%0.0f',difftimes(sub(jj))) sprintf('\t%0.3f', [df(sub(jj)) dsd(sub(jj))]) sprintf('\t%0.3f',normcdf(df(sub(jj))./dsd(sub(jj))))];
-		end
-
+	    if length(regionlabels)==0
+    		outtable = [outtable sprintf('\nRegion %0.0f',selregions(i)) sprintf('\nYear\tmm/y\t1s\tP>0')];
+    	else
+     		outtable = [outtable '\n' regionlabels{i} sprintf('\nYear\tmm/y\t1s\tP>0')];
+     	end
+        if length(sub)>0
+            sub=find((difftimes>=starttimes(i)).*(difftimes<=endtimes(i)).*(diffreg==selregions(i)));
+            hl2(i)=plot(difftimes(sub),df(sub),[colrs{i}],'linew',2); hold on;
+            if do2s>-1
+                plot(difftimes(sub),df(sub)+dsd(sub),[colrs{i} '--']);
+                plot(difftimes(sub),df(sub)-dsd(sub),[colrs{i} '--']);
+            end
+            if do2s>0
+                plot(difftimes(sub),df(sub)+2*dsd(sub),[colrs{i} ':']);
+                plot(difftimes(sub),df(sub)-2*dsd(sub),[colrs{i} ':']);
+            end
+        
+            for jj=1:length(sub)
+                outtable=[outtable sprintf('\n%0.0f',difftimes(sub(jj))) sprintf('\t%0.3f', [df(sub(jj)) dsd(sub(jj))]) sprintf('\t%0.3f',normcdf(df(sub(jj))./dsd(sub(jj))))];
+            end
+        end
 	end
 	
 	xlabel('Year');

@@ -1,13 +1,14 @@
-function [f2s,sd2s,V2s,testlocs,logp]=RegressHoloceneDataSets(dataset,testsitedef,modelspec,thetTGG,GISfp,ICE5G,trainsub,trainsubsubset,noiseMasks,testt,refyear)
+function [f2s,sd2s,V2s,testlocs,logp]=RegressHoloceneDataSets(dataset,testsitedef,modelspec,thetTGG,GISfp,ICE5G,trainsub,trainsubsubset,noiseMasks,testt,refyear,collinear)
 
 %
 % 
-% Last updated by  Bob Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sat Mar 1 08:25:36 EST 2014
+% Last updated by  Bob Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri Mar 7 16:51:40 EST 2014
 
 defval('testt',[-2010:20:2010]);
 defval('refyear',2010);
 defval('GISfp',[]);
 defval('ICE5G',[]);
+defval('collinear',0);
 
 if ~iscell(testt)
     testt=testt(:);
@@ -162,17 +163,12 @@ for i=1:size(noiseMasks,1)
 	disp(i);
 	[f2s(:,i),V2s(:,:,i),logp] = GaussianProcessRegression([],Y(trainsub)-GIAproj(trainsub)-yoffset,[],traincvTGG(t1,t1,dt1t1,thetTGG,Ycv2,dy1y1,fp1fp1),testcv(thetTGG.*noiseMasks(i,:))',testcv2(thetTGG.*noiseMasks(i,:)));
 	sd2s(:,i)=sqrt(diag(V2s(:,:,i)));
-	
-end
-
-parfor i=1:size(noiseMasks,1)
-    if size(noiseMasks,2)<8
+    if (collinear==0)||(collinear>size(noiseMasks,2))
         f2s(:,i)=f2s(:,i)+testGIAproj;
-	else
-        if noiseMasks(i,8)==1
-            f2s(:,i)=f2s(:,i)+testGIAproj;
-        end
+	elseif noiseMasks(i,collinear)==1
+        f2s(:,i)=f2s(:,i)+testGIAproj;
     end
+	
 end
 
 testlocs=testsitedef;
