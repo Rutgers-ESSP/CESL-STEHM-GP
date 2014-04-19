@@ -34,7 +34,6 @@ hp(1)=subplot(2,1,1);
 for i=1:length(selregions)
 	outtable = [outtable sprintf('\nRegion %0.0f',selregions(i)) sprintf('\nYear\tmm\t1s')];
 	sub=find((years>=starttimes(i)).*(years<=endtimes(i)).*(regions==selregions(i)));
-
 	hl(i)=plot(years(sub),slf(sub),[colrs{i}],'linew',2); hold on;
 	plot(years(sub),slf(sub)+slsd(sub),[colrs{i} '--']);
 	plot(years(sub),slf(sub)-slsd(sub),[colrs{i} '--']);

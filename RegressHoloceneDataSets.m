@@ -2,7 +2,7 @@ function [f2s,sd2s,V2s,testlocs,logp]=RegressHoloceneDataSets(dataset,testsitede
 
 %
 % 
-% Last updated by  Bob Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri Mar 7 16:51:40 EST 2014
+% Last updated by  Bob Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri Apr 18 08:46:33 EDT 2014
 
 defval('testt',[-2010:20:2010]);
 defval('refyear',2010);
@@ -43,6 +43,10 @@ time1=dataset.time1;
 time2=dataset.time2;
 dY=dataset.dY;
 
+% compaction correction
+dY=sqrt(dY.^2+(compactcorr.*thetTGG(end)).^2);
+Ycv=Ycv+diag(compactcorr.*thetTGG(end)).^2;
+
 testsites=testsitedef.sites;
 testsites(:,3)=mod(testsites(:,3),360);
 testnames=testsitedef.names;
@@ -70,7 +74,6 @@ fp1fp1=bsxfun(@times,obsGISfp(trainsub)-1,obsGISfp(trainsub)'-1);
 wcvfunc = @(x1,x2,thet) cvfuncTGG(x1,x2,dYears(x1,x2),thet,dy1y1,fp1fp1);
 
 dt = abs(time2-time1)/4;
-
 if max(dt)>0
     [dK,df,d2f,yoffset] = GPRdx(meantime(trainsub),Y(trainsub),dt(trainsub),dY(trainsub),@(x1,x2) wcvfunc(x1,x2,thetTGG),2);
 else

@@ -2,6 +2,8 @@ function [thetTGG,trainsub]=OptimizeHoloceneCovariance(dataset,modelspec,optimiz
 
 % Last updated by  Bob Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Mar 2 23:29:36 EST 2014
 
+defval('maxcompactcorrfactor',.25);
+
 istg = dataset.istg;
 lat=dataset.lat;
 long=dataset.long;
@@ -88,7 +90,7 @@ for nnn=1:length(optimizesteps)
 %            lbTGG(1:5) = thetTGG(1:5); % set lower bound of amplitudes and temporal scale
 %        end
         thetTGG = [thetTGG .1];
-        ubTGG = [ubTGG 5];
+        ubTGG = [ubTGG maxcompactcorrfactor];
         lbTGG = [lbTGG 0];
 
         if donetg
@@ -105,6 +107,10 @@ for nnn=1:length(optimizesteps)
         trainsub = find((limiting==0));
         trainsub=intersect(trainsub,find(meantime>=mintime));
         %trainsub=intersect(trainsub,find(datid<1e6));
+        
+%        % remove extreme points
+%        trainsub=intersect(trainsub,find(abs((Y-mean(Y))/std(Y))<3));
+        
         dt1t1=dYears(meantime(trainsub),meantime(trainsub));
         dy1y1 = dDist([lat(trainsub) long(trainsub)],[lat(trainsub) long(trainsub)]);
         fp1fp1=bsxfun(@times,obsGISfp(trainsub)-1,obsGISfp(trainsub)'-1);
@@ -119,7 +125,7 @@ for nnn=1:length(optimizesteps)
         if length(subadj)>0
             thetTGG(subnotfixed(subadj))=thetTGG(subnotfixed(subadj))+min(.01,.01*dublb(subnotfixed(subadj)));
         end
-  
+
         opttype = floor((optimizesteps(nnn)-2+1e-6)*10)/10;
         if opttype==0.1
             if doneglob

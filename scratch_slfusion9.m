@@ -483,7 +483,7 @@ for jj=1:length(trainsets)
     selmask=2;
 
     gradf=[]; gradsd=[]; gradt=[]; gradpair=[]; gradV=[]; gradstarttimes=[];
-    diffpairs=[2 1; 2 3; 2 4; 2 5]; clear pairnames;
+    diffpairs=[2 1; 2 3; 2 4; 2 5 ; 3 5]; clear pairnames;
     for i=1:size(diffpairs,1)
         pairnames{i} = [shortselnames{diffpairs(i,2)} '-' shortselnames{diffpairs(i,1)}];
         sub1=find(testreg==testsites(sitesub(diffpairs(i,1))));
