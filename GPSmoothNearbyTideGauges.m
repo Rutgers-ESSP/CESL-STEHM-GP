@@ -3,13 +3,11 @@ function [TGdata2,TGdata,thetL,TGmodellocal] = GPSmoothNearbyTideGauges(targcoor
 % Find tide gauge sites to include, based on length and proximity criteria, then
 % fit GP model to them in order to interpolate and take running averge.
 %
-% Should tweak to use proxy data set rather than prescribed list of sites to look for 
-% tide gauges near.
 %
-% Last updated by  Bob Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri Feb 28 10:23:00 EST 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Apr 20 16:39:18 EDT 2014
 %
 
-defval('minlength',[120 70 20]);  % minimum length for global curves, most purposes and minimum
+defval('minlength',[150 75 20]);  % minimum length for global curves, most purposes and minimum
 defval('thetL0',[]);
 defval('winlength',11);
 defval('thinlength',winlength-1);
@@ -39,7 +37,7 @@ defval('gslfile',fullfile(IFILES,'CSIRO_Recons_gmsl_yr_2011.csv'));
 %giamodel.lat=ncread(giafile,'Lat');
 %giamodel.long=ncread(giafile,'Lon');
 
-[TGcoords,TGrsl,TGrslunc,TGid,TGsiteid,sitenames,TGsitecoords,sitelen]=ReadPSMSLData(1,1000,minlength(3),psmsldir,gslfile);
+[TGcoords,TGrsl,TGrslunc,TGid,TGsiteid,sitenames,TGsitecoords,sitelen]=ReadPSMSLData(0,1000,minlength(3),psmsldir,gslfile);
 sub1=find((sitelen>minlength(1)));
 sub1=union(sub1,find(TGsiteid==0));
 

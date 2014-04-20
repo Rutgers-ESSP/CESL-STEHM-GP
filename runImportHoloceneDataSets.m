@@ -3,6 +3,7 @@
 thinyrs=10;
 minlen=50;
 firsttime=-1000;
+minperstudy=2;
 
 %%%%%%%%%%
 datid=[]; time1=[]; time2=[]; mediantime=[]; limiting=[]; Y=[]; dY = []; compactcorr = [];
@@ -16,51 +17,51 @@ datPX.textdata=datPX.textdata(2:end,:);
 sub=find(isnan(datPX.data(:,8))); datPX.data(sub,8)=100;
 sub=find(isnan(datPX.data(:,7))); datPX.data(sub,7)=100;
 
-
-
 study=datPX.textdata(:,1);
 uStudy = unique(study);
 for ii=1:length(uStudy)
-    sub=find(strcmpi(uStudy{ii},study));
-    site = datPX.textdata(sub,2);
-    uSite=unique(site);
-    for jj=1:length(uSite)
-        curid = 1e4*ii + jj;
-        curstudysite=[uStudy{ii} '-' uSite{jj}];
-        sub2=sub(find(strcmpi(uSite{jj},site)));
-        wdatid=ones(length(sub2),1)*curid;
-        wmediantime=datPX.data(sub2,6);
-        wtime1=wmediantime-datPX.data(sub2,8)+(1:length(sub2))'/1e5;
-        wtime2=wmediantime+datPX.data(sub2,7)+(1:length(sub2))'/1e5;
-        
-        wlimiting=zeros(length(sub2),1);
-        wYmedian=datPX.data(sub2,3);
-        wY1=wYmedian-datPX.data(sub2,5);
-        wY2=wYmedian+datPX.data(sub2,4);
-        wY=(wY1+wY2)/2;
-        wdY=abs(wY2-wY1)/4;
-        wcompactcorr=zeros(length(sub2),1);;
-        wlat=datPX.data(sub2,1);
-        wlong=datPX.data(sub2,2);
-        
-        wY=wY*1000;
-        wdY=wdY*1000;
-        
-        datid = [datid ; wdatid];
-        time1 = [time1 ; wtime1];
-        time2 = [time2 ; wtime2];
-        limiting = [limiting ; wlimiting];
-        Y = [Y ; wY];
-        dY = [dY ; wdY];
-        compactcorr = [compactcorr ; wcompactcorr];
-        istg = [istg ; 0 * wY];
-        lat = [lat ; wlat];
-        long = [long ; wlong];
-        mediantime = [mediantime ; wmediantime];
+      sub=find(strcmpi(uStudy{ii},study));
+       if length(sub)>=minperstudy
+        site = datPX.textdata(sub,2);
+        uSite=unique(site);
+        for jj=1:length(uSite)
+            curid = 1e4*ii + jj;
+            curstudysite=[uStudy{ii} '-' uSite{jj}];
+            sub2=sub(find(strcmpi(uSite{jj},site)));
+            wdatid=ones(length(sub2),1)*curid;
+            wmediantime=datPX.data(sub2,6);
+            wtime1=wmediantime-datPX.data(sub2,8)+(1:length(sub2))'/1e5;
+            wtime2=wmediantime+datPX.data(sub2,7)+(1:length(sub2))'/1e5;
+            
+            wlimiting=zeros(length(sub2),1);
+            wYmedian=datPX.data(sub2,3);
+            wY1=wYmedian-datPX.data(sub2,5);
+            wY2=wYmedian+datPX.data(sub2,4);
+            wY=(wY1+wY2)/2;
+            wdY=abs(wY2-wY1)/4;
+            wcompactcorr=zeros(length(sub2),1);;
+            wlat=datPX.data(sub2,1);
+            wlong=datPX.data(sub2,2);
+            
+            wY=wY*1000;
+            wdY=wdY*1000;
+                
+            datid = [datid ; wdatid];
+            time1 = [time1 ; wtime1];
+            time2 = [time2 ; wtime2];
+            limiting = [limiting ; wlimiting];
+            Y = [Y ; wY];
+            dY = [dY ; wdY];
+            compactcorr = [compactcorr ; wcompactcorr];
+            istg = [istg ; 0 * wY];
+            lat = [lat ; wlat];
+            long = [long ; wlong];
+            mediantime = [mediantime ; wmediantime];
 
-        siteid=[siteid ; curid];
-        sitenames={sitenames{:}, curstudysite};
-        sitecoords=[sitecoords; mean(wlat) mean(wlong)];
+            siteid=[siteid ; curid];
+            sitenames={sitenames{:}, curstudysite};
+            sitecoords=[sitecoords; mean(wlat) mean(wlong)];
+        end
 
     end
 end 
@@ -98,13 +99,8 @@ for curreg=1:length(HoloRegions)
 	long = [long ; wlong];
 
         sitecoords=[sitecoords; mean(wlat) mean(wlong)];
-
-end
-siteid=[siteid ; [1e6+HoloRegions*1e3]'];
-for i=1:length(HoloRegions)
-    sitenames={sitenames{:}, ['EH12_' num2str(HoloRegions(i))]};
-    sub=find(datid==(1e6+HoloRegions(i)*1e3));
-    sitecoords = [sitecoords; mean(lat(sub)) mean(long(sub))];
+        sitenames={sitenames{:}, ['EH12_' num2str(HoloRegions(i))]};
+        siteid=[siteid ; [1e6+curreg*1e3]'];
 end
 
 %%%%
@@ -126,7 +122,12 @@ PX.meantime=(PX.time1+PX.time2)/2;
 PX.sitecoords = sitecoords;
 
 PX0=PX;
+
+% drop too old, and too near field
 sub=find(PX.time1>=firsttime);
+sub=intersect(sub,find(abs(PX.lat)<=52));
+subS=find(abs(PX.sitecoords(:,1))<=52);
+
 shortenfields={'datid','time1','time2','meantime','limiting','Y','dY','compactcorr','istg','lat','long'};
 for jj=1:length(shortenfields)
     PX.(shortenfields{jj}) =  PX.(shortenfields{jj})(sub);
@@ -134,6 +135,14 @@ end
 PX.Ycv=sparse(diag(PX.dY.^2));
 PX.Ycv0=sparse(diag(PX.dY.^2));
 
+shortenfields={'siteid','sitenames'};
+for jj=1:length(shortenfields)
+    PX.(shortenfields{jj}) =  PX.(shortenfields{jj})(subS);
+end
+PX.sitecoords=PX.sitecoords(subS,:);
+for ii=1:length(PX.siteid)
+    PX.sitelen(ii)=sum(PX.datid==PX.siteid(ii));
+end
 
 %%%%%%%%%%%%%%%
 
@@ -141,6 +150,24 @@ PX.Ycv0=sparse(diag(PX.dY.^2));
 
 optimizemode=1.0;
 [TG,TG0,thetL,TGmodellocal] = GPSmoothNearbyTideGauges(PX.sitecoords,[],[],[],[],[],optimizemode);
+
+% drop near field
+sub=find(abs(TG.lat)<=52);
+subS=find(abs(TG.sitecoords(:,1))<=52);
+
+shortenfields={'datid','time1','time2','meantime','limiting','Y','dY','compactcorr','istg','lat','long'};
+for jj=1:length(shortenfields)
+    TG.(shortenfields{jj}) =  TG.(shortenfields{jj})(sub);
+end
+shortenfields={'siteid','sitenames','sitelen'};
+for jj=1:length(shortenfields)
+    TG.(shortenfields{jj}) =  TG.(shortenfields{jj})(subS);
+end
+TG.sitecoords=TG.sitecoords(subS,:);
+TG.Ycv=sparse(TG.Ycv(sub,sub));
+TG.Ycv0=sparse(TG.Ycv);
+
+%
 
 sub=find(TG.datid~=0); subS = find(TG.siteid~=0);
 TGNOCW=TG;
