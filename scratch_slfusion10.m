@@ -18,7 +18,7 @@ runImportHoloceneDataSets;
 
 save ~/tmp/CESL datasets modelspec;
 
-trainsets=1; % train w/TG+GSL+PX
+trainsets=1; % train w/TGslim+GSL+PX
 trainspecs=ones(size(trainsets));
 
 clear thetTGG trainsubsubset;
@@ -26,7 +26,9 @@ for ii=1:length(trainsets)
     if ii>1
         modelspec(trainspecs(ii)).thet0=thetTGG{1}(1:length(modelspec(trainspecs(ii)).thet0));
     end
-    [thetTGG{ii},trainsubsubset{ii}]=OptimizeHoloceneCovariance(datasets{trainsets(ii)},modelspec(trainspecs(ii)),[1.1 2.21]);
+    [thetTGG{ii},trainsubsubset{ii}]= ...
+        OptimizeHoloceneCovariance(datasets{trainsets(ii)}, ...
+                                   modelspec(trainspecs(ii)),[2.4 2.01]);
 end
 
 save thetTGG thetTGG trainsubsubset

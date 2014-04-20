@@ -130,7 +130,6 @@ for nn=1:length(TGdata.siteid)
     end
     TGdatasub.sitecoords=TGdatasub.sitecoords(subS,:);
     TGdatasub.Ycv=sparse(diag(TGdatasub.dY.^2));
-    TGdatasub.Ycv0=sparse(diag(TGdatasub.dY.^2));
     if length(thetL0)==0
         [thetL(nn,:)]=OptimizeHoloceneCovariance(TGdatasub,TGmodellocal,optimizemode);
     elseif size(thetL0,1)>1

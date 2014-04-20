@@ -8,7 +8,7 @@ istg = dataset.istg;
 lat=dataset.lat;
 long=dataset.long;
 Y=dataset.Y;
-Ycv0=dataset.Ycv0;
+Ycv=dataset.Ycv;
 limiting=dataset.limiting;
 compactcorr=dataset.compactcorr;
 time1=dataset.time1;
@@ -75,7 +75,7 @@ for nnn=1:length(optimizesteps)
                 doglobs=0;
             end
             for doglob=doglobs
-                [thetTGG(subnotfixed)] = SLGPOptimize(Y(trainsub),@(x) traincvTGG(meantime(trainsub),meantime(trainsub),dt1t1,x*Mfixed+fixedvect,Ycv0(trainsub,trainsub),dy1y1,fp1fp1),thetTGG(subnotfixed),lbTGG(subnotfixed),ubTGG(subnotfixed),doglob);
+                [thetTGG(subnotfixed)] = SLGPOptimize(Y(trainsub),@(x) traincvTGG(meantime(trainsub),meantime(trainsub),dt1t1,x*Mfixed+fixedvect,Ycv(trainsub,trainsub),dy1y1,fp1fp1),thetTGG(subnotfixed),lbTGG(subnotfixed),ubTGG(subnotfixed),doglob);
                 disp(sprintf('%0.3f ',thetTGG));
             end
 
@@ -91,7 +91,7 @@ for nnn=1:length(optimizesteps)
 %        end
         thetTGG = [thetTGG .1];
         ubTGG = [ubTGG maxcompactcorrfactor];
-        lbTGG = [lbTGG 0];
+        lbTGG = [lbTGG 1e-6];
 
         if donetg
             subfixed=union(subfixed,sublength); % fix length scales at those determined from the tide gauge data
@@ -143,12 +143,14 @@ for nnn=1:length(optimizesteps)
        elseif opttype==0.4
             doglobs=3;
             doneglob=1;
+        elseif opttype==0.5
+            doglobs=[];
         else
             doglobs=0;
         end
 
         for doglob=doglobs
-            [thetTGG(subnotfixed)] = SLGPOptimize(Y(trainsub),@(x) traincvTGG(meantime(trainsub),meantime(trainsub),dt1t1,x(1:end-1)*Mfixed+fixedvect,Ycv0(trainsub,trainsub)+diag(x(end)*compactcorr(trainsub)).^2,dy1y1,fp1fp1),thetTGG(subnotfixed),lbTGG(subnotfixed),ubTGG(subnotfixed),doglob);
+            [thetTGG(subnotfixed)] = SLGPOptimize(Y(trainsub),@(x) traincvTGG(meantime(trainsub),meantime(trainsub),dt1t1,x(1:end-1)*Mfixed+fixedvect,Ycv(trainsub,trainsub)+diag(x(end)*compactcorr(trainsub)).^2,dy1y1,fp1fp1),thetTGG(subnotfixed),lbTGG(subnotfixed),ubTGG(subnotfixed),doglob);
             disp(sprintf('%0.3f ',thetTGG));
         end
         
@@ -161,8 +163,13 @@ for nnn=1:length(optimizesteps)
 
             [dK,df,d2f,yoffset] = GPRdx(meantime(trainsub),Y(trainsub),dt(trainsub),sqrt(dY(trainsub).^2+(thetTGG(end)*compactcorr(trainsub)).^2),@(x1,x2) wcvfunc(x1,x2,thetTGG),2);
 
-            for doglob=[0]
-                [thetTGG(subnotfixed)] = SLGPOptimize(Y(trainsub),@(x) traincvTGG(meantime(trainsub),meantime(trainsub),dt1t1,x(1:end-1)*Mfixed+fixedvect,Ycv0(trainsub,trainsub)+diag(x(end)*compactcorr(trainsub)).^2+diag(dK),dy1y1,fp1fp1),thetTGG(subnotfixed),lbTGG(subnotfixed),ubTGG(subnotfixed),doglob);
+            doglobs=0;
+            if opttype==0.4
+                doglobs=3;
+            end
+            
+            for doglob=doglobs
+                [thetTGG(subnotfixed)] = SLGPOptimize(Y(trainsub),@(x) traincvTGG(meantime(trainsub),meantime(trainsub),dt1t1,x(1:end-1)*Mfixed+fixedvect,Ycv(trainsub,trainsub)+diag(x(end)*compactcorr(trainsub)).^2+diag(dK),dy1y1,fp1fp1),thetTGG(subnotfixed),lbTGG(subnotfixed),ubTGG(subnotfixed),doglob);
                 disp(sprintf('%0.3f ',thetTGG));
 
             end

@@ -33,14 +33,14 @@ thetTG(12) 5 1e4 % non-GIS regional amplitude
 
 thetTG(13) 1 10 % geographic length scale
 
-thetTG(10) 0 100 % linear regional amplitude
+thetTG(10) 1e-2 100 % linear regional amplitude
 thetTG(11) .5 15 %  linear regional length scale
-thetTG(7) 0 100 % linear local amplitude
+thetTG(7) 1e-2 100 % linear local amplitude
 
-100 0 1e4 % local offset
+100 1e-2 1e4 % local offset
 
-10 0 1e4 % local Matern
-1.3 1 3e3
+10 1e-2 1e4 % local Matern
+1e3 1 3e3
 1.5 .5 9.5
 
 1 1 1; % GIS global switch

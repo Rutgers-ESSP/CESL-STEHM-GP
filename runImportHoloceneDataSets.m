@@ -128,21 +128,26 @@ sub=find(PX.time1>=firsttime);
 sub=intersect(sub,find(abs(PX.lat)<=52));
 subS=find(abs(PX.sitecoords(:,1))<=52);
 
-shortenfields={'datid','time1','time2','meantime','limiting','Y','dY','compactcorr','istg','lat','long'};
-for jj=1:length(shortenfields)
-    PX.(shortenfields{jj}) =  PX.(shortenfields{jj})(sub);
-end
-PX.Ycv=sparse(diag(PX.dY.^2));
-PX.Ycv0=sparse(diag(PX.dY.^2));
+PX=SubsetDataStructure(PX,sub,subS);
 
-shortenfields={'siteid','sitenames'};
-for jj=1:length(shortenfields)
-    PX.(shortenfields{jj}) =  PX.(shortenfields{jj})(subS);
+% now create a slimmed version for training
+excl={'France','Tasmania','Spain','New Zealand','Italy','Israel',['Isle ' ...
+                    'of Wight'],'Iceland','Greenland'};
+
+subexcl=[]; subexclS=[];
+
+for ii=1:length(excl)
+    doexcl=find(strncmp(excl{ii},PX.sitenames,length(excl{ii})));
+    subexclS=union(subexclS,doexcl);
+    for jj=1:length(doexcl)
+        subexcl=union(subexcl,find(PX.datid==PX.siteid(doexcl(jj))));
+    end
 end
-PX.sitecoords=PX.sitecoords(subS,:);
-for ii=1:length(PX.siteid)
-    PX.sitelen(ii)=sum(PX.datid==PX.siteid(ii));
-end
+sub=setdiff(1:length(PX.datid),subexcl);
+subS=setdiff(1:length(PX.siteid),subexclS);
+
+PXslim=SubsetDataStructure(PX,sub,subS);
+
 
 %%%%%%%%%%%%%%%
 
@@ -152,36 +157,16 @@ optimizemode=1.0;
 [TG,TG0,thetL,TGmodellocal] = GPSmoothNearbyTideGauges(PX.sitecoords,[],[],[],[],[],optimizemode);
 
 % drop near field
-sub=find(abs(TG.lat)<=52);
-subS=find(abs(TG.sitecoords(:,1))<=52);
+sub=union(find(abs(TG.lat)<=52),find(TG.lat>100));
+subS=union(find(abs(TG.sitecoords(:,1))<=52),find(TG.sitecoords(:,1)>100));
 
-shortenfields={'datid','time1','time2','meantime','limiting','Y','dY','compactcorr','istg','lat','long'};
-for jj=1:length(shortenfields)
-    TG.(shortenfields{jj}) =  TG.(shortenfields{jj})(sub);
-end
-shortenfields={'siteid','sitenames','sitelen'};
-for jj=1:length(shortenfields)
-    TG.(shortenfields{jj}) =  TG.(shortenfields{jj})(subS);
-end
-TG.sitecoords=TG.sitecoords(subS,:);
-TG.Ycv=sparse(TG.Ycv(sub,sub));
-TG.Ycv0=sparse(TG.Ycv);
+TG=SubsetDataStructure(TG,sub,subS);
 
 %
 
 sub=find(TG.datid~=0); subS = find(TG.siteid~=0);
-TGNOCW=TG;
-shortenfields={'datid','time1','time2','meantime','limiting','Y','dY','compactcorr','istg','lat','long'};
-for jj=1:length(shortenfields)
-    TGNOCW.(shortenfields{jj}) =  TGNOCW.(shortenfields{jj})(sub);
-end
-shortenfields={'siteid','sitenames','sitelen'};
-for jj=1:length(shortenfields)
-    TGNOCW.(shortenfields{jj}) =  TGNOCW.(shortenfields{jj})(subS);
-end
-TGNOCW.sitecoords=TGNOCW.sitecoords(subS,:);
-TGNOCW.Ycv=sparse(TGNOCW.Ycv(sub,sub));
-TGNOCW.Ycv0=sparse(TGNOCW.Ycv);
+TGNOCW=SubsetDataStructure(TG,sub,subS);
+
 
 %%%%%%%%%%%%%%%%
 
@@ -211,17 +196,11 @@ GISfp=GISfp*1000;
 %%%%%%
 
 clear datasets;
-datasets{1}=MergeDataStructures(TG,PX);
+datasets{1}=MergeDataStructures(TG,PXslim);
 datasets{2}=MergeDataStructures(TGNOCW,PX);
-datasets{3}=PX;
-datasets{4}=TG;
-datasets{5}=TGNOCW;
 
-datasets{1}.label='TG+GSL+PX';
+datasets{1}.label='TG+GSL+PXslim';
 datasets{2}.label='TG+PX';
-datasets{3}.label='PX';
-datasets{4}.label='TG+GSL';
-datasets{5}.label='TG';
 
 
 for ii=1:length(datasets)
@@ -229,8 +208,6 @@ for ii=1:length(datasets)
     datasets{ii}.long = mod(datasets{ii}.long,360); sub=find(datasets{ii}.long>180); datasets{ii}.long(sub)=datasets{ii}.long(sub)-360;
     datasets{ii}.meantime=mean([t1 t2],2);
     datasets{ii}.dt = abs(t1-t2)/4;
-    datasets{ii}.dY0=datasets{ii}.dY;
-    datasets{ii}.Ycv0 = datasets{ii}.Ycv;
     datasets{ii}.compactcorr=sparse(datasets{ii}.compactcorr);
 
 
@@ -265,7 +242,7 @@ for ii=1:length(datasets)
     end
     datasets{ii}.GIAproj=GIAproj;
     datasets{ii}.Y0=datasets{ii}.Y;
-    %datasets{ii}.Y=datasets{ii}.Y0-GIAproj;
+    datasets{ii}.Y=datasets{ii}.Y0-GIAproj;
 end
 
 
