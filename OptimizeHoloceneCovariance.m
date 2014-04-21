@@ -1,6 +1,6 @@
 function [thetTGG,trainsub]=OptimizeHoloceneCovariance(dataset,modelspec,optimizesteps,mintime)
 
-% Last updated by  Bob Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Mar 2 23:29:36 EST 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Apr 20 19:16:17 EDT 2014
 
 defval('maxcompactcorrfactor',.25);
 
@@ -44,6 +44,8 @@ defval('optimizesteps',[1.1 2.11]);
 defval('mintime',-1000);
 
 donetg=0;
+addedcompactcorr=0;
+
 for nnn=1:length(optimizesteps)
 
     if floor(optimizesteps(nnn))==1
@@ -89,9 +91,12 @@ for nnn=1:length(optimizesteps)
 %        if donetg
 %            lbTGG(1:5) = thetTGG(1:5); % set lower bound of amplitudes and temporal scale
 %        end
-        thetTGG = [thetTGG .1];
-        ubTGG = [ubTGG maxcompactcorrfactor];
-        lbTGG = [lbTGG 1e-6];
+        if ~addedcompactcorr
+            thetTGG = [thetTGG .1];
+            ubTGG = [ubTGG maxcompactcorrfactor];
+            lbTGG = [lbTGG 1e-6];
+            addedcompactcorr = 1;
+        end
 
         if donetg
             subfixed=union(subfixed,sublength); % fix length scales at those determined from the tide gauge data
@@ -102,7 +107,6 @@ for nnn=1:length(optimizesteps)
             Mfixed(i,subnotfixed(i))=1;
         end
         fixedvect = 0*thetTGG; fixedvect(subfixed)=thetTGG(subfixed);
-
         subnotfixed = [subnotfixed length(thetTGG)];
         trainsub = find((limiting==0));
         trainsub=intersect(trainsub,find(meantime>=mintime));

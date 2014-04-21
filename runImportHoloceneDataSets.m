@@ -1,8 +1,9 @@
-% Last updated by  Bob Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Mar 2 21:39:29 EST 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Apr 20 19:15:51 EDT 2014
+
+defval('firsttime',-1000);
 
 thinyrs=10;
 minlen=50;
-firsttime=-1000;
 minperstudy=2;
 
 %%%%%%%%%%
@@ -20,8 +21,8 @@ sub=find(isnan(datPX.data(:,7))); datPX.data(sub,7)=100;
 study=datPX.textdata(:,1);
 uStudy = unique(study);
 for ii=1:length(uStudy)
-      sub=find(strcmpi(uStudy{ii},study));
-       if length(sub)>=minperstudy
+    sub=find(strcmpi(uStudy{ii},study));
+    if length(sub)>=minperstudy
         site = datPX.textdata(sub,2);
         uSite=unique(site);
         for jj=1:length(uSite)
@@ -45,7 +46,7 @@ for ii=1:length(uStudy)
             
             wY=wY*1000;
             wdY=wdY*1000;
-                
+            
             datid = [datid ; wdatid];
             time1 = [time1 ; wtime1];
             time2 = [time2 ; wtime2];
@@ -65,42 +66,42 @@ for ii=1:length(uStudy)
 
     end
 end 
-    
-    
+
+
 %%%%%%%%%%%%%%%%
-    
+
 % Engelhart & Horton database
 
 datHolo=importdata(fullfile(IFILES,'Engelhart_Horton_2012_v4.csv'));
 HoloRegions=[1:16];
 for curreg=1:length(HoloRegions)
-	sub=find((datHolo.data(:,1)==HoloRegions(curreg)).*(datHolo.data(:,2)==0));
+    sub=find((datHolo.data(:,1)==HoloRegions(curreg)).*(datHolo.data(:,2)==0));
 
-	count=[1:length(sub)]';
-	wdatid = ones(length(sub),1)*(1e6+HoloRegions(curreg)*1e3);
-	wtime1=1950-datHolo.data(sub,8) + count/1e5;
-	wtime2=1950-datHolo.data(sub,9) + count/1e5;
-	wlimiting=datHolo.data(sub,2);
-	wY=datHolo.data(sub,10)*1000;
-	wdY=datHolo.data(sub,11)*1000;
-	wlat=datHolo.data(sub,3);
-	wlong=-datHolo.data(sub,4);
-	wcompactcorr = wY*.1;
-	
-	datid = [datid ; wdatid];
-	time1 = [time1 ; wtime1];
-	time2 = [time2 ; wtime2];
-	limiting = [limiting ; wlimiting];
-	Y = [Y ; wY];
-	dY = [dY ; wdY];
-	compactcorr = [compactcorr ; wcompactcorr];
-	istg = [istg ; 0 * wY];
-	lat = [lat ; wlat];
-	long = [long ; wlong];
+    count=[1:length(sub)]';
+    wdatid = ones(length(sub),1)*(1e6+HoloRegions(curreg)*1e3);
+    wtime1=1950-datHolo.data(sub,8) + count/1e5;
+    wtime2=1950-datHolo.data(sub,9) + count/1e5;
+    wlimiting=datHolo.data(sub,2);
+    wY=datHolo.data(sub,10)*1000;
+    wdY=datHolo.data(sub,11)*1000;
+    wlat=datHolo.data(sub,3);
+    wlong=-datHolo.data(sub,4);
+    wcompactcorr = wY*.1;
+    
+    datid = [datid ; wdatid];
+    time1 = [time1 ; wtime1];
+    time2 = [time2 ; wtime2];
+    limiting = [limiting ; wlimiting];
+    Y = [Y ; wY];
+    dY = [dY ; wdY];
+    compactcorr = [compactcorr ; wcompactcorr];
+    istg = [istg ; 0 * wY];
+    lat = [lat ; wlat];
+    long = [long ; wlong];
 
-        sitecoords=[sitecoords; mean(wlat) mean(wlong)];
-        sitenames={sitenames{:}, ['EH12_' num2str(HoloRegions(i))]};
-        siteid=[siteid ; [1e6+curreg*1e3]'];
+    sitecoords=[sitecoords; mean(wlat) mean(wlong)];
+    sitenames={sitenames{:}, ['EH12_' num2str(HoloRegions(i))]};
+    siteid=[siteid ; [1e6+curreg*1e3]'];
 end
 
 %%%%
@@ -219,10 +220,10 @@ for ii=1:length(datasets)
     ider = datasets{ii}.lat*1e5+datasets{ii}.long;
     [ideru,iderui]=unique(ider);
     
-%    [regionsu,regionsusi]=unique(datasets{ii}.datid);
-%    sitecoords=[datasets{ii}.lat(regionsusi) datasets{ii}.long(regionsusi)];
-%    GIAproju=zeros(size(regionsu));
-%    GIAproj=zeros(size(datasets{ii}.Y));
+    %    [regionsu,regionsusi]=unique(datasets{ii}.datid);
+    %    sitecoords=[datasets{ii}.lat(regionsusi) datasets{ii}.long(regionsusi)];
+    %    GIAproju=zeros(size(regionsu));
+    %    GIAproj=zeros(size(datasets{ii}.Y));
     GIAproju=zeros(size(ideru));
     GIAproj=zeros(size(datasets{ii}.Y));
 
@@ -250,28 +251,28 @@ end
 % indices
 
 datNAO = importdata(fullfile(IFILES,'nao-trouet2009.txt'));
-	
-	%% comparison to temperature records
-	impt=importdata(fullfile(IFILES,'Marcott2013_global.txt'));
-	Marcottgl_yr = 1950-impt.data(:,1);
-	Marcottgl_T = impt.data(:,2);
-	Marcottgl_dT = impt.data(:,3);
 
-		impt=importdata(fullfile(IFILES,'Marcott2013_regional.txt'));
-	Marcottr_yr=1950-impt.data(:,1);
-	Marcott_Next_T=impt.data(:,2);
-	Marcott_Next_dT=impt.data(:,3);
-	Marcott_eq_T=impt.data(:,4);
-	Marcott_eq_dT=impt.data(:,5);
-	Marcott_Sext_T=impt.data(:,6);
-	Marcott_Sext_dT=impt.data(:,7);
+%% comparison to temperature records
+impt=importdata(fullfile(IFILES,'Marcott2013_global.txt'));
+Marcottgl_yr = 1950-impt.data(:,1);
+Marcottgl_T = impt.data(:,2);
+Marcottgl_dT = impt.data(:,3);
 
-	impt=importdata(fullfile(IFILES,'HadCRUT4-gl.dat'));
-	HadCRUT_yr=impt(1:2:end,1);
-	HadCRUT_T=impt(1:2:end,end);
+impt=importdata(fullfile(IFILES,'Marcott2013_regional.txt'));
+Marcottr_yr=1950-impt.data(:,1);
+Marcott_Next_T=impt.data(:,2);
+Marcott_Next_dT=impt.data(:,3);
+Marcott_eq_T=impt.data(:,4);
+Marcott_eq_dT=impt.data(:,5);
+Marcott_Sext_T=impt.data(:,6);
+Marcott_Sext_dT=impt.data(:,7);
 
-	Mann_T=importdata(fullfile(IFILES,'glglfulihad_smxx.txt'));
-	Mann_yr = [[1:length(Mann_T)]-1]';
+impt=importdata(fullfile(IFILES,'HadCRUT4-gl.dat'));
+HadCRUT_yr=impt(1:2:end,1);
+HadCRUT_T=impt(1:2:end,end);
+
+Mann_T=importdata(fullfile(IFILES,'glglfulihad_smxx.txt'));
+Mann_yr = [[1:length(Mann_T)]-1]';
 
 
 

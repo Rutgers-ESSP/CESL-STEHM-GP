@@ -1,4 +1,4 @@
-% Last updated by  Bob Kopp, robert-dot-kopp-at-rutgers-dot-edu, Tue Mar 4 11:12:37 EST 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Apr 20 19:16:04 EDT 2014
 
 
 % define some covariance functions
