@@ -1,13 +1,9 @@
-function [f2s,sd2s,V2s,testlocs,logp]=RegressHoloceneDataSets(dataset,testsitedef,modelspec,thetTGG,GISfp,ICE5G,trainsub,trainsubsubset,noiseMasks,testt,refyear,collinear)
+function [f2s,sd2s,V2s,testlocs,logp]=RegressHoloceneDataSets(dataset,testsitedef,modelspec,thetTGG,trainsub,trainsubsubset,noiseMasks,testt,refyear,collinear)
 
-%
-% 
-% Last updated by  Bob Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri Apr 18 08:46:33 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Apr 21 09:25:56 EDT 2014
 
 defval('testt',[-2010:20:2010]);
 defval('refyear',2010);
-defval('GISfp',[]);
-defval('ICE5G',[]);
 defval('collinear',0);
 
 if ~iscell(testt)
@@ -28,7 +24,7 @@ else
     meantime=mean([dataset.time1(:) dataset.time2(:)],2);
 end
 lat=dataset.lat;
-long=mod(dataset.long,360);
+long=mod(dataset.long,360); sublong=find(long>180); long(sublong)=long(sublong)-360;
 Y=dataset.Y;
 Ycv=dataset.Ycv;
 
@@ -48,7 +44,6 @@ dY=sqrt(dY.^2+(compactcorr.*thetTGG(end)).^2);
 Ycv=Ycv+diag(compactcorr.*thetTGG(end)).^2;
 
 testsites=testsitedef.sites;
-testsites(:,3)=mod(testsites(:,3),360);
 testnames=testsitedef.names;
 testnames2=testsitedef.names2;
 if isfield(testsitedef,'firstage')
@@ -73,19 +68,31 @@ fp1fp1=bsxfun(@times,obsGISfp(trainsub)-1,obsGISfp(trainsub)'-1);
 
 wcvfunc = @(x1,x2,thet) cvfuncTGG(x1,x2,dYears(x1,x2),thet,dy1y1,fp1fp1);
 
+dK=0; df=0; d2f=0; yoffset=0;
 dt = abs(time2-time1)/4;
 if max(dt)>0
     [dK,df,d2f,yoffset] = GPRdx(meantime(trainsub),Y(trainsub),dt(trainsub),dY(trainsub),@(x1,x2) wcvfunc(x1,x2,thetTGG),2);
-else
-    dK=0; df=0; d2f=0; yoffset=0;
 end
 
-if iscell(GISfp)
-    testsitefp = interp2(GISfp.long,GISfp.lat,GISfp.fp,testsites(:,3),testsites(:,2),'linear');
-    testsitefp(find(testsites(:,2)>100))=1;
+if isfield('testsitedef','GISfp')
+    testsitefp=testsitedef.GISfp;
 else
-    testsitefp=ones(size(testsites,1));
+    testsitefp=ones(size(testsites(:,1)));
 end
+
+if isfield('testsitedef','GIA')
+    testGIAproju=testsitedef.GIA;
+else
+    testGIAproju=zeros(size(testsites(:,1)));
+end
+
+
+% $$$ if iscell(GISfp)    
+% $$$     testsitefp = interp2(GISfp.long,GISfp.lat,GISfp.fp,testsites(:,3),testsites(:,2),'linear');
+% $$$     testsitefp(find(testsites(:,2)>100))=1;
+% $$$ else
+% $$$     testsitefp=ones(size(testsites,1));
+% $$$ end
 
 testX=[];
 testreg=[];
@@ -110,34 +117,12 @@ for i=1:size(testsites,1)
 
 end
 
-testGIAproju=zeros(size(testsites,1),1);
 testGIAproj=zeros(size(testX,1),1);
-GIAproj=zeros(size(Y));
 
-if isstruct(ICE5G)
-    ICE5G.long=mod(ICE5G.long,360);
-    for i=1:size(testsites,1)
-        if testsites(i,1)>0
-            testGIAproju(i)=interp2(ICE5G.lat,ICE5G.long,ICE5G.gia,testsites(i,2),testsites(i,3));
-            sub=find(testreg==testsites(i,1));
-            testGIAproj(sub)=testGIAproju(i).*(testX(sub,3)-refyear);
-        end
-    end
-
-
-    for jj=1:length(dataset.siteid)
-        if dataset.siteid(jj)>0
-            sub=find(datid==dataset.siteid(jj));    
-            if length(sub)>0   
-                GIAproju(jj)=interp2(ICE5G.lat,ICE5G.long,ICE5G.gia,lat(sub(1)),long(sub(1)));
-                GIAproj(sub)=GIAproju(jj).*(meantime(sub)-refyear);
-            else
-                GIAproju(jj)=NaN;
-            end
-        end
-    end
+for i=1:size(testsites,1)
+    sub=find(testreg==testsites(i,1));
+    testGIAproj(sub)=testGIAproju(i).*(testX(sub,3)-refyear);
 end
-
 
 X1 = [lat long meantime];
 
@@ -164,7 +149,7 @@ Ycv2=Ycv(trainsub,trainsub)+diag(dK);
 clear f2s V2s sd2s;
 for i=1:size(noiseMasks,1)
 	disp(i);
-	[f2s(:,i),V2s(:,:,i),logp] = GaussianProcessRegression([],Y(trainsub)-GIAproj(trainsub)-yoffset,[],traincvTGG(t1,t1,dt1t1,thetTGG,Ycv2,dy1y1,fp1fp1),testcv(thetTGG.*noiseMasks(i,:))',testcv2(thetTGG.*noiseMasks(i,:)));
+	[f2s(:,i),V2s(:,:,i),logp] = GaussianProcessRegression([],Y(trainsub)-yoffset,[],traincvTGG(t1,t1,dt1t1,thetTGG,Ycv2,dy1y1,fp1fp1),testcv(thetTGG.*noiseMasks(i,:))',testcv2(thetTGG.*noiseMasks(i,:)));
 	sd2s(:,i)=sqrt(diag(V2s(:,:,i)));
     if (collinear==0)||(collinear>size(noiseMasks,2))
         f2s(:,i)=f2s(:,i)+testGIAproj;

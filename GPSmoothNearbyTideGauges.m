@@ -177,7 +177,7 @@ for nn=1:length(TGdata.siteid)
     TGV2=Mop*TGV*Mop';
     TGsd2=sqrt(diag(TGV2));
 
-    TGdata2.datid=[TGdata2.datid ; Mop*TGtestlocs.reg];
+    TGdata2.datid=[TGdata2.datid ; round(Mop*TGtestlocs.reg)];
     TGdata2.time1=[TGdata2.time1 ; Mop*TGtestlocs.X(:,3)];
     TGdata2.Y=[TGdata2.Y ; TGf2];
     TGdata2.dY =[TGdata2.dY ; TGsd2];

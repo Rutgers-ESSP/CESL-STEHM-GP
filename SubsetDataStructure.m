@@ -19,7 +19,7 @@ for jj=1:length(shortenfields)
     PX.(shortenfields{jj}) =  PX.(shortenfields{jj})(subS);
 end
 PX.sitecoords=PX.sitecoords(subS,:);
+PX.sitelen=zeros(length(PX.siteid),1);
 for ii=1:length(PX.siteid)
     PX.sitelen(ii)=sum(PX.datid==PX.siteid(ii));
 end
-PX.sitelen=PX.sitelen(:);

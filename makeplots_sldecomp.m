@@ -1,10 +1,10 @@
 function makeplots_sldecomp(dataset,f2s,sd2s,V2s,testloc,labl)
 
-% Last updated by  Bob Kopp, robert-dot-kopp-at-rutgers-dot-edu, Tue Feb 18 23:13:46 EST 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Apr 21 08:18:17 EDT 2014
 
 
 
-% SL component plots
+% Sl component plots
 % (a) total record
 % (b) regional + local record
 % (c-d) corresponding average rates of change
@@ -28,7 +28,7 @@ meantime=dataset.meantime;
 lat=dataset.lat;
 long=dataset.long;
 Y=dataset.Y0;
-Ycv0=dataset.Ycv0;
+Ycv=dataset.Ycv;
 limiting=dataset.limiting;
 obsGISfp=dataset.obsGISfp;
 compactcorr=dataset.compactcorr;

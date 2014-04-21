@@ -8,7 +8,7 @@ IFILES=[pwd '/IFILES'];
 addpath(pwd)
 savefile='~/tmp/CESL';
 
-WORKDIR='140419';
+WORKDIR='140421b';
 if ~exist(WORKDIR,'dir')
 	mkdir(WORKDIR);
 end
@@ -72,7 +72,7 @@ fclose(fid)
 
 %% now do a regression
 clear Loc cnt oldest testsitedef;
-preserveall={'North Carolina','New Jersey'};
+preserveall={'North Carolina','New Jersey','Florida','Nova Scotia'};
 for ii=1:length(PX.sitenames)
     s0=0;
     for jj=1:length(preserveall)
@@ -113,14 +113,30 @@ for ii=1:length(uLoc)
     end
 end
 
+% $$$ if iscell(GISfp)    
+% $$$     testsitefp = interp2(GISfp.long,GISfp.lat,GISfp.fp,testsites(:,3),testsites(:,2),'linear');
+% $$$     testsitefp(find(testsites(:,2)>100))=1;
+% $$$ else
+% $$$     testsitefp=ones(size(testsites,1));
+% $$$ end
+
 GISfpt.lat=GISfplat;
 GISfpt.long=GISfplong;
 GISfpt.fp=GISfp;
 
 ICE5G.lat=ICE5Glat;
 ICE5G.long=ICE5Glon;
-[ICE5G.long,si]=sort(mod(ICE5Glon,360));
-ICE5G.gia=ICE5Ggia(si,:);
+ICE5G.gia=ICE5Ggia;
+
+for ii=1:length(testsitedefs.sites(:,1))
+     testsitedef.GISfp = interp2(GISfp.long,GISfp.lat,GISfp.fp,testsitedef.sites(:,3),testsitedef.sites(:,2),'linear');
+     testsitedef.GISfp(find(testsitedef.sites(:,2)>100))=1;
+
+     testsitedef.GIA = interp2(ICE5G.long,ICE5G.lat,ICE5G.gia.fp,testsitedef.sites(:,3),testsitedef.sites(:,2),'linear');
+     testsitedef.GIA(find(testsitedef.sites(:,2)>100))=1;
+
+end
+
 
 testt = [-1000:20:2000 2010];
 
@@ -146,7 +162,7 @@ for ii=2 % use only the TG+PX, no GSL, data set
         subtimes=find(testt>=min(union(wdataset.time1,wdataset.time2)));
         
         collinear=modelspec(trainspecs(jj)).subamplinear(1);
-        [f2s{ii,jj},sd2s{ii,jj},V2s{ii,jj},testlocs{ii,jj},logp(ii,jj)]=RegressHoloceneDataSets(wdataset,testsitedef,modelspec(trainspecs(jj)),thetTGG{jj},GISfpt,ICE5G,trainsub,[],noiseMasks,testt(subtimes),refyear,collinear);
+        [f2s{ii,jj},sd2s{ii,jj},V2s{ii,jj},testlocs{ii,jj},logp(ii,jj)]=RegressHoloceneDataSets(wdataset,testsitedef,modelspec(trainspecs(jj)),thetTGG{jj},trainsub,[],noiseMasks,testt(subtimes),refyear,collinear);
 
         labl=labls{ii,jj}; disp(labl);
         makeplots_sldecomp(datasets{ii},f2s{ii,jj},sd2s{ii,jj},V2s{ii,jj},testlocs{ii,jj},labl);

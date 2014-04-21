@@ -9,6 +9,7 @@ defval('thetTG',[1.6585 36.1312 1e3 0.05 0 1.0217 0.5970   28.6848   11.9728    
 
 refyear=2010;
 kDP = @(years1,years2,thetas) thetas(1).^2 * bsxfun(@times,(years1-refyear)',(years2-refyear));
+kDELTAG = @(ad,thetas)thetas(1).^2.*(abs(ad)<1e-4).*(ad<360);
 
 % asymptotic covariance associated with
 % A exp((t0-t)/tau)
@@ -25,7 +26,7 @@ modelspec(1).traincv = @(t1,t2,dt1t2,thetas,errcv,ad,fp1fp2) modelspec(1).cvfunc
 tluTGG = [
 
 sqrt((thetTG(1)*100)^2 + thetTG(2)^2) 5 1e4 % global non-GIS amplitude
-50 5 1e4 % GIS amplitude
+100 5 1e4 % GIS amplitude
 thetTG(12) 5 1e4 % non-GIS regional amplitude
 
 1e3 1 3e3 % temporal parameters

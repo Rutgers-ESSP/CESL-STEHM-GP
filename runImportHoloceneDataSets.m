@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Apr 20 19:15:51 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Apr 21 08:42:27 EDT 2014
 
 defval('firsttime',-1000);
 
@@ -11,7 +11,7 @@ datid=[]; time1=[]; time2=[]; mediantime=[]; limiting=[]; Y=[]; dY = []; compact
 istg = []; lat=[]; long=[];
 siteid=[]; sitenames={}; sitecoords=[];
 
-datPX = importdata(fullfile(IFILES,'RSL_Feb2014.csv'));
+datPX = importdata(fullfile(IFILES,'RSL_Apr2014.csv'));
 datPX.textdata=datPX.textdata(2:end,:);
 
 % catch entries without age errors
@@ -71,42 +71,42 @@ end
 %%%%%%%%%%%%%%%%
 
 % Engelhart & Horton database
-
-datHolo=importdata(fullfile(IFILES,'Engelhart_Horton_2012_v4.csv'));
-HoloRegions=[1:16];
-for curreg=1:length(HoloRegions)
-    sub=find((datHolo.data(:,1)==HoloRegions(curreg)).*(datHolo.data(:,2)==0));
-
-    count=[1:length(sub)]';
-    wdatid = ones(length(sub),1)*(1e6+HoloRegions(curreg)*1e3);
-    wtime1=1950-datHolo.data(sub,8) + count/1e5;
-    wtime2=1950-datHolo.data(sub,9) + count/1e5;
-    wlimiting=datHolo.data(sub,2);
-    wY=datHolo.data(sub,10)*1000;
-    wdY=datHolo.data(sub,11)*1000;
-    wlat=datHolo.data(sub,3);
-    wlong=-datHolo.data(sub,4);
-    wcompactcorr = wY*.1;
-    
-    datid = [datid ; wdatid];
-    time1 = [time1 ; wtime1];
-    time2 = [time2 ; wtime2];
-    limiting = [limiting ; wlimiting];
-    Y = [Y ; wY];
-    dY = [dY ; wdY];
-    compactcorr = [compactcorr ; wcompactcorr];
-    istg = [istg ; 0 * wY];
-    lat = [lat ; wlat];
-    long = [long ; wlong];
-
-    sitecoords=[sitecoords; mean(wlat) mean(wlong)];
-    sitenames={sitenames{:}, ['EH12_' num2str(HoloRegions(i))]};
-    siteid=[siteid ; [1e6+curreg*1e3]'];
-end
+% $$$ 
+% $$$ datHolo=importdata(fullfile(IFILES,'Engelhart_Horton_2012_v4.csv'));
+% $$$ HoloRegions=[1:16];
+% $$$ for curreg=1:length(HoloRegions)
+% $$$     sub=find((datHolo.data(:,1)==HoloRegions(curreg)).*(datHolo.data(:,2)==0));
+% $$$ 
+% $$$     count=[1:length(sub)]';
+% $$$     wdatid = ones(length(sub),1)*(1e6+HoloRegions(curreg)*1e3);
+% $$$     wtime1=1950-datHolo.data(sub,8) + count/1e5;
+% $$$     wtime2=1950-datHolo.data(sub,9) + count/1e5;
+% $$$     wlimiting=datHolo.data(sub,2);
+% $$$     wY=datHolo.data(sub,10)*1000;
+% $$$     wdY=datHolo.data(sub,11)*1000;
+% $$$     wlat=datHolo.data(sub,3);
+% $$$     wlong=-datHolo.data(sub,4);
+% $$$     wcompactcorr = wY*.1;
+% $$$     
+% $$$     datid = [datid ; wdatid];
+% $$$     time1 = [time1 ; wtime1];
+% $$$     time2 = [time2 ; wtime2];
+% $$$     limiting = [limiting ; wlimiting];
+% $$$     Y = [Y ; wY];
+% $$$     dY = [dY ; wdY];
+% $$$     compactcorr = [compactcorr ; wcompactcorr];
+% $$$     istg = [istg ; 0 * wY];
+% $$$     lat = [lat ; wlat];
+% $$$     long = [long ; wlong];
+% $$$ 
+% $$$     sitecoords=[sitecoords; mean(wlat) mean(wlong)];
+% $$$     sitenames={sitenames{:}, ['EH12_' num2str(HoloRegions(curreg))]};
+% $$$     siteid=[siteid ; [1e6+curreg*1e3]'];
+% $$$ end
 
 %%%%
 
-PX.datid=datid;
+PX.datid=round(datid);
 PX.time1=time1;
 PX.time2=time2;
 PX.limiting=limiting;
@@ -117,7 +117,7 @@ PX.istg = istg;
 PX.lat=lat;
 PX.long=long;
 PX.Ycv=sparse(diag(dY.^2));
-PX.siteid=siteid;
+PX.siteid=round(siteid);
 PX.sitenames=sitenames;
 PX.meantime=(PX.time1+PX.time2)/2;
 PX.sitecoords = sitecoords;
@@ -132,22 +132,22 @@ subS=find(abs(PX.sitecoords(:,1))<=52);
 PX=SubsetDataStructure(PX,sub,subS);
 
 % now create a slimmed version for training
-excl={'France','Tasmania','Spain','New Zealand','Italy','Israel',['Isle ' ...
-                    'of Wight'],'Iceland','Greenland'};
-
-subexcl=[]; subexclS=[];
-
-for ii=1:length(excl)
-    doexcl=find(strncmp(excl{ii},PX.sitenames,length(excl{ii})));
-    subexclS=union(subexclS,doexcl);
-    for jj=1:length(doexcl)
-        subexcl=union(subexcl,find(PX.datid==PX.siteid(doexcl(jj))));
-    end
-end
-sub=setdiff(1:length(PX.datid),subexcl);
-subS=setdiff(1:length(PX.siteid),subexclS);
-
-PXslim=SubsetDataStructure(PX,sub,subS);
+% $$$ excl={'France','Tasmania','Spain','New Zealand','Italy','Israel',['Isle ' ...
+% $$$                     'of Wight'],'Iceland','Greenland'};
+% $$$ 
+% $$$ subexcl=[]; subexclS=[];
+% $$$ 
+% $$$ for ii=1:length(excl)
+% $$$     doexcl=find(strncmp(excl{ii},PX.sitenames,length(excl{ii})));
+% $$$     subexclS=union(subexclS,doexcl);
+% $$$     for jj=1:length(doexcl)
+% $$$         subexcl=union(subexcl,find(PX.datid==PX.siteid(doexcl(jj))));
+% $$$     end
+% $$$ end
+% $$$ sub=setdiff(1:length(PX.datid),subexcl);
+% $$$ subS=setdiff(1:length(PX.siteid),subexclS);
+% $$$ 
+% $$$ PXslim=SubsetDataStructure(PX,sub,subS);
 
 
 %%%%%%%%%%%%%%%
@@ -197,10 +197,10 @@ GISfp=GISfp*1000;
 %%%%%%
 
 clear datasets;
-datasets{1}=MergeDataStructures(TG,PXslim);
+datasets{1}=MergeDataStructures(TG,PX);
 datasets{2}=MergeDataStructures(TGNOCW,PX);
 
-datasets{1}.label='TG+GSL+PXslim';
+datasets{1}.label='TG+GSL+PX';
 datasets{2}.label='TG+PX';
 
 
@@ -214,33 +214,22 @@ for ii=1:length(datasets)
 
     datasets{ii}.obsGISfp = interp2(GISfplong,GISfplat,GISfp,datasets{ii}.long,datasets{ii}.lat,'linear');
     datasets{ii}.obsGISfp(find(datasets{ii}.lat>100))=1;
+    datasets{ii}.siteGISfp = interp2(GISfplong,GISfplat,GISfp,datasets{ii}.sitecoords(:,2),datasets{ii}.sitecoords(:,1),'linear');
+    datasets{ii}.siteGISfp(find(datasets{ii}.sitecoords(:,1)>100))=1;
     
     % subtract GIA model
-    
-    ider = datasets{ii}.lat*1e5+datasets{ii}.long;
-    [ideru,iderui]=unique(ider);
-    
-    %    [regionsu,regionsusi]=unique(datasets{ii}.datid);
-    %    sitecoords=[datasets{ii}.lat(regionsusi) datasets{ii}.long(regionsusi)];
-    %    GIAproju=zeros(size(regionsu));
-    %    GIAproj=zeros(size(datasets{ii}.Y));
-    GIAproju=zeros(size(ideru));
-    GIAproj=zeros(size(datasets{ii}.Y));
+    datasets{ii}.siteGIA = interp2(ICE5Glat,ICE5Glon,ICE5Ggia, ...
+                                datasets{ii}.sitecoords(:,1),datasets{ii}.sitecoords(:,2));
+    datasets{ii}.siteGIA(find(datasets{ii}.sitecoords(:,1)>100))=0;
 
-    for jj=1:length(ideru)
-        if datasets{ii}.datid(iderui(jj))>0
-            GIAproju(jj)=interp2(ICE5Glat,ICE5Glon,ICE5Ggia,datasets{ii}.lat(iderui(jj)),datasets{ii}.long(iderui(jj)));
-            sub=find(ider==ideru(jj));
-            GIAproj(sub)=GIAproju(jj).*(datasets{ii}.meantime(sub)-refyear);
-        end
-    end
+    GIAproj = zeros(size(datasets{ii}.datid));
     for jj=1:length(datasets{ii}.siteid)
-        datasets{ii}.siteGIA(jj)=0;
-        sub=find(datasets{ii}.datid == datasets{ii}.siteid(jj));
-        if length(sub)>0
-            datasets{ii}.siteGIA(jj) = GIAproj(sub(1));
-        end
+           sub=find(abs(datasets{ii}.datid- ...
+                        datasets{ii}.siteid(jj))<.01);
+           GIAproj(sub)=datasets{ii}.siteGIA(jj).*(datasets{ii}.meantime(sub)- ...
+                                        refyear);
     end
+    
     datasets{ii}.GIAproj=GIAproj;
     datasets{ii}.Y0=datasets{ii}.Y;
     datasets{ii}.Y=datasets{ii}.Y0-GIAproj;
