@@ -1,6 +1,6 @@
 % Master script for Common Era proxy + tide gauge sea-level analysis
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Apr 20 19:16:22 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Tue Apr 22 22:06:57 EDT 2014
 
 addpath('~/Dropbox/Code/TGAnalysis/MFILES');
 addpath([pwd '/MFILES']);
@@ -23,30 +23,30 @@ runImportHoloceneDataSets;
 
 save(savefile,'datasets','modelspec');
 
-trainsets=1; % train w/TGslim+GSL+PX
-trainspecs=ones(size(trainsets));
+trainsets=[1 1 1 1]; % train w/TGslim+GSL+PX
+trainspecs=[1 2 3 4];
+
 
 clear thetTGG trainsubsubset;
-for ii=1:length(trainsets)  
-    if ii>1
-        modelspec(trainspecs(ii)).thet0=thetTGG{1}(1:length(modelspec(trainspecs(ii)).thet0));
-    end
-    [thetTGG{ii},trainsubsubset{ii}]= ...
+for ii=trainspecs
+    [thetTGG{ii},trainsubsubset{ii},logp(ii)]= ...
         OptimizeHoloceneCovariance(datasets{trainsets(ii)}, ...
                                    modelspec(trainspecs(ii)),[2.4 2.01]);
+    
+    fid=fopen('thetTGG.tsv','w');
+    for iii=1:length(thetTGG)
+        fprintf(fid,[datasets{trainsets(iii)}.label '\t' ...
+                     modelspec(trainspecs(iii)).label '\t']);
+        fprintf(fid,['(%0.2f)\t'],logp(iii));
+        fprintf(fid,'%0.3f\t',thetTGG{iii});
+        fprintf(fid,'\n');
+    end
+    fclose(fid);
 end
 
 save thetTGG thetTGG trainsubsubset
 
 %%%%%%%%
-
-fid=fopen('thetTGG.tsv','w');
-for ii=1:length(trainsets)
-    fprintf(fid,[datasets{trainsets(ii)}.label '\t']);
-    fprintf(fid,'%0.3f\t',thetTGG{ii});
-    fprintf(fid,'\n');
-end
-fclose(fid);
 
 
 %%%%
@@ -96,6 +96,7 @@ for ii=1:length(PX.sitenames)
 end
 [uLoc,ui]=unique(Loc);
 
+clear testsitedef;
 testsitedef.sites=[0 1e6 1e6];
 testsitedef.names={'GSL'};
 testsitedef.names2={'GSL'};
@@ -113,13 +114,6 @@ for ii=1:length(uLoc)
     end
 end
 
-% $$$ if iscell(GISfp)    
-% $$$     testsitefp = interp2(GISfp.long,GISfp.lat,GISfp.fp,testsites(:,3),testsites(:,2),'linear');
-% $$$     testsitefp(find(testsites(:,2)>100))=1;
-% $$$ else
-% $$$     testsitefp=ones(size(testsites,1));
-% $$$ end
-
 GISfpt.lat=GISfplat;
 GISfpt.long=GISfplong;
 GISfpt.fp=GISfp;
@@ -128,12 +122,12 @@ ICE5G.lat=ICE5Glat;
 ICE5G.long=ICE5Glon;
 ICE5G.gia=ICE5Ggia;
 
-for ii=1:length(testsitedefs.sites(:,1))
-     testsitedef.GISfp = interp2(GISfp.long,GISfp.lat,GISfp.fp,testsitedef.sites(:,3),testsitedef.sites(:,2),'linear');
+for ii=1:length(testsitedef.sites(:,1))
+     testsitedef.GISfp = interp2(GISfpt.long,GISfpt.lat,GISfpt.fp,testsitedef.sites(:,3),testsitedef.sites(:,2),'linear');
      testsitedef.GISfp(find(testsitedef.sites(:,2)>100))=1;
 
-     testsitedef.GIA = interp2(ICE5G.long,ICE5G.lat,ICE5G.gia.fp,testsitedef.sites(:,3),testsitedef.sites(:,2),'linear');
-     testsitedef.GIA(find(testsitedef.sites(:,2)>100))=1;
+     testsitedef.GIA = interp2(ICE5G.lat,ICE5G.long,ICE5G.gia,testsitedef.sites(:,2),testsitedef.sites(:,3),'linear');
+     testsitedef.GIA(find(testsitedef.sites(:,2)>100))=0;
 
 end
 
@@ -153,7 +147,8 @@ for ii=2 % use only the TG+PX, no GSL, data set
 
         wdataset=datasets{ii};
 
-        labls{ii,jj}=['_' wdataset.label '_tr' datasets{trainsets(jj)}.label];
+        labls{ii,jj}=['_' wdataset.label '_tr' ...
+                      datasets{trainsets(jj)}.label '_' modelspec(trainspecs(jj)).label];
         disp(labls{ii,jj});
 
         trainsub = find((wdataset.limiting==0)); % only index points
@@ -162,7 +157,7 @@ for ii=2 % use only the TG+PX, no GSL, data set
         subtimes=find(testt>=min(union(wdataset.time1,wdataset.time2)));
         
         collinear=modelspec(trainspecs(jj)).subamplinear(1);
-        [f2s{ii,jj},sd2s{ii,jj},V2s{ii,jj},testlocs{ii,jj},logp(ii,jj)]=RegressHoloceneDataSets(wdataset,testsitedef,modelspec(trainspecs(jj)),thetTGG{jj},trainsub,[],noiseMasks,testt(subtimes),refyear,collinear);
+        [f2s{ii,jj},sd2s{ii,jj},V2s{ii,jj},testlocs{ii,jj},logp(ii,jj),passderivs]=RegressHoloceneDataSets(wdataset,testsitedef,modelspec(trainspecs(jj)),thetTGG{jj},trainsub,noiseMasks,testt(subtimes),refyear,collinear);
 
         labl=labls{ii,jj}; disp(labl);
         makeplots_sldecomp(datasets{ii},f2s{ii,jj},sd2s{ii,jj},V2s{ii,jj},testlocs{ii,jj},labl);
@@ -220,7 +215,7 @@ for ii=2 % use only the TG+PX, no GSL, data set
         
         fid=fopen(['linrates' labl '.tsv'],'w');
         fprintf(fid,['Regional+Local Linear Rates (mm/y), ' labl '\n']);
-        fprintf(fid,'Site\tRate (linear)\t2s');
+        fprintf(fid,'Site\tICE5G VM2-90\tRate (linear)\t2s');
         for pp=1:length(firstyears)
             fprintf(fid,'\tRate (avg, %0.0f-%0.0f)\t2s',[firstyears(pp) lastyears(pp)]);
         end
@@ -230,6 +225,7 @@ for ii=2 % use only the TG+PX, no GSL, data set
         fprintf(fid,'\n');
         for kk=1:size(testsites,1)
             fprintf(fid,testnames2{kk});
+            fprintf(fid,'\t%0.2f',testsitedef.GIA(kk));
             fprintf(fid,'\t%0.2f',[fslopelin(kk,ii,jj) 2*sdslopelin(kk,ii,jj)]);
             for pp=1:length(firstyears)
                 fprintf(fid,'\t%0.2f',[fslopeavg(kk,ii,jj,pp) 2*sdslopeavg(kk,ii,jj,pp)]);
@@ -242,14 +238,15 @@ for ii=2 % use only the TG+PX, no GSL, data set
         fclose(fid);
 
         
-        fslope=fslopelin(:,ii,jj); fslope=fslope(:);
+        %       fslope=fslopelin(:,ii,jj); fslope=fslope(:);
+       fslope=fslopeavglessGSL(:,ii,jj,end-2); fslope=fslope(:);
         sub=find(testsites(:,2)<1e3);
 
         figure;
         plotcont; hold on;
 
         % plot tide gauge locations
-        scatter(mod(TGNOCW.sitecoords(:,2),360),TGNOCW.sitecoords(:,1),20,[.5 .5 .5],'filled'); hold on;
+        scatter(mod(TGNOCW.sitecoords(:,2),360),TGNOCW.sitecoords(:,1),10,[.5 .5 .5],'filled'); hold on;
 
         % plot observation sites
         scatter(mod(testsites(sub,3),360),testsites(sub,2),30,fslope(sub),'filled'); hold on;
@@ -292,13 +289,13 @@ for ii=2 % use only the TG+PX, no GSL, data set
         for i=1:size(testsites,1)
             
             sub1=find(testreg==testsites(i,1));
-            sub2=intersect(sub1,find(testX(:,3)==2010));
+            sub2=intersect(sub1,find(testX(:,3)==refyear));
             
             Mref(sub1,sub2)=Mref(sub1,sub2)-1;
 
         end
         Mref=sparse(Mref);
-        selsitenames={'GSL','Florida','NorthCarolina-SandPoint','NewJersey-LeedsPoint','Connecticut','Massachusetts','NovaScotia'};
+        selsitenames={'GSL','Florida-Nassau','NorthCarolina-SandPoint','NewJersey-LeedsPoint','Connecticut','Massachusetts','NovaScotia-Chezzetcook'};
         sitesub=[];
         for kk=1:length(selsitenames)
             q=find(strcmpi(selsitenames{kk},testsitedef.names));
@@ -489,7 +486,7 @@ for ii=2 % use only the TG+PX, no GSL, data set
 
         % figure of sea-level differences
 
-        selsitenames={'Florida','NorthCarolina-SandPoint','NewJersey-LeedsPoint','Massachusetts','NovaScotia'};
+        selsitenames={'Florida-Nassau','NorthCarolina-SandPoint','NewJersey-LeedsPoint','Massachusetts','NovaScotia-Chezzetcook'};
         shortselnames={'FL','NC','NJ','MA','NS'};
         sitesub=[];
         for kk=1:length(selsitenames)
@@ -501,40 +498,53 @@ for ii=2 % use only the TG+PX, no GSL, data set
 
         selmask=2;
 
-        gradf=[]; gradsd=[]; gradt=[]; gradpair=[]; gradV=[]; gradstarttimes=[];
-        diffpairs=[2 1; 2 3; 2 4; 2 5 ; 3 5]; clear pairnames;
-        for i=1:size(diffpairs,1)
-            pairnames{i} = [shortselnames{diffpairs(i,2)} '-' shortselnames{diffpairs(i,1)}];
-            sub1=find(testreg==testsites(sitesub(diffpairs(i,1))));
-            sub2=find(testreg==testsites(sitesub(diffpairs(i,2))));
-            [u,ui,uj]=intersect(testX(sub1,3),testX(sub2,3));
-            Mgrad=sparse(length(u),length(testX));
-            Mgrad(:,sub1(ui))=-eye(length(ui));
-            Mgrad(:,sub1(ui(end))) = Mgrad(:,sub1(ui(end)))+1;
-            
-            Mgrad(:,sub2(uj)) = Mgrad(:,sub2(uj)) + eye(length(uj));
-            Mgrad(:,sub2(uj(end))) = Mgrad(:,sub2(uj(end)))-1;
+        clear pairsets;
+        pairsets{1}=[2 1; 2 3; 2 4; 2 5 ; 3 5];
+        pairsets{2}=[2 3; 3 5 ; 2 5];
+        for mmm=1:length(pairsets)
+            gradf=[]; gradsd=[]; gradt=[]; gradpair=[]; gradV=[]; ...
+              gradstarttimes=[]; clear pairnames;
+            diffpairs=pairsets{mmm};
+            labl2=['_' num2str(mmm)];
+            for i=1:size(diffpairs,1)
+                pairnames{i} = [shortselnames{diffpairs(i,2)} '-' shortselnames{diffpairs(i,1)}];
+                sub1=find(testreg==testsites(sitesub(diffpairs(i,1))));
+                sub2=find(testreg==testsites(sitesub(diffpairs(i,2))));
+                [u,ui,uj]=intersect(testX(sub1,3),testX(sub2,3));
+                Mgrad=sparse(length(u),length(testX));
+                Mgrad(:,sub1(ui))=-eye(length(ui));
+                Mgrad(:,sub1(ui(end))) = Mgrad(:,sub1(ui(end)))+1;
+                
+                Mgrad(:,sub2(uj)) = Mgrad(:,sub2(uj)) + eye(length(uj));
+                Mgrad(:,sub2(uj(end))) = Mgrad(:,sub2(uj(end)))-1;
 
-            gradf = [gradf ; Mgrad*f2s{ii,jj}(:,selmask)];
-            gradV(length(gradV) + [1:length(u)],length(gradV) + [1:length(u)]) = Mgrad*V2s{ii,jj}(:,:,selmask)*Mgrad';
-            gradt = [gradt ; u];
-            gradpair = [gradpair ; ones(length(u),1)*i];
-            gradstarttimes(i)=u(1);
-            
-        end 
-        gradsd = sqrt(diag(gradV));
+                gradf = [gradf ; Mgrad*f2s{ii,jj}(:,selmask)];
+                gradV(length(gradV) + [1:length(u)],length(gradV) + [1:length(u)]) = Mgrad*V2s{ii,jj}(:,:,selmask)*Mgrad';
+                gradt = [gradt ; u];
+                gradpair = [gradpair ; ones(length(u),1)*i];
+                gradstarttimes(i)=u(1);
+                
+            end 
+            gradsd = sqrt(diag(gradV));
 
-        for timesteps=[100 600 160 40 20]
+            for timesteps=[100 600 160 40 20]
 
-            clf;
-            [hp,hl,hl2,dGSL,dGSLsd,dGSLV,outtable,difftimes,diffreg]=PlotPSLOverlay(gradt,gradpair,1:length(diffpairs),gradf,gradV,colrs,gradstarttimes,2010,0,timesteps,pairnames);
-            set(hp,'xlim',[-1000 2010]);
-            legend(hl,pairnames,'Location','Southwest');
-            pdfwrite(['RSLgrad_' num2str(timesteps) 'y' labl]);
+                clf;
+                [hp,hl,hl2,dGSL,dGSLsd,dGSLV,outtable,difftimes,diffreg]=PlotPSLOverlay(gradt,gradpair,1:length(diffpairs),gradf,gradV,colrs,gradstarttimes,2010,0,timesteps,pairnames);
+                set(hp,'xlim',[-1000 2010]);
+                if mmm>1
+                    set(hp,'xlim',[0 2010]);
+                end
+                legend(hl,pairnames,'Location','Southwest');
+                pdfwrite(['RSLgrad_' num2str(timesteps) 'y' labl labl2]);
 
-            fid=fopen(['RSLgrad_' num2str(timesteps) labl 'y.tsv'],'w');
-            fprintf(fid,outtable);
-            fclose(fid);
+                if mmm==1
+                    fid=fopen(['RSLgrad_' num2str(timesteps) 'y' labl '.tsv'],'w');
+                    fprintf(fid,outtable);
+                    fclose(fid);
+                end
+                
+            end
         end
         
         save(savefile,'datasets','modelspec','f2s','sd2s','V2s', ...

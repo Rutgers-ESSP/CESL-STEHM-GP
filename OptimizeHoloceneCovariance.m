@@ -1,6 +1,6 @@
-function [thetTGG,trainsub]=OptimizeHoloceneCovariance(dataset,modelspec,optimizesteps,mintime)
+function [thetTGG,trainsub,logp]=OptimizeHoloceneCovariance(dataset,modelspec,optimizesteps,mintime)
 
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Apr 20 19:16:17 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Tue Apr 22 16:50:35 EDT 2014
 
 defval('maxcompactcorrfactor',.25);
 
@@ -152,9 +152,8 @@ for nnn=1:length(optimizesteps)
         else
             doglobs=0;
         end
-
         for doglob=doglobs
-            [thetTGG(subnotfixed)] = SLGPOptimize(Y(trainsub),@(x) traincvTGG(meantime(trainsub),meantime(trainsub),dt1t1,x(1:end-1)*Mfixed+fixedvect,Ycv(trainsub,trainsub)+diag(x(end)*compactcorr(trainsub)).^2,dy1y1,fp1fp1),thetTGG(subnotfixed),lbTGG(subnotfixed),ubTGG(subnotfixed),doglob);
+            [thetTGG(subnotfixed),logp] = SLGPOptimize(Y(trainsub),@(x) traincvTGG(meantime(trainsub),meantime(trainsub),dt1t1,x(1:end-1)*Mfixed+fixedvect,Ycv(trainsub,trainsub)+diag(x(end)*compactcorr(trainsub)).^2,dy1y1,fp1fp1),thetTGG(subnotfixed),lbTGG(subnotfixed),ubTGG(subnotfixed),doglob);
             disp(sprintf('%0.3f ',thetTGG));
         end
         
@@ -173,7 +172,7 @@ for nnn=1:length(optimizesteps)
             end
             
             for doglob=doglobs
-                [thetTGG(subnotfixed)] = SLGPOptimize(Y(trainsub),@(x) traincvTGG(meantime(trainsub),meantime(trainsub),dt1t1,x(1:end-1)*Mfixed+fixedvect,Ycv(trainsub,trainsub)+diag(x(end)*compactcorr(trainsub)).^2+diag(dK),dy1y1,fp1fp1),thetTGG(subnotfixed),lbTGG(subnotfixed),ubTGG(subnotfixed),doglob);
+                [thetTGG(subnotfixed),logp] = SLGPOptimize(Y(trainsub),@(x) traincvTGG(meantime(trainsub),meantime(trainsub),dt1t1,x(1:end-1)*Mfixed+fixedvect,Ycv(trainsub,trainsub)+diag(x(end)*compactcorr(trainsub)).^2+diag(dK),dy1y1,fp1fp1),thetTGG(subnotfixed),lbTGG(subnotfixed),ubTGG(subnotfixed),doglob);
                 disp(sprintf('%0.3f ',thetTGG));
 
             end

@@ -1,10 +1,11 @@
-function [f2s,sd2s,V2s,testlocs,logp]=RegressHoloceneDataSets(dataset,testsitedef,modelspec,thetTGG,trainsub,trainsubsubset,noiseMasks,testt,refyear,collinear)
+function [f2s,sd2s,V2s,testlocs,logp,passderivs]=RegressHoloceneDataSets(dataset,testsitedef,modelspec,thetTGG,trainsub,noiseMasks,testt,refyear,collinear,passderivs)
 
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Apr 21 09:25:56 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Apr 21 10:03:41 EDT 2014
 
 defval('testt',[-2010:20:2010]);
 defval('refyear',2010);
 defval('collinear',0);
+defval('passderivs',[]);
 
 if ~iscell(testt)
     testt=testt(:);
@@ -24,7 +25,7 @@ else
     meantime=mean([dataset.time1(:) dataset.time2(:)],2);
 end
 lat=dataset.lat;
-long=mod(dataset.long,360); sublong=find(long>180); long(sublong)=long(sublong)-360;
+long=dataset.long;
 Y=dataset.Y;
 Ycv=dataset.Ycv;
 
@@ -53,9 +54,6 @@ else
 end
 
 defval('trainsub',find((limiting==0).*(datid>0))); % only index points, and drop the global curve
-defval('trainsubsubset',trainsub);
-
-trainsub=intersect(trainsub,trainsubsubset);
 
 angd= @(Lat0,Long0,lat,long) (180/pi)*(atan2(sqrt((cosd(lat).*sind(long-Long0)).^2+(cosd(Lat0).*sind(lat)-sind(Lat0).*cosd(lat).*cosd(long-Long0)).^2),(sind(Lat0).*sind(lat)+cosd(Lat0).*cosd(lat).*cosd(long-Long0))));
 
@@ -70,29 +68,31 @@ wcvfunc = @(x1,x2,thet) cvfuncTGG(x1,x2,dYears(x1,x2),thet,dy1y1,fp1fp1);
 
 dK=0; df=0; d2f=0; yoffset=0;
 dt = abs(time2-time1)/4;
-if max(dt)>0
-    [dK,df,d2f,yoffset] = GPRdx(meantime(trainsub),Y(trainsub),dt(trainsub),dY(trainsub),@(x1,x2) wcvfunc(x1,x2,thetTGG),2);
+if length(passderivs)>0
+    dK = passderivs.dK;
+    yoffset = passderivs.yoffset;
+else
+    
+    if max(dt)>0
+        [dK,df,d2f,yoffset] = GPRdx(meantime(trainsub),Y(trainsub), ...
+                                    dt(trainsub),dY(trainsub),@(x1,x2) wcvfunc(x1,x2,thetTGG),2);
+    end
+    passderivs.dK = dK;
+    passderivs.yoffset = yoffset;
 end
 
-if isfield('testsitedef','GISfp')
+
+if isfield(testsitedef,'GISfp')
     testsitefp=testsitedef.GISfp;
 else
     testsitefp=ones(size(testsites(:,1)));
 end
 
-if isfield('testsitedef','GIA')
+if isfield(testsitedef,'GIA')
     testGIAproju=testsitedef.GIA;
 else
     testGIAproju=zeros(size(testsites(:,1)));
 end
-
-
-% $$$ if iscell(GISfp)    
-% $$$     testsitefp = interp2(GISfp.long,GISfp.lat,GISfp.fp,testsites(:,3),testsites(:,2),'linear');
-% $$$     testsitefp(find(testsites(:,2)>100))=1;
-% $$$ else
-% $$$     testsitefp=ones(size(testsites,1));
-% $$$ end
 
 testX=[];
 testreg=[];
@@ -102,19 +102,9 @@ for i=1:size(testsites,1)
         testt=testts{i}(:);
     end
     subtimes=find(testt>=firstage(i));
-	testX = [testX; ones(size(testt(subtimes)))*testsites(i,2) ones(size(testt(subtimes)))*testsites(i,3) testt(subtimes)];
-	testreg = [testreg ; ones(size(testt(subtimes)))*testsites(i,1)];
-	testfp=[testfp ; ones(size(testt(subtimes)))*testsitefp(i)];
-end
-
-Mref = eye(size(testX,1));
-for i=1:size(testsites,1)
-	
-	sub1=find(testreg==testsites(i,1));
-	sub2=intersect(sub1,find(testX(:,3)==refyear));
-	
-	Mref(sub1,sub2)=Mref(sub1,sub2)-1;
-
+    testX = [testX; ones(size(testt(subtimes)))*testsites(i,2) ones(size(testt(subtimes)))*testsites(i,3) testt(subtimes)];
+    testreg = [testreg ; ones(size(testt(subtimes)))*testsites(i,1)];
+    testfp=[testfp ; ones(size(testt(subtimes)))*testsitefp(i)];
 end
 
 testGIAproj=zeros(size(testX,1),1);
@@ -148,15 +138,15 @@ Ycv2=Ycv(trainsub,trainsub)+diag(dK);
 
 clear f2s V2s sd2s;
 for i=1:size(noiseMasks,1)
-	disp(i);
-	[f2s(:,i),V2s(:,:,i),logp] = GaussianProcessRegression([],Y(trainsub)-yoffset,[],traincvTGG(t1,t1,dt1t1,thetTGG,Ycv2,dy1y1,fp1fp1),testcv(thetTGG.*noiseMasks(i,:))',testcv2(thetTGG.*noiseMasks(i,:)));
-	sd2s(:,i)=sqrt(diag(V2s(:,:,i)));
+    disp(i);
+    [f2s(:,i),V2s(:,:,i),logp] = GaussianProcessRegression([],Y(trainsub)-yoffset,[],traincvTGG(t1,t1,dt1t1,thetTGG,Ycv2,dy1y1,fp1fp1),testcv(thetTGG.*noiseMasks(i,:))',testcv2(thetTGG.*noiseMasks(i,:)));
+    sd2s(:,i)=sqrt(diag(V2s(:,:,i)));
     if (collinear==0)||(collinear>size(noiseMasks,2))
         f2s(:,i)=f2s(:,i)+testGIAproj;
-	elseif noiseMasks(i,collinear)==1
+    elseif noiseMasks(i,collinear)==1
         f2s(:,i)=f2s(:,i)+testGIAproj;
     end
-	
+    
 end
 
 testlocs=testsitedef;
