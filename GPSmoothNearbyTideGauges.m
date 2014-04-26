@@ -4,7 +4,7 @@ function [TGdata2,TGdata,thetL,TGmodellocal] = GPSmoothNearbyTideGauges(targcoor
 % fit GP model to them in order to interpolate and take running averge.
 %
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Apr 20 16:39:18 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Apr 24 22:19:27 EDT 2014
 %
 
 defval('minlength',[150 75 20]);  % minimum length for global curves, most purposes and minimum
@@ -146,13 +146,13 @@ for nn=1:length(TGdata.siteid)
     noiseMasks = ones(1,size(thetL,2));
     noiseMasklabels={'full'};
     trainsub=find(TGdatasub.limiting==0);
-    [TGf,TGsd,TGV,TGtestlocs]=RegressHoloceneDataSets(TGdatasub,TGtestsitedef,TGmodellocal,thetL(nn,:),[],[],trainsub,[],noiseMasks,TGtestsitedef.t,GIAanchoryear);
+    [TGf,TGsd,TGV,TGtestlocs]=RegressHoloceneDataSets(TGdatasub,TGtestsitedef,TGmodellocal,thetL(nn,:),trainsub,noiseMasks,TGtestsitedef.t,GIAanchoryear);
     
     % check for bad fit, and do a global optimization if need me
     if min(diag(TGV))<0
         if (length(thetL0)==0) .* (optimizemode<1.1)
              [thetL(nn,:)]=OptimizeHoloceneCovariance(TGdatasub,TGmodellocal,1.1)
-             [TGf,TGsd,TGV,TGtestlocs]=RegressHoloceneDataSets(TGdatasub,TGtestsitedef,TGmodellocal,thetL(nn,:),[],[],trainsub,[],noiseMasks,TGtestsitedef.t,GIAanchoryear);
+             [TGf,TGsd,TGV,TGtestlocs]=RegressHoloceneDataSets(TGdatasub,TGtestsitedef,TGmodellocal,thetL(nn,:),trainsub,noiseMasks,TGtestsitedef.t,GIAanchoryear);
         end
     end
 

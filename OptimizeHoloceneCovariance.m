@@ -85,7 +85,7 @@ for nnn=1:length(optimizesteps)
             
         end
 
-     elseif floor(optimizesteps(nnn))==2
+     elseif floor(optimizesteps(nnn))>=2
 
         % optimize ignoring geochronological uncertainty
 %        if donetg
@@ -152,31 +152,45 @@ for nnn=1:length(optimizesteps)
         else
             doglobs=0;
         end
-        for doglob=doglobs
-            [thetTGG(subnotfixed),logp] = SLGPOptimize(Y(trainsub),@(x) traincvTGG(meantime(trainsub),meantime(trainsub),dt1t1,x(1:end-1)*Mfixed+fixedvect,Ycv(trainsub,trainsub)+diag(x(end)*compactcorr(trainsub)).^2,dy1y1,fp1fp1),thetTGG(subnotfixed),lbTGG(subnotfixed),ubTGG(subnotfixed),doglob);
-            disp(sprintf('%0.3f ',thetTGG));
-        end
-        
-        if mod(optimizesteps(nnn),0.1)>0.001
-            % now include geochronological uncertainty, one iteration
-
-             wcvfunc = @(x1,x2,thet) cvfuncTGG(x1,x2,dYears(x1,x2),thet,dy1y1,fp1fp1);
-
+        if floor(optimizesteps(nnn))==3
             dt = abs(time2-time1)/4;
-
-            [dK,df,d2f,yoffset] = GPRdx(meantime(trainsub),Y(trainsub),dt(trainsub),sqrt(dY(trainsub).^2+(thetTGG(end)*compactcorr(trainsub)).^2),@(x1,x2) wcvfunc(x1,x2,thetTGG),2);
-
-            doglobs=0;
-            if opttype==0.4
-                doglobs=3;
+         for doglob=doglobs
+                [thetTGG(subnotfixed),logp] = ...
+                    SLNIGPOptimize(meantime(trainsub),Y(trainsub), ...
+                                   dt(trainsub),dY(trainsub),@(thet) ...
+                                   diag(thet(end)*compactcorr(trainsub)).^2, @(x1,x2,thet,xxx,yyy) cvfuncTGG(x1,x2,dYears(x1,x2),thet,dy1y1(xxx,yyy)',fp1fp1(xxx,yyy)'),thetTGG(subnotfixed),lbTGG(subnotfixed),ubTGG(subnotfixed),doglob,[1:length(trainsub)]');
+                disp(sprintf('%0.3f ',thetTGG));
             end
+        else
             
             for doglob=doglobs
-                [thetTGG(subnotfixed),logp] = SLGPOptimize(Y(trainsub),@(x) traincvTGG(meantime(trainsub),meantime(trainsub),dt1t1,x(1:end-1)*Mfixed+fixedvect,Ycv(trainsub,trainsub)+diag(x(end)*compactcorr(trainsub)).^2+diag(dK),dy1y1,fp1fp1),thetTGG(subnotfixed),lbTGG(subnotfixed),ubTGG(subnotfixed),doglob);
+                [thetTGG(subnotfixed),logp] = SLGPOptimize(Y(trainsub),@(x) traincvTGG(meantime(trainsub),meantime(trainsub),dt1t1,x(1:end-1)*Mfixed+fixedvect,Ycv(trainsub,trainsub)+diag(x(end)*compactcorr(trainsub)).^2,dy1y1,fp1fp1),thetTGG(subnotfixed),lbTGG(subnotfixed),ubTGG(subnotfixed),doglob);
                 disp(sprintf('%0.3f ',thetTGG));
+            end
 
+            if mod(optimizesteps(nnn),0.1)>0.001
+                % now include geochronological uncertainty, one iteration
+
+                wcvfunc = @(x1,x2,thet,xxx,yyy) cvfuncTGG(x1,x2,dYears(x1,x2),thet,dy1y1(xxx,yyy)',fp1fp1(xxx,yyy)');
+
+            dt = abs(time2-time1)/4;
+ 
+
+                [dK,df,d2f,yoffset] = GPRdx(meantime(trainsub),Y(trainsub),dt(trainsub),sqrt(dY(trainsub).^2+(thetTGG(end)*compactcorr(trainsub)).^2),@(x1,x2,r1,r2) wcvfunc(x1,x2,thetTGG,r1,r2),1,[1:length(trainsub)]');
+
+                doglobs=0;
+                if opttype==0.4
+                    doglobs=3;
+                end
+                
+                for doglob=doglobs
+                    [thetTGG(subnotfixed),logp] = SLGPOptimize(Y(trainsub)-yoffset,@(x) traincvTGG(meantime(trainsub),meantime(trainsub),dt1t1,x(1:end-1)*Mfixed+fixedvect,Ycv(trainsub,trainsub)+diag(x(end)*compactcorr(trainsub)).^2+diag(dK),dy1y1,fp1fp1),thetTGG(subnotfixed),lbTGG(subnotfixed),ubTGG(subnotfixed),doglob);
+                    disp(sprintf('%0.3f ',thetTGG));
+
+                end
             end
         end
+        
     end
 
 end

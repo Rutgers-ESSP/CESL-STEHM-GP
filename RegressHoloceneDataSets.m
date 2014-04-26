@@ -64,7 +64,7 @@ dt1t1=dYears(meantime(trainsub),meantime(trainsub));
 dy1y1 = dDist([lat(trainsub) long(trainsub)],[lat(trainsub) long(trainsub)]);
 fp1fp1=bsxfun(@times,obsGISfp(trainsub)-1,obsGISfp(trainsub)'-1);
 
-wcvfunc = @(x1,x2,thet) cvfuncTGG(x1,x2,dYears(x1,x2),thet,dy1y1,fp1fp1);
+wcvfunc = @(x1,x2,thet,xxx,yyy) cvfuncTGG(x1,x2,dYears(x1,x2),thet,dy1y1(xxx,yyy)',fp1fp1(xxx,yyy)');
 
 dK=0; df=0; d2f=0; yoffset=0;
 dt = abs(time2-time1)/4;
@@ -74,13 +74,13 @@ if length(passderivs)>0
 else
     
     if max(dt)>0
-        [dK,df,d2f,yoffset] = GPRdx(meantime(trainsub),Y(trainsub), ...
-                                    dt(trainsub),dY(trainsub),@(x1,x2) wcvfunc(x1,x2,thetTGG),2);
+           [dK,df,d2f,yoffset] = GPRdx(meantime(trainsub),Y(trainsub),dt(trainsub),dY(trainsub),@(x1,x2,r1,r2) wcvfunc(x1,x2,thetTGG,r1,r2),1,[1:length(trainsub)]');
     end
     passderivs.dK = dK;
     passderivs.yoffset = yoffset;
+    passderivs.df = df;
+    passderivs.d2d = d2f;
 end
-
 
 if isfield(testsitedef,'GISfp')
     testsitefp=testsitedef.GISfp;
