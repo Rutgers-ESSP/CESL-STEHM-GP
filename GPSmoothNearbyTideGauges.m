@@ -1,17 +1,16 @@
-function [TGdata2,TGdata,thetL,TGmodellocal] = GPSmoothNearbyTideGauges(targcoords,addlsites,thetL0,winlength,thinlength,minlength,optimizemode,psmsldir,gslfile,ROOTDIR)
+function [TGdata2,TGdata,thetL,TGmodellocal] = GPSmoothNearbyTideGauges(targcoords,addlsites,thetL0,winlength,thinlength,minlength,optimizemode,psmsldir,ROOTDIR)
 
 % Find tide gauge sites to include, based on length and proximity criteria, then
 % fit GP model to them in order to interpolate and take running averge.
 %
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Apr 24 22:19:27 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Wed Apr 30 08:48:51 EDT 2014
 %
 
 defval('minlength',[150 75 20]);  % minimum length for global curves, most purposes and minimum
 defval('thetL0',[]);
 defval('winlength',11);
 defval('thinlength',winlength-1);
-defval('GIAanchoryear',2005);
 defval('optimizemode',1.1); % set to 1.0 for local optimization only
 
 defval('targcoords',[
@@ -29,13 +28,8 @@ defval('ROOTDIR','~/Dropbox/Consulting/Risky Business/Code/RiskyBusinessScience/
 addpath(fullfile(ROOTDIR,'MFILES'));
 IFILES=fullfile(ROOTDIR,'../../IFILES/slr/');
 
-%defval('giafile',fullfile(IFILES,'dsea250.1grid.ICE5Gv1.3_VM2_L90_2012.nc'));
 defval('psmsldir',fullfile(IFILES,'rlr_annual'));
 defval('gslfile',fullfile(IFILES,'CSIRO_Recons_gmsl_yr_2011.csv'));
-
-%giamodel.gia=ncread(giafile,'Dsea_250');
-%giamodel.lat=ncread(giafile,'Lat');
-%giamodel.long=ncread(giafile,'Lon');
 
 [TGcoords,TGrsl,TGrslunc,TGid,TGsiteid,sitenames,TGsitecoords,sitelen]=ReadPSMSLData(0,1000,minlength(3),psmsldir,gslfile);
 sub1=find((sitelen>minlength(1)));
@@ -146,13 +140,13 @@ for nn=1:length(TGdata.siteid)
     noiseMasks = ones(1,size(thetL,2));
     noiseMasklabels={'full'};
     trainsub=find(TGdatasub.limiting==0);
-    [TGf,TGsd,TGV,TGtestlocs]=RegressHoloceneDataSets(TGdatasub,TGtestsitedef,TGmodellocal,thetL(nn,:),trainsub,noiseMasks,TGtestsitedef.t,GIAanchoryear);
+    [TGf,TGsd,TGV,TGtestlocs]=RegressHoloceneDataSets(TGdatasub,TGtestsitedef,TGmodellocal,thetL(nn,:),trainsub,noiseMasks,TGtestsitedef.t);
     
     % check for bad fit, and do a global optimization if need me
     if min(diag(TGV))<0
         if (length(thetL0)==0) .* (optimizemode<1.1)
              [thetL(nn,:)]=OptimizeHoloceneCovariance(TGdatasub,TGmodellocal,1.1)
-             [TGf,TGsd,TGV,TGtestlocs]=RegressHoloceneDataSets(TGdatasub,TGtestsitedef,TGmodellocal,thetL(nn,:),trainsub,noiseMasks,TGtestsitedef.t,GIAanchoryear);
+             [TGf,TGsd,TGV,TGtestlocs]=RegressHoloceneDataSets(TGdatasub,TGtestsitedef,TGmodellocal,thetL(nn,:),trainsub,noiseMasks,TGtestsitedef.t);
         end
     end
 

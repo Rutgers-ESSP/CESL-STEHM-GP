@@ -1,11 +1,12 @@
-function [f2s,sd2s,V2s,testlocs,logp,passderivs]=RegressHoloceneDataSets(dataset,testsitedef,modelspec,thetTGG,trainsub,noiseMasks,testt,refyear,collinear,passderivs)
+function [f2s,sd2s,V2s,testlocs,logp,passderivs,invcv]=RegressHoloceneDataSets(dataset,testsitedef,modelspec,thetTGG,trainsub,noiseMasks,testt,refyear,collinear,passderivs,invcv)
 
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Apr 21 10:03:41 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Wed Apr 30 08:17:49 EDT 2014
 
 defval('testt',[-2010:20:2010]);
 defval('refyear',2010);
 defval('collinear',0);
 defval('passderivs',[]);
+defval('invcv',[]);
 
 if ~iscell(testt)
     testt=testt(:);
@@ -139,7 +140,7 @@ Ycv2=Ycv(trainsub,trainsub)+diag(dK);
 clear f2s V2s sd2s;
 for i=1:size(noiseMasks,1)
     disp(i);
-    [f2s(:,i),V2s(:,:,i),logp] = GaussianProcessRegression([],Y(trainsub)-yoffset,[],traincvTGG(t1,t1,dt1t1,thetTGG,Ycv2,dy1y1,fp1fp1),testcv(thetTGG.*noiseMasks(i,:))',testcv2(thetTGG.*noiseMasks(i,:)));
+    [f2s(:,i),V2s(:,:,i),logp,~,~,~,invcv] = GaussianProcessRegression([],Y(trainsub)-yoffset,[],traincvTGG(t1,t1,dt1t1,thetTGG,Ycv2,dy1y1,fp1fp1),testcv(thetTGG.*noiseMasks(i,:))',testcv2(thetTGG.*noiseMasks(i,:)),invcv);
     sd2s(:,i)=sqrt(diag(V2s(:,:,i)));
     if (collinear==0)||(collinear>size(noiseMasks,2))
         f2s(:,i)=f2s(:,i)+testGIAproj;

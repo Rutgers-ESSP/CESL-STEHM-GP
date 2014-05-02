@@ -129,8 +129,10 @@ for nnn=1:length(optimizesteps)
         if length(subadj)>0
             thetTGG(subnotfixed(subadj))=thetTGG(subnotfixed(subadj))+min(.01,.01*dublb(subnotfixed(subadj)));
         end
-
+        
         opttype = floor((optimizesteps(nnn)-2+1e-6)*10)/10;
+        opttype = round((opttype-floor(opttype))*10)/10;
+        
         if opttype==0.1
             if doneglob
                 doglobs=0;
@@ -152,6 +154,7 @@ for nnn=1:length(optimizesteps)
         else
             doglobs=0;
         end
+
         if floor(optimizesteps(nnn))==3
             dt = abs(time2-time1)/4;
          for doglob=doglobs

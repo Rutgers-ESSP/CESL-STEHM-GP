@@ -1,6 +1,6 @@
 % Master script for Common Era proxy + tide gauge sea-level analysis
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri Apr 25 16:23:59 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Wed Apr 30 13:47:30 EDT 2014
 
 pd=pwd;
 addpath('~/Dropbox/Code/TGAnalysis/MFILES');
@@ -9,7 +9,7 @@ IFILES=[pd '/IFILES'];
 addpath(pd)
 savefile='~/tmp/CESL';
 
-WORKDIR='140425';
+WORKDIR='140430b';
 if ~exist(WORKDIR,'dir')
     mkdir(WORKDIR);
 end
@@ -22,11 +22,15 @@ firsttime=-1000;
 runSetupHoloceneCovariance;
 runImportHoloceneDataSets;
 
+addpath('~/Dropbox/Code/TGAnalysis/MFILES');
+addpath([pd '/MFILES']);
+addpath(pd)
+
 save(savefile,'datasets','modelspec');
 addpath(pwd)
 trainsets=[1 2 ]; % train w/TG+GSL+PX or w/TG+PX
 trainspecs=[1 1];
-
+trainlabels={'default','trainedwoGSL'};
 
 clear thetTGG trainsubsubset;
 for ii=1:length(trainspecs)
@@ -62,7 +66,7 @@ for i=1:size(datasets{ii}.datid,1)
     fprintf(fid,'%0.1f\t',datasets{ii}.time2(i));
     fprintf(fid,'%d\t',datasets{ii}.limiting(i));
     fprintf(fid,'%0.2f\t',datasets{ii}.Y(i));
-    fprintf(fid,'%0.2f\t',datasets{ii}.Y(i)+datasets{ii}.GIAproj(i));
+    fprintf(fid,'%0.2f\t',datasets{ii}.Y0(i));
     fprintf(fid,'%0.2f\t',datasets{ii}.dY(i));
     fprintf(fid,'%0.2f\t',compactcorr(i));
     fprintf(fid,'%d\t',datasets{ii}.istg(i));
@@ -135,21 +139,25 @@ end
 
 testt = [-1000:20:2000 2010];
 
-regresssets=[2 1 2 ]; % regress w/TG+PX
-regressparams=[1 1 2 ];
-regresslabels={'TG+PX_default','TG+GSL+PX_default','TG+PX_trainedwoGSL'}
+regresssets=[2 1 2 3 4 5 6 7]; % regress w/TG+PX
+regressparams=[1 1 2 1 1 1 1 1];
+clear regresslabels;
+for i=1:length(regresssets)
+    regresslabels{i} = [datasets{regresssets(i)}.label '_' trainlabels{regressparams(i)}];
+end
 
 for iii=1:length(regresssets)
     ii=regresssets(iii);
     jj=regressparams(iii);
 
     noiseMasks = ones(6,length(thetTGG{trainspecs(jj)}));
+    noiseMasks(1,[modelspec(trainspecs(jj)).subampnoise])=0; % without white noise
     noiseMasks(2,[modelspec(trainspecs(jj)).subamplinear modelspec(trainspecs(jj)).subampoffset]  )=0; %without linear
     noiseMasks(3,[modelspec(trainspecs(jj)).subampglobal modelspec(trainspecs(jj)).subampoffset])=0; %only regional and local
     noiseMasks(4,[modelspec(trainspecs(jj)).subamplinear modelspec(trainspecs(jj)).subampglobal  modelspec(trainspecs(jj)).subampoffset])=0; %only regional and local non-linear
     noiseMasks(5,[modelspec(trainspecs(jj)).subampglobal modelspec(trainspecs(jj)).subampnonlinear modelspec(trainspecs(jj)).subampoffset])=0; %only regional and local linear
     noiseMasks(6,setdiff(modelspec(trainspecs(jj)).subamp,modelspec(trainspecs(jj)).subampGIS))=0; %Greenland only
-    noiseMasklabels={'full','nonlin','regloc','reglocnonlin','regloclin','gis'};
+    noiseMasklabels={'denoised','nonlin','regloc','reglocnonlin','regloclin','gis'};
 
     wdataset=datasets{ii};
 
@@ -162,20 +170,69 @@ for iii=1:length(regresssets)
     subtimes=find(testt>=min(union(wdataset.time1,wdataset.time2)));
     
     collinear=modelspec(trainspecs(jj)).subamplinear(1);
-    [f2s{ii,jj},sd2s{ii,jj},V2s{ii,jj},testlocs{ii,jj},logp(ii,jj),passderivs]=RegressHoloceneDataSets(wdataset,testsitedef,modelspec(trainspecs(jj)),thetTGG{jj},trainsub,noiseMasks,testt(subtimes),refyear,collinear);
+    [f2s{ii,jj},sd2s{ii,jj},V2s{ii,jj},testlocs{ii,jj},logp(ii,jj),passderivs,invcv]=RegressHoloceneDataSets(wdataset,testsitedef,modelspec(trainspecs(jj)),thetTGG{jj},trainsub,noiseMasks,testt(subtimes),refyear,collinear);
 
     labl=labls{iii}; disp(labl);
-    makeplots_sldecomp(datasets{ii},f2s{ii,jj},sd2s{ii,jj},V2s{ii,jj},testlocs{ii,jj},labl);
+    
+    u=unique(wdataset.datid);
+    clear fp sdp;
+    clear testsitedefp;
+    subps=[];
+    for pp=1:length(u)
+        subp=find(wdataset.datid==u(pp));
+        subq=find(wdataset.siteid==u(pp));
+        if length(subp)>0
+            testtsp{pp}=wdataset.meantime(subp);
+            testsitedefp.sites(pp,:)=[wdataset.siteid(subq) ...
+                                wdataset.sitecoords(subq,:)];
+            testsitedefp.names(pp)=wdataset.sitenames(subq);
+            testsitedefp.names2(pp)=wdataset.sitenames(subq);
+            testsitedefp.firstage(pp)=min(wdataset.meantime(subp));
+            testsitedefp.GISfp(pp)=wdataset.siteGISfp(subq);
+            testsitedefp.GIA(pp)=wdataset.siteGIA(subq);
+        end
+        subps=[subps ; subp];
+    end
+    [fp(subps),sdp(subps),~,testlocp]=RegressHoloceneDataSets(wdataset,testsitedefp,                                            modelspec(trainspecs(jj)),thetTGG{jj},trainsub,noiseMasks(1,:),testtsp,refyear,collinear,passderivs,invcv);
+
+    fid=fopen(['TGandProxyData' labl '.tsv'],'w');
+    fprintf(fid,['Site\tID\t1ime1\ttime2\tlimiting\tGIAproj\tY-GIAproj\tY\' ...
+                 'tdY\tcompactcorr\tistg\tlat\tlong\tsite GIA\tmean time\tYposterior\tdYposterior\n']);
+    for i=1:size(wdataset.datid,1)
+        subq=find(wdataset.siteid==wdataset.datid(i));
+        compactcorr=full(wdataset.compactcorr);
+        subq=find(wdataset.siteid==wdataset.datid(i));
+        fprintf(fid,[wdataset.sitenames{subq} '\t']);
+        fprintf(fid,'%d\t',wdataset.datid(i));
+        fprintf(fid,'%0.1f\t',wdataset.time1(i));
+        fprintf(fid,'%0.1f\t',wdataset.time2(i));
+        fprintf(fid,'%d\t',wdataset.limiting(i));
+        fprintf(fid,'%0.2f\t',wdataset.GIAproj(i));
+        fprintf(fid,'%0.2f\t',wdataset.Y(i));
+        fprintf(fid,'%0.2f\t',wdataset.Y0(i));
+        fprintf(fid,'%0.2f\t',wdataset.dY(i));
+        fprintf(fid,'%0.2f\t',compactcorr(i));
+        fprintf(fid,'%d\t',wdataset.istg(i));
+        fprintf(fid,'%0.2f\t',wdataset.lat(i));
+        fprintf(fid,'%0.2f\t',wdataset.long(i));
+        fprintf(fid,'%0.2f\t',wdataset.siteGIA(subq(1)));
+        fprintf(fid,'%0.1f\t',wdataset.meantime(i));
+        fprintf(fid,'%0.2f\t',fp(i));
+        fprintf(fid,'%0.2f\n',sdp(i));
+    end
+    fclose(fid)    
+    
+    makeplots_sldecomp(wdataset,f2s{ii,jj},sd2s{ii,jj},V2s{ii,jj},testlocs{ii,jj},labl);
     
     testreg=testlocs{ii,jj}.reg;
     testsites=testlocs{ii,jj}.sites;
     testX=testlocs{ii,jj}.X;
     testnames2=testlocs{ii,jj}.names2;
 
-    firstyears=[ 0 -300 700  1700 1800 1900];
-    lastyears=[1800 700 1700 1800 1900 2000];
+    firstyears=[ 0 1000  200  -300 700 1700 1800 1900 860  1000 1080 1460 1560 1800 1840];
+    lastyears=[1800 1800 1000 700 1700 1800 1900 2000 1560 1400 1360 1880 1800 1880 1900];
     
-    clear fslopelin fslopeavg sdslopelin sdslopeavg;
+    clear fslopelin fslopeavg sdslopelin sdslopeavg fslopeavgdiff sdslopeavgdiff;
 
     for kk=1:size(testsites,1)
         
@@ -183,19 +240,18 @@ for iii=1:length(regresssets)
         sub=find((testreg==testsites(kk,1)));
         M=zeros(length(firstyears),length(sub));
         for pp=1:length(firstyears)
-            sub1=find((testX(sub,3)>=firstyears(pp)).*(testX(sub, ...
-                                                             3)<= ...
-                                                       lastyears(pp)));
-            if length(sub1)>1
-                M(pp,sub1(1))=-1; M(pp,sub1(end))=1;
-                M(pp,:)=M(pp,:)/(testX(sub1(end),3)-testX(sub1(1), ...
-                                                          3));
+
+            sub1=find((testX(sub,3)==firstyears(pp)));
+            sub2=find((testX(sub,3)==lastyears(pp)));
+            if (length(sub1)==1)&&(length(sub2)==1)
+                M(pp,sub1(1))=-1; M(pp,sub2(1))=1;
+                M(pp,:)=M(pp,:)/(testX(sub2(1),3)-testX(sub1(1),3));
             end
         end
-
+        
         clear Mdiff diffplus diffless;
         counter=1;
-        for pp=1:length(firstyears)
+        for pp=1:min(7,length(firstyears))
             for qq=(pp+1):length(firstyears)
                 Mdiff(counter,pp)=-1;
                 Mdiff(counter,qq)=1;
@@ -265,7 +321,7 @@ for iii=1:length(regresssets)
     fclose(fid);
 
     
-    fslope=fslopeavg(:,ii,jj,1); fslope=fslope(:);
+    fslope=fslopeavg(:,ii,jj,2); fslope=fslope(:);
     sub=find(testsites(:,2)<1e3);
 
     figure;
@@ -280,7 +336,7 @@ for iii=1:length(regresssets)
     axis tight;
     colorbar;
     box on;
-    %title('Sea level  rates, 0-1800 CE (mm/y)');
+    %title('Sea level  rates, 1000-1800 CE (mm/y)');
     pdfwrite(['map_linrates_global' labl]);
 
     figure;
@@ -300,7 +356,7 @@ for iii=1:length(regresssets)
     axis tight;
     colorbar;
     box on;
-    %title('Sea level  rates, 0-1800 CE (mm/y)');
+    %title('Sea level  rates, 1000-1800 CE (mm/y)');
 
     xlim([260 305]);
     ylim([27 50]);
@@ -321,7 +377,8 @@ for iii=1:length(regresssets)
 
     end
     Mref=sparse(Mref);
-    selsitenames={'GSL','Florida-Nassau','NorthCarolina-SandPoint','NewJersey-LeedsPoint','Connecticut','Massachusetts','NovaScotia-Chezzetcook'};
+    selsitenames={'Florida-Nassau','NorthCarolina-TumpPoint','NorthCarolina-SandPoint','NewJersey-LeedsPoint','NovaScotia-Chezzetcook'};
+    shortnames = {'FL','NC-TP','NC-SP','NJ','NS'};
     sitesub=[];
     for kk=1:length(selsitenames)
         q=find(strcmpi(selsitenames{kk},testsitedef.names));
@@ -329,13 +386,12 @@ for iii=1:length(regresssets)
             sitesub=[sitesub q(1)];
         end
     end
-    colrs={'k','r','c','b','g','m','y'};
+    colrs={'r','c','b','m','g'};
 
     datsub=find(ismember(testreg,testsites(sitesub,1)));
 
     % figure of sites with data, full curves
     % figure of sites with data, without linear
-    % figure of sites with data, without linear or GSL
 
     for selmask=[1 2]
         
@@ -344,12 +400,12 @@ for iii=1:length(regresssets)
         wf=Mref*f2s{ii,jj}(:,selmask);
         wV=Mref*V2s{ii,jj}(:,:,selmask)*Mref';
         wsd=sqrt(diag(wV));
-        [hp,hl,~,~,~,~,outtable]=PlotPSLOverlay(testX(datsub,3),testreg(datsub),testsites(sitesub,1),wf(datsub),wsd(datsub),colrs,testsitedef.firstage(sitesub),testt(end),0,160,testnames2(sitesub));
+        [hp,hl,~,~,~,~,outtable]=PlotPSLOverlay(testX(datsub,3),testreg(datsub),testsites(sitesub,1),wf(datsub),wsd(datsub),colrs,testsitedef.firstage(sitesub),testt(end),0,100,testnames2(sitesub));
         
         if selmask==1
-            legend(hl,testnames2{sitesub},'Location','Southwest');
+            legend(hl,shortnames,'Location','Southwest');
         else
-            legend(hl,testnames2{sitesub},'Location','Southwest');
+            legend(hl,shortnames,'Location','Southwest');
         end
         set(hp,'xlim',[-1000 2010]);
         %	set(hp(2),'ylim',[-2 5]);
@@ -410,11 +466,11 @@ for iii=1:length(regresssets)
     datsub=find(ismember(testreg,testsites(sitesub,1)));
 
     dorateshift=0;
-    if length(intersect(modelspec(jj).subamplinear, ...
-                        modelspec(jj).subampglobal))==0
+    if length(intersect(modelspec(trainspecs(jj)).subamplinear, ...
+                        modelspec(trainspecs(jj)).subampglobal))==0
         dorateshift=[0 0.15 0.3];
-    elseif sum(abs(intersect(modelspec(jj).subamplinear, ...
-                             modelspec(jj).subampglobal))) == 0
+    elseif sum(abs(intersect(modelspec(trainspecs(jj)).subamplinear, ...
+                             modelspec(trainspecs(jj)).subampglobal))) == 0
         dorateshift=[0 0.15 0.3];
     end
     

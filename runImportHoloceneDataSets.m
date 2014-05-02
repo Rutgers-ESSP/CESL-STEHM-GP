@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Apr 21 08:42:27 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Apr 28 15:03:49 EDT 2014
 
 defval('firsttime',-1000);
 
@@ -11,7 +11,7 @@ datid=[]; time1=[]; time2=[]; mediantime=[]; limiting=[]; Y=[]; dY = []; compact
 istg = []; lat=[]; long=[];
 siteid=[]; sitenames={}; sitecoords=[];
 
-datPX = importdata(fullfile(IFILES,'RSL_Apr2014.csv'));
+datPX = importdata(fullfile(IFILES,'RSL_May2014.csv'));
 datPX.textdata=datPX.textdata(2:end,:);
 
 % catch entries without age errors
@@ -131,6 +131,23 @@ subS=find(abs(PX.sitecoords(:,1))<=52);
 
 PX=SubsetDataStructure(PX,sub,subS);
 
+incls = {{'North Carolina','New Jersey','Florida'},{'Florida','New Jersey','North Carolina','Nova Scotia'},{'Florida','New Jersey','North Carolina','Nova Scotia','New Zealand','Cook Islands'},{'Florida','New Jersey','North Carolina','Nova Scotia','New Zealand','Cook Islands','Massachusetts','Maine','Louisiana'}};
+
+for ii=1:length(incls);
+    incl=incls{ii};
+    subincl=[]; subinclS=[];
+    for jj=1:length(incl)
+        doincl=find(strncmp(incl{jj},PX.sitenames, ...
+                            length(incl{jj})));
+        subinclS=union(subinclS,doincl);
+        for kk=1:length(doincl)
+            subincl=union(subincl,find(PX.datid==PX.siteid(doincl(kk))));
+        end
+    end
+    sub=subincl; subS=subinclS;
+    PXsub{ii}=SubsetDataStructure(PX,sub,subS);
+end
+
 % now create a slimmed version for training
 % $$$ excl={'France','Tasmania','Spain','New Zealand','Italy','Israel',['Isle ' ...
 % $$$                     'of Wight'],'Iceland','Greenland'};
@@ -153,7 +170,6 @@ PX=SubsetDataStructure(PX,sub,subS);
 %%%%%%%%%%%%%%%
 
 % First load tide gauge data
-
 optimizemode=1.0;
 [TG,TG0,thetL,TGmodellocal] = GPSmoothNearbyTideGauges(PX.sitecoords,[],[],[],[],[],optimizemode);
 
@@ -199,9 +215,16 @@ GISfp=GISfp*1000;
 clear datasets;
 datasets{1}=MergeDataStructures(TG,PX);
 datasets{2}=MergeDataStructures(TGNOCW,PX);
+datasets{3}=PX;
 
 datasets{1}.label='TG+GSL+PX';
 datasets{2}.label='TG+PX';
+datasets{3}.label='PX';
+
+for jj=1:length(PXsub)
+    datasets{end+1}=MergeDataStructures(TGNOCW,PXsub{jj});
+    datasets{end}.label=['TG+PXsub' num2str(jj)];
+end
 
 
 for ii=1:length(datasets)

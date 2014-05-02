@@ -62,5 +62,6 @@ modelspec(1).subamplocal = [11 12];
 modelspec(1).subampnonlinear = [1 2 3 12];
 modelspec(1).subampoffset = [11];
 modelspec(1).subampGIS = [2];
+modelspec(1).subampnoise = [12];
 modelspec(1).label='default';
 
