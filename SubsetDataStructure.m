@@ -4,7 +4,8 @@ function PX=SubsetDataStructure(PX,sub,subS)
 %
 % Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Apr 20 18:54:45 EDT 2014
 
-shortenfields={'datid','time1','time2','meantime','limiting','Y','dY','compactcorr','istg','lat','long'};
+shortenfields={'datid','time1','time2','meantime','limiting','Y','dY','compactcorr','istg','lat','long','Y0'};
+shortenfields=intersect(fieldnames(PX),shortenfields);
 for jj=1:length(shortenfields)
     PX.(shortenfields{jj}) =  PX.(shortenfields{jj})(sub);
 end

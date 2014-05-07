@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Apr 28 15:03:49 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon May 05 08:33:50 EDT 2014
 
 defval('firsttime',-1000);
 
@@ -71,38 +71,38 @@ end
 %%%%%%%%%%%%%%%%
 
 % Engelhart & Horton database
-% $$$ 
-% $$$ datHolo=importdata(fullfile(IFILES,'Engelhart_Horton_2012_v4.csv'));
-% $$$ HoloRegions=[1:16];
-% $$$ for curreg=1:length(HoloRegions)
-% $$$     sub=find((datHolo.data(:,1)==HoloRegions(curreg)).*(datHolo.data(:,2)==0));
-% $$$ 
-% $$$     count=[1:length(sub)]';
-% $$$     wdatid = ones(length(sub),1)*(1e6+HoloRegions(curreg)*1e3);
-% $$$     wtime1=1950-datHolo.data(sub,8) + count/1e5;
-% $$$     wtime2=1950-datHolo.data(sub,9) + count/1e5;
-% $$$     wlimiting=datHolo.data(sub,2);
-% $$$     wY=datHolo.data(sub,10)*1000;
-% $$$     wdY=datHolo.data(sub,11)*1000;
-% $$$     wlat=datHolo.data(sub,3);
-% $$$     wlong=-datHolo.data(sub,4);
-% $$$     wcompactcorr = wY*.1;
-% $$$     
-% $$$     datid = [datid ; wdatid];
-% $$$     time1 = [time1 ; wtime1];
-% $$$     time2 = [time2 ; wtime2];
-% $$$     limiting = [limiting ; wlimiting];
-% $$$     Y = [Y ; wY];
-% $$$     dY = [dY ; wdY];
-% $$$     compactcorr = [compactcorr ; wcompactcorr];
-% $$$     istg = [istg ; 0 * wY];
-% $$$     lat = [lat ; wlat];
-% $$$     long = [long ; wlong];
-% $$$ 
-% $$$     sitecoords=[sitecoords; mean(wlat) mean(wlong)];
-% $$$     sitenames={sitenames{:}, ['EH12_' num2str(HoloRegions(curreg))]};
-% $$$     siteid=[siteid ; [1e6+curreg*1e3]'];
-% $$$ end
+
+datHolo=importdata(fullfile(IFILES,'Engelhart_Horton_2012_v4.csv'));
+HoloRegions=[1:16];
+for curreg=1:length(HoloRegions)
+    sub=find((datHolo.data(:,1)==HoloRegions(curreg)).*(datHolo.data(:,2)==0));
+
+    count=[1:length(sub)]';
+    wdatid = ones(length(sub),1)*(1e6+HoloRegions(curreg)*1e3);
+    wtime1=1950-datHolo.data(sub,8) + count/1e5;
+    wtime2=1950-datHolo.data(sub,9) + count/1e5;
+    wlimiting=datHolo.data(sub,2);
+    wY=datHolo.data(sub,10)*1000;
+    wdY=datHolo.data(sub,11)*1000;
+    wlat=datHolo.data(sub,3);
+    wlong=-datHolo.data(sub,4);
+    wcompactcorr = wY*.1;
+    
+    datid = [datid ; wdatid];
+    time1 = [time1 ; wtime1];
+    time2 = [time2 ; wtime2];
+    limiting = [limiting ; wlimiting];
+    Y = [Y ; wY];
+    dY = [dY ; wdY];
+    compactcorr = [compactcorr ; wcompactcorr];
+    istg = [istg ; 0 * wY];
+    lat = [lat ; wlat];
+    long = [long ; wlong];
+
+    sitecoords=[sitecoords; mean(wlat) mean(wlong)];
+    sitenames={sitenames{:}, ['EH12_' num2str(HoloRegions(curreg))]};
+    siteid=[siteid ; [1e6+curreg*1e3]'];
+end
 
 %%%%
 
@@ -266,25 +266,35 @@ datNAO = importdata(fullfile(IFILES,'nao-trouet2009.txt'));
 
 %% comparison to temperature records
 impt=importdata(fullfile(IFILES,'Marcott2013_global.txt'));
-Marcottgl_yr = 1950-impt.data(:,1);
-Marcottgl_T = impt.data(:,2);
-Marcottgl_dT = impt.data(:,3);
+Marcottgl.yr = 1950-impt.data(:,1);
+Marcottgl.T = impt.data(:,2);
+Marcottgl.dT = impt.data(:,3);
 
 impt=importdata(fullfile(IFILES,'Marcott2013_regional.txt'));
-Marcottr_yr=1950-impt.data(:,1);
-Marcott_Next_T=impt.data(:,2);
-Marcott_Next_dT=impt.data(:,3);
-Marcott_eq_T=impt.data(:,4);
-Marcott_eq_dT=impt.data(:,5);
-Marcott_Sext_T=impt.data(:,6);
-Marcott_Sext_dT=impt.data(:,7);
+Marcottr.yr=1950-impt.data(:,1);
+Marcott.Next_T=impt.data(:,2);
+Marcott.Next_dT=impt.data(:,3);
+Marcott.eq_T=impt.data(:,4);
+Marcott.eq_dT=impt.data(:,5);
+Marcott.Sext_T=impt.data(:,6);
+Marcott.Sext_dT=impt.data(:,7);
 
 impt=importdata(fullfile(IFILES,'HadCRUT4-gl.dat'));
-HadCRUT_yr=impt(1:2:end,1);
-HadCRUT_T=impt(1:2:end,end);
+HadCRUT.yr=impt(1:2:end,1);
+HadCRUT.T=impt(1:2:end,end);
 
-Mann_T=importdata(fullfile(IFILES,'glglfulihad_smxx.txt'));
-Mann_yr = [[1:length(Mann_T)]-1]';
+Mann.T=importdata(fullfile(IFILES,'glglfulihad_smxx.txt'));
+Mann.yr = [[1:length(Mann.T)]-1]';
+
+impt=importdata(fullfile(IFILES,'Lund2006_transport.csv'));
+Lundtransport.yr=impt.data(:,1);
+Lundtransport.Sv=impt.data(:,2);
+Lundtransport.dSv=impt.data(:,3);
+
+
+impt=importdata(fullfile(IFILES,'Cronin2010_ChesapeakeT.txt'));
+Chesapeake.yr = impt(:,1);
+Chesapeake.T = impt(:,2);
 
 
 

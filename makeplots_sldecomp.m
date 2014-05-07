@@ -1,4 +1,4 @@
-function makeplots_sldecomp(dataset,f2s,sd2s,V2s,testloc,labl)
+function makeplots_sldecomp(dataset,f2s,sd2s,V2s,testloc,labl,doplots,difftimestep)
 
 % Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Apr 21 08:18:17 EDT 2014
 
@@ -10,7 +10,11 @@ function makeplots_sldecomp(dataset,f2s,sd2s,V2s,testloc,labl)
 % (c-d) corresponding average rates of change
 
 defval('labl','');
+defval('doplots',[]);
+defval('difftimestep',100);
 xlim0=[-1000 2010];
+
+numrows=1+(difftimestep>0);
 
 angd= @(Lat0,Long0,lat,long) (180/pi)*(atan2(sqrt((cosd(lat).*sind(long-Long0)).^2+(cosd(Lat0).*sind(lat)-sind(Lat0).*cosd(lat).*cosd(long-Long0)).^2),(sind(Lat0).*sind(lat)+cosd(Lat0).*cosd(lat).*cosd(long-Long0))));
 
@@ -30,7 +34,6 @@ long=dataset.long;
 Y=dataset.Y0;
 Ycv=dataset.Ycv;
 limiting=dataset.limiting;
-obsGISfp=dataset.obsGISfp;
 compactcorr=dataset.compactcorr;
 time1=dataset.time1;
 time2=dataset.time2;
@@ -46,16 +49,21 @@ for i=1:size(testsites,1)
 	
 	clf; clear hp;
 	
-	if testsites(i,1)>0
+        if length(doplots)==0
+            if testsites(i,1)>0
 		js = [1 3 4];
-	else
+            else
 		js=[1 6];
-	end
+            end
+        else
+            js=doplots;
+        end
+        
 	
 	for k=1:length(js)
 		offsetA=0;
 		j=js(1,k);
-		hp(k)=subplot(2,length(js),k);
+		hp(k)=subplot(numrows,length(js),k);
 		box on;
 		
 		hold on
@@ -90,28 +98,28 @@ for i=1:size(testsites,1)
 				
 	end
 	
-	difftimestep=100;
+        if difftimestep>0
 
-	Mdiff = bsxfun(@eq,testX(:,3),testX(:,3)')-bsxfun(@eq,testX(:,3),testX(:,3)'+difftimestep);
-	Mdiff = Mdiff .* bsxfun(@eq,testreg,testreg');
-	sub=find(sum(Mdiff,2)==0);
-	Mdiff=Mdiff(sub,:);
-	difftimes=bsxfun(@rdivide,abs(Mdiff)*testX(:,3),sum(abs(Mdiff),2));;
-	diffreg=bsxfun(@rdivide,abs(Mdiff)*testreg,sum(abs(Mdiff),2));;
-	Mdiff=bsxfun(@rdivide,Mdiff,Mdiff*testX(:,3));
+            Mdiff = bsxfun(@eq,testX(:,3),testX(:,3)')-bsxfun(@eq,testX(:,3),testX(:,3)'+difftimestep);
+            Mdiff = Mdiff .* bsxfun(@eq,testreg,testreg');
+            sub=find(sum(Mdiff,2)==0);
+            Mdiff=Mdiff(sub,:);
+            difftimes=bsxfun(@rdivide,abs(Mdiff)*testX(:,3),sum(abs(Mdiff),2));;
+            diffreg=bsxfun(@rdivide,abs(Mdiff)*testreg,sum(abs(Mdiff),2));;
+            Mdiff=bsxfun(@rdivide,Mdiff,Mdiff*testX(:,3));
 
-	clear df2s dV2s dsd2s;
-	for n=1:size(f2s,2)
+            clear df2s dV2s dsd2s;
+            for n=1:size(f2s,2)
 		df2s(:,n)=Mdiff*f2s(:,n);
 		dV2s(:,:,n)=Mdiff*V2s(:,:,n)*Mdiff';
 		dsd2s(:,n)=sqrt(diag(dV2s(:,:,n)));
-	end
-	
-	subA2 = find(diffreg == testsites(i,1));
+            end
+            
+            subA2 = find(diffreg == testsites(i,1));
 
-	for k=1:length(js)
+            for k=1:length(js)
 		offsetA=0;
-		hp(k+length(js))=subplot(2,length(js),k+length(js));
+		hp(k+length(js))=subplot(numrows,length(js),k+length(js));
 		box on;
 		
 		hold on
@@ -125,7 +133,9 @@ for i=1:size(testsites,1)
 		ylabel(['mm/y (' num2str(difftimestep) '-y)']);
 		xlim(wxlim);
 		
-	end
+            end
+        end
+        
 	title(hp(1),testnames2{i})
 	longticks(hp);
 	[bh,th]=label(hp,'ul',12,[],0,1,1,1.5,1.5); 
