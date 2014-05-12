@@ -2,7 +2,7 @@ function [wf2,wV2,wsd2,sitespec]=DetrendSLReconstruction(wf,wV,testsites,testreg
 
 %
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon May 05 08:32:28 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon May 12 10:36:15 EDT 2014
 
 %%%
 
@@ -46,7 +46,7 @@ if length(refyear)==2
 end
 
 wf2=M*wf;
-wV2=M*wV;
+wV2=M*wV*M';
 wsd2=sqrt(diag(wV2));
 
 subbad=find(ismember(testreg,testsites(find(isnan(selfirstyear)))));

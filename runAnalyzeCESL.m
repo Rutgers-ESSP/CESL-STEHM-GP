@@ -1,6 +1,6 @@
 % Master script for Common Era proxy + tide gauge sea-level analysis
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Tue May 06 22:38:37 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri May 09 08:36:58 EDT 2014
 
 pd=pwd;
 addpath('~/Dropbox/Code/TGAnalysis/MFILES');
@@ -128,8 +128,8 @@ end
 
 testt = [-1000:20:2000 2010];
 
-regresssets=[2 2]; % regress w/TG+PX
-regressparams=[1 2];
+regresssets=[2 2 1]; % regress w/TG+PX
+regressparams=[1 2 1];
 clear regresslabels;
 for i=1:length(regresssets)
     regresslabels{i} = [datasets{regresssets(i)}.label '_' trainlabels{regressparams(i)}];
@@ -384,7 +384,7 @@ for iii=1:length(regresssets)
                 labl2='_detrended';
             end
             
-            [hp,hl,~,~,~,~,outtable]=PlotPSLOverlay(testX(datsub,3),testreg(datsub),testsites(sitesub,1),wf(datsub),wsd(datsub),colrs,testsitedef.firstage(sitesub),testt(end),0,200,testnames2(sitesub));
+            [hp,hl,~,~,~,~,outtable]=PlotPSLOverlay(testX(datsub,3),testreg(datsub),testsites(sitesub,1),wf(datsub),wV(datsub,datsub),colrs,testsitedef.firstage(sitesub),testt(end),0,200,testnames2(sitesub));
             
             if selmask==1
                 legend(hl,shortnames,'Location','Southwest');
@@ -423,14 +423,16 @@ for iii=1:length(regresssets)
     wV=Mref*V2s{ii,jj}(:,:,selmask)*Mref';
     wsd=sqrt(diag(wV));
 
-    [wf,wV,wsd]=DetrendSLReconstruction(wf,wV,testsites,testreg,testX(:,3),[1000],1800,refyear);
-
+    if sum(wdataset.datid==0)<=2
+        [wf,wV,wsd]=DetrendSLReconstruction(wf,wV,testsites,testreg,testX(:,3),[1000],1800,refyear);
+    end
+    
     datsub=find(ismember(testreg,testsites(sitesub,1)));
 
     for timesteps=[100 400 60 ]
 
         clf;
-        [hp,hl,hl2,dGSL,dGSLsd,dGSLV,outtable,difftimes,diffreg]=PlotPSLOverlay(testX(datsub,3),testreg(datsub),testsites(sitesub,1),wf(datsub),wsd(datsub),colrs,testsitedef.firstage(sitesub),testt(end),0,timesteps,{'GSL'});
+        [hp,hl,hl2,dGSL,dGSLsd,dGSLV,outtable,difftimes,diffreg]=PlotPSLOverlay(testX(datsub,3),testreg(datsub),testsites(sitesub,1),wf(datsub),wV(datsub,datsub),colrs,testsitedef.firstage(sitesub),testt(end),0,timesteps,{'GSL'});
         set(hp,'xlim',[-500 2010]);
         
         labl2=labl;  
@@ -493,9 +495,23 @@ for iii=1:length(regresssets)
         end
         fclose(fid);
         
+        
     end
 
+    % output GSL covariance
+  
 
+    fid=fopen(['GSL'  labl2 '_cov.tsv'],'w');
+    fprintf(fid,'mm^2');
+    fprintf(fid,'\t%0.0f',testX(datsub,3));
+    fprintf(fid,'\n');
+    for ppp=1:length(datsub)
+        fprintf(fid,'%0.0f',testX(datsub(ppp),3));
+        fprintf(fid,'\t%0.3e',wV(datsub(ppp),datsub));
+        fprintf(fid,'\n');
+    end
+    
+    fclose(fid);
     
     %%%
 
@@ -522,7 +538,7 @@ for iii=1:length(regresssets)
     for timesteps=[100 600]
 
         clf;
-        [hp,hl,hl2,dGSL,dGSLsd,dGSLV,outtable,difftimes,diffreg]=PlotPSLOverlay(testX(datsub,3),testreg(datsub),testsites(sitesub,1),wf(datsub),wsd(datsub),colrs,testsitedef.firstage(sitesub),testt(end),0,timesteps,{'GIS'});
+        [hp,hl,hl2,dGSL,dGSLsd,dGSLV,outtable,difftimes,diffreg]=PlotPSLOverlay(testX(datsub,3),testreg(datsub),testsites(sitesub,1),wf(datsub),wV(datsub,datsub),colrs,testsitedef.firstage(sitesub),testt(end),0,timesteps,{'GIS'});
         set(hp,'xlim',[-1000 2010]);
 
         pdfwrite(['GIS_' num2str(timesteps) 'y' labl]);
