@@ -1,6 +1,6 @@
 % Master script for Common Era proxy + tide gauge sea-level analysis
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri May 16 09:41:57 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri May 16 09:47:43 EDT 2014
 
 pd=pwd;
 addpath('~/Dropbox/Code/TGAnalysis/MFILES');
@@ -424,95 +424,101 @@ for iii=1:length(regresssets)
     wV=Mref*V2s{ii,jj}(:,:,selmask)*Mref';
     wsd=sqrt(diag(wV));
 
-    if sum(wdataset.datid==0)<=2
-        [wf,wV,wsd]=DetrendSLReconstruction(wf,wV,testsites,testreg,testX(:,3),[1000],1800,refyear);
-    end
+    for dodetrend=[0 1]
+        labl3='';
+        if dodetrend
+            [wf,wV,wsd]=DetrendSLReconstruction(wf,wV,testsites,testreg,testX(:,3),[1000],1800,refyear);
+            labl3='_detrended';
+        end
+        
     
-    datsub=find(ismember(testreg,testsites(sitesub,1)));
+        datsub=find(ismember(testreg,testsites(sitesub,1)));
 
-    for timesteps=[100 400 60 ]
+        for timesteps=[100 400 60 ]
 
-        clf;
-        [hp,hl,hl2,dGSL,dGSLsd,dGSLV,outtable,difftimes,diffreg]=PlotPSLOverlay(testX(datsub,3),testreg(datsub),testsites(sitesub,1),wf(datsub),wV(datsub,datsub),colrs,testsitedef.firstage(sitesub),testt(end),0,timesteps,{'GSL'});
-        set(hp,'xlim',[-500 2010]);
-        
-        labl2=labl;  
-
-        delete(hp(2));
-        if timesteps==100
-            pdfwrite(['GSL_' num2str(timesteps) 'y' labl2]);
-        end
-        
-
-
-        fid=fopen(['GSL_' num2str(timesteps) 'y' labl2 '.tsv'],'w');
-        fprintf(fid,outtable);
-
-        Nsamps=10000;
-        sub1=find((difftimes<=1800).*(difftimes>=1500)); sub2=find(difftimes>1800);
-        sub1a=find((difftimes<=1800).*(difftimes>=0)); sub2=find(difftimes>1800); 
-        if ((length(sub1a))>0).*(length(sub1)>0)
-            samps=mvnrnd(dGSL,dGSLV,Nsamps);
-            if (length(sub1)>0).*(length(sub2)>0)
-                [max1,max1i]=max(samps(:,sub1),[],2);
-                [max1a,max1ia]=max(samps(:,sub1a),[],2);
-                difr=bsxfun(@minus,samps(:,sub2),max1);
-                difra=bsxfun(@minus,samps(:,sub2),max1a);
-                Ppositive = sum(samps(:,sub2)>0,1)/size(samps,1);
-                q=cumprod((samps(:,sub2(end:-1:1))>0)*1,2); q=q(:,end:-1:1);
-                Ppositiveseries = sum(q,1)/size(samps,1);
-                Plarger = sum(difr>0,1)/size(samps,1);
-                Plargera = sum(difra>0,1)/size(samps,1);
-                fprintf(fid,'\n\nProbability faster than during fastest interval\n');
-                fprintf(fid,'Central year\tP > 0\tP all subsequent > 0\tP centered 1500-1800\tP centered 0-1800');
-                fprintf(fid,'\n%0.0f\t%0.3f\t%0.3f\t%0.3f\t%0.3f',[difftimes(sub2)' ; Ppositive; Ppositiveseries ; Plarger ; Plargera]);
-            end
-        end
-        
-        suboverallyrs=find(mod(difftimes,timesteps)==timesteps/2);
-        subyrs=find(difftimes(suboverallyrs)>=1800);
-        wquants=[.67 .9 .95 .99 .995 .999];
-        if length(subyrs)>0
-            fprintf(fid,'\n\nLast year faster');
-            fprintf(fid,'Central year');
-            fprintf(fid,'\t%0.2f',wquants);
-            fprintf(fid,'\n');
+            clf;
+            [hp,hl,hl2,dGSL,dGSLsd,dGSLV,outtable,difftimes,diffreg]=PlotPSLOverlay(testX(datsub,3),testreg(datsub),testsites(sitesub,1),wf(datsub),wV(datsub,datsub),colrs,testsitedef.firstage(sitesub),testt(end),0,timesteps,{'GSL'});
+            set(hp,'xlim',[-500 2010]);
             
-            clear lastyrlarger;
-            for mm=1:length(subyrs)
-                curyr=difftimes(suboverallyrs(subyrs(mm)));
-                for nn=1:Nsamps
-                    sub=intersect(suboverallyrs,find(difftimes<curyr));
-                    sub2=find(samps(nn,sub)>samps(nn,suboverallyrs(subyrs(mm))));
-                    if length(sub2)>0
-                        lastyrlarger(nn,mm)=difftimes(suboverallyrs(sub2(end)));
-                    else
-                        lastyrlarger(nn,mm)=min(difftimes)-1;
-                    end
-                end
-                fprintf(fid,'\n%0.0f',curyr);
-                fprintf(fid,'\t%0.0f',quantile(lastyrlarger(:,mm),wquants));
+            labl2=[labl labl3];  
+
+            delete(hp(2));
+            if timesteps==100
+                pdfwrite(['GSL_' num2str(timesteps) 'y' labl2]);
             end
+            
+
+
+            fid=fopen(['GSL_' num2str(timesteps) 'y' labl2 '.tsv'],'w');
+            fprintf(fid,outtable);
+
+            Nsamps=10000;
+            sub1=find((difftimes<=1800).*(difftimes>=1500)); sub2=find(difftimes>1800);
+            sub1a=find((difftimes<=1800).*(difftimes>=0)); sub2=find(difftimes>1800); 
+            if ((length(sub1a))>0).*(length(sub1)>0)
+                samps=mvnrnd(dGSL,dGSLV,Nsamps);
+                if (length(sub1)>0).*(length(sub2)>0)
+                    [max1,max1i]=max(samps(:,sub1),[],2);
+                    [max1a,max1ia]=max(samps(:,sub1a),[],2);
+                    difr=bsxfun(@minus,samps(:,sub2),max1);
+                    difra=bsxfun(@minus,samps(:,sub2),max1a);
+                    Ppositive = sum(samps(:,sub2)>0,1)/size(samps,1);
+                    q=cumprod((samps(:,sub2(end:-1:1))>0)*1,2); q=q(:,end:-1:1);
+                    Ppositiveseries = sum(q,1)/size(samps,1);
+                    Plarger = sum(difr>0,1)/size(samps,1);
+                    Plargera = sum(difra>0,1)/size(samps,1);
+                    fprintf(fid,'\n\nProbability faster than during fastest interval\n');
+                    fprintf(fid,'Central year\tP > 0\tP all subsequent > 0\tP centered 1500-1800\tP centered 0-1800');
+                    fprintf(fid,'\n%0.0f\t%0.3f\t%0.3f\t%0.3f\t%0.3f',[difftimes(sub2)' ; Ppositive; Ppositiveseries ; Plarger ; Plargera]);
+                end
+            end
+            
+            suboverallyrs=find(mod(difftimes,timesteps)==timesteps/2);
+            subyrs=find(difftimes(suboverallyrs)>=1800);
+            wquants=[.67 .9 .95 .99 .995 .999];
+            if length(subyrs)>0
+                fprintf(fid,'\n\nLast year faster');
+                fprintf(fid,'Central year');
+                fprintf(fid,'\t%0.2f',wquants);
+                fprintf(fid,'\n');
+                
+                clear lastyrlarger;
+                for mm=1:length(subyrs)
+                    curyr=difftimes(suboverallyrs(subyrs(mm)));
+                    for nn=1:Nsamps
+                        sub=intersect(suboverallyrs,find(difftimes<curyr));
+                        sub2=find(samps(nn,sub)>samps(nn,suboverallyrs(subyrs(mm))));
+                        if length(sub2)>0
+                            lastyrlarger(nn,mm)=difftimes(suboverallyrs(sub2(end)));
+                        else
+                            lastyrlarger(nn,mm)=min(difftimes)-1;
+                        end
+                    end
+                    fprintf(fid,'\n%0.0f',curyr);
+                    fprintf(fid,'\t%0.0f',quantile(lastyrlarger(:,mm),wquants));
+                end
+            end
+            fclose(fid);
+            
+            
         end
-        fclose(fid);
-        
-        
-    end
 
-    % output GSL covariance
-  
+        % output GSL covariance
+        
 
-    fid=fopen(['GSL'  labl2 '_cov.tsv'],'w');
-    fprintf(fid,'mm^2');
-    fprintf(fid,'\t%0.0f',testX(datsub,3));
-    fprintf(fid,'\n');
-    for ppp=1:length(datsub)
-        fprintf(fid,'%0.0f',testX(datsub(ppp),3));
-        fprintf(fid,'\t%0.3e',wV(datsub(ppp),datsub));
+        fid=fopen(['GSL'  labl2 '_cov.tsv'],'w');
+        fprintf(fid,'mm^2');
+        fprintf(fid,'\t%0.0f',testX(datsub,3));
         fprintf(fid,'\n');
+        for ppp=1:length(datsub)
+            fprintf(fid,'%0.0f',testX(datsub(ppp),3));
+            fprintf(fid,'\t%0.3e',wV(datsub(ppp),datsub));
+            fprintf(fid,'\n');
+        end
+        
+        fclose(fid);
     end
     
-    fclose(fid);
     
     %%%
 
