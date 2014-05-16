@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon May 05 08:33:50 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri May 16 09:38:09 EDT 2014
 
 defval('firsttime',-1000);
 
@@ -131,6 +131,10 @@ subS=find(abs(PX.sitecoords(:,1))<=52);
 
 PX=SubsetDataStructure(PX,sub,subS);
 
+sub = find(PX.datid<1e6);
+subS = find(PX.siteid<1e6);
+PXnoEH = SubsetDataStructure(PX,sub,subS);
+
 incls = {{'North Carolina','New Jersey','Florida'},{'Florida','New Jersey','North Carolina','Nova Scotia'},{'Florida','New Jersey','North Carolina','Nova Scotia','New Zealand','Cook Islands'},{'Florida','New Jersey','North Carolina','Nova Scotia','New Zealand','Cook Islands','Massachusetts','Maine','Louisiana'}};
 
 for ii=1:length(incls);
@@ -171,7 +175,11 @@ end
 
 % First load tide gauge data
 optimizemode=1.0;
-[TG,TG0,thetL,TGmodellocal] = GPSmoothNearbyTideGauges(PX.sitecoords,[],[],[],[],[],optimizemode);
+
+psmsldir=fullfile(IFILES,'rlr_annual');
+gslfile=fullfile(IFILES,'/CSIRO_Recons_gmsl_yr_2011.csv');
+
+[TG,TG0,thetL,TGmodellocal] = GPSmoothNearbyTideGauges(PX.sitecoords,[],[],[],[],[],optimizemode,psmsldir,gslfile);
 
 % drop near field
 sub=union(find(abs(TG.lat)<=52),find(TG.lat>100));
@@ -213,13 +221,13 @@ GISfp=GISfp*1000;
 %%%%%%
 
 clear datasets;
-datasets{1}=MergeDataStructures(TG,PX);
-datasets{2}=MergeDataStructures(TGNOCW,PX);
-datasets{3}=PX;
+datasets{1}=MergeDataStructures(TGNOCW,PX);
+datasets{2}=PX;
+datasets{3}=MergeDataStructures(TGNOCW,PXnoEH);
 
-datasets{1}.label='TG+GSL+PX';
-datasets{2}.label='TG+PX';
-datasets{3}.label='PX';
+datasets{1}.label='TG+PX';
+datasets{2}.label='PX';
+datasets{3}.label='TG+PXnoEH';
 
 for jj=1:length(PXsub)
     datasets{end+1}=MergeDataStructures(TGNOCW,PXsub{jj});

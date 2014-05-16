@@ -1,6 +1,6 @@
 % Master script for Common Era proxy + tide gauge sea-level analysis
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri May 09 08:36:58 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri May 16 09:41:57 EDT 2014
 
 pd=pwd;
 addpath('~/Dropbox/Code/TGAnalysis/MFILES');
@@ -9,7 +9,7 @@ IFILES=[pd '/IFILES'];
 addpath(pd)
 savefile='~/tmp/CESL';
 
-WORKDIR='140507';
+WORKDIR='140516';
 if ~exist(WORKDIR,'dir')
     mkdir(WORKDIR);
 end
@@ -29,9 +29,9 @@ addpath(pd)
 
 save(savefile,'datasets','modelspec');
 addpath(pwd)
-trainsets=[1 2 ]; % train w/TG+GSL+PX or w/TG+PX
-trainspecs=[1 1];
-trainlabels={'default','trainedwoGSL'};
+trainsets=[3];
+trainspecs=[1];
+trainlabels={'default'};
 
 clear thetTGG trainsubsubset;
 for ii=1:length(trainspecs)
@@ -128,8 +128,8 @@ end
 
 testt = [-1000:20:2000 2010];
 
-regresssets=[2 2 1]; % regress w/TG+PX
-regressparams=[1 2 1];
+regresssets=[1 2 3];
+regressparams=[1 1 1];
 clear regresslabels;
 for i=1:length(regresssets)
     regresslabels{i} = [datasets{regresssets(i)}.label '_' trainlabels{regressparams(i)}];
@@ -184,7 +184,7 @@ for iii=1:length(regresssets)
     [fp(subps),sdp(subps),~,testlocp]=RegressHoloceneDataSets(wdataset,testsitedefp,modelspec(trainspecs(jj)),thetTGG{jj},trainsub,noiseMasks(1,:),testtsp,refyear,collinear,passderivs,invcv);
 
     fid=fopen(['TGandProxyData' labl '.tsv'],'w');
-    fprintf(fid,['Site\tID\t1ime1\ttime2\tlimiting\tGIAproj\tY-GIAproj\tY\' ...
+    fprintf(fid,['Site\tID\ttime1\ttime2\tlimiting\tGIAproj\tY-GIAproj\tY\' ...
                  'tdY\tcompactcorr\tistg\tlat\tlong\tsite GIA\tmean time\tYposterior\tdYposterior\n']);
     for i=1:size(wdataset.datid,1)
         subq=find(wdataset.siteid==wdataset.datid(i));
@@ -225,7 +225,7 @@ for iii=1:length(regresssets)
     
     fid=fopen(['linrates' labl '.tsv'],'w');
     fprintf(fid,['Regional+Local Linear Rates (mm/y), ' labl '\n']);
-    fprintf(fid,'Site\tICE5G VM2-90\tRate (linear)\t2s');
+    fprintf(fid,'Site\tSiteID\tLat\tLong\tICE5G VM2-90\tRate (linear)\t2s');
     for pp=1:length(firstyears)
         fprintf(fid,'\tRate (avg, %0.0f-%0.0f)\t2s',[firstyears(pp) lastyears(pp)]);
     end
@@ -238,6 +238,7 @@ for iii=1:length(regresssets)
     fprintf(fid,'\n');
     for kk=1:size(testsites,1)
         fprintf(fid,testnames2{kk});
+        fprintf(fid,'\t%0.2f',testsitedef.sites(kk,:));
         fprintf(fid,'\t%0.2f',testsitedef.GIA(kk));
         fprintf(fid,'\t%0.2f',[fslopelin(kk) 2*sdslopelin(kk)]);
         for pp=1:length(firstyears)
@@ -695,7 +696,6 @@ for iii=1:length(regresssets)
         end
     end
     
-    if iii==1
         % weight GIA models
         
         GIAtimes=[.15 .95 1.95];
@@ -754,7 +754,7 @@ for iii=1:length(regresssets)
         end
         legend(shortnames,'location','northeast');
         xlabel('Year (CE)'); ylabel('mm'); title('Detrended mean GIA estimate');
-        pdfwrite('GIAwtmeandetr');
+        pdfwrite(['GIAwtmeandetr' labl]);
         
         clf;
         subplot(2,1,1);
@@ -766,9 +766,7 @@ for iii=1:length(regresssets)
        
         legend(pairnames,'location','northeast');
         xlabel('Year (CE)'); ylabel('mm'); title('Detrended mean GIA estimate');
-        pdfwrite('GIAwtmeandetr_grad');
-    end
-    
+        pdfwrite(['GIAwtmeandetr_grad' labl]);
    
     
     save(savefile,'datasets','modelspec','f2s','sd2s','V2s', ...

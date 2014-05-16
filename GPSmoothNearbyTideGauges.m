@@ -1,10 +1,10 @@
-function [TGdata2,TGdata,thetL,TGmodellocal] = GPSmoothNearbyTideGauges(targcoords,addlsites,thetL0,winlength,thinlength,minlength,optimizemode,psmsldir,ROOTDIR)
+function [TGdata2,TGdata,thetL,TGmodellocal] = GPSmoothNearbyTideGauges(targcoords,addlsites,thetL0,winlength,thinlength,minlength,optimizemode,psmsldir,gslfile)
 
 % Find tide gauge sites to include, based on length and proximity criteria, then
 % fit GP model to them in order to interpolate and take running averge.
 %
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Wed Apr 30 08:48:51 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon May 12 11:11:56 EDT 2014
 %
 
 defval('minlength',[150 75 20]);  % minimum length for global curves, most purposes and minimum
@@ -24,12 +24,8 @@ defval('targcoords',[
 
 defval('addlsites',[]);
 
-defval('ROOTDIR','~/Dropbox/Consulting/Risky Business/Code/RiskyBusinessScience/slr');
-addpath(fullfile(ROOTDIR,'MFILES'));
-IFILES=fullfile(ROOTDIR,'../../IFILES/slr/');
-
-defval('psmsldir',fullfile(IFILES,'rlr_annual'));
-defval('gslfile',fullfile(IFILES,'CSIRO_Recons_gmsl_yr_2011.csv'));
+defval('psmsldir',fullfile('.','.rlr_annual'));
+defval('gslfile',fullfile('.','CSIRO_Recons_gmsl_yr_2011.csv'));
 
 [TGcoords,TGrsl,TGrslunc,TGid,TGsiteid,sitenames,TGsitecoords,sitelen]=ReadPSMSLData(0,1000,minlength(3),psmsldir,gslfile);
 sub1=find((sitelen>minlength(1)));
@@ -74,7 +70,7 @@ TGdata.sitelen=sitelen(sitesub);
 
 %%%%%%%%%%
 
-GPSLDefineCovFuncs;
+TGDefineCovFuncs;
 
 TGmodellocal.cvfunc=@(t1,t2,dt1t2,thetas,dy1y2,fp1fp2) kDP(t1,t2,thetas(1)) + kMatG(dt1t2,thetas(2:4)) + kDELTAG(dy1y2,thetas(5));
 TGmodellocal.traincv = @(t1,t2,dt1t2,thetas,errcv,ad,fp1fp2) TGmodellocal.cvfunc(t1,t2,dt1t2,thetas,ad,fp1fp2) + errcv;
