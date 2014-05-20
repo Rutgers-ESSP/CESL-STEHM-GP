@@ -217,7 +217,7 @@ for iii=1:length(regresssets)
     testX=testlocs{ii,jj}.X;
     testnames2=testlocs{ii,jj}.names2;
 
-    firstyears=[ 0 1000  200  -500  -300 700 1700 1800 1900 860  1000 1080 1460 1560 1800 1840];
+    firstyears=[ 0 1000  200  -500  -300 700 1700 1800 1900 860  1000 1080 1460 1560 1800 1860];
     lastyears=[1800 1800 1000 1000 700 1700 1800 1900 2000 1560 1400 1360 1880 1800 1880 1900];
 
      [fslopeavg,sdslopeavg,fslopeavgdiff,sdslopeavgdiff,diffplus,diffless]=SLRateCompare(f2s{ii,jj}(:,1),V2s{ii,jj}(:,:,1),testsites,testreg,testX(:,3),firstyears,lastyears);
@@ -434,7 +434,7 @@ for iii=1:length(regresssets)
     
         datsub=find(ismember(testreg,testsites(sitesub,1)));
 
-        for timesteps=[100 400 60 ]
+        for timesteps=[100 400 60 40 20]
 
             clf;
             [hp,hl,hl2,dGSL,dGSLsd,dGSLV,outtable,difftimes,diffreg]=PlotPSLOverlay(testX(datsub,3),testreg(datsub),testsites(sitesub,1),wf(datsub),wV(datsub,datsub),colrs,testsitedef.firstage(sitesub),testt(end),0,timesteps,{'GSL'});
