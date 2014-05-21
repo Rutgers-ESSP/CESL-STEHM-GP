@@ -25,7 +25,7 @@ defval('targcoords',[
 
 defval('addlsites',[]);
 
-defval('psmsldir',fullfile('.','.rlr_annual'));
+defval('psmsldir',fullfile('.','rlr_annual'));
 defval('gslfile',fullfile('.','CSIRO_Recons_gmsl_yr_2011.csv'));
 
 % read PSMSL data for all sites longer than minlength(3)

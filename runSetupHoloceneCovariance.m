@@ -3,8 +3,6 @@
 % Define some covariance functions
 
 TGDefineCovFuncs;
-defval('thetTG',[1.6585 36.1312 1e3 0.05 0 1.0217 0.5970   28.6848   11.9728    1.2888    5.7005   26.6414    4.1376   28.2188    7.3826]);
-
 
 refyear=2010;
 kDP = @(years1,years2,thetas) thetas(1).^2 * bsxfun(@times,(years1-refyear)',(years2-refyear));

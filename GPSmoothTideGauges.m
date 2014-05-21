@@ -1,22 +1,23 @@
-function TGdata2 = GPSmoothTideGauges(TGdata,winlength,optimizemode,thinlength,thetL0)
+function TGdata2s = GPSmoothTideGauges(TGdata,winlengths,optimizemode,thinlengths,thetL0,thinyrstart)
 
 % TGdata2 = GPSmoothTideGauges(TGdata,[winlength],[optimizemode],[thinlength],[thetL0])
 %
 % Fit GP model to TGdata site-by-site in order to interpolate and take running averge.
 %
 %   TGdata: data structure with tide gauge data to smooth
-%   winlength: window length for running averages (default = 11)
+%   winlength: window length for running averages, or list of window lengths (default = 11)
 %   optimizemode: optimization mode (default = 1.1 for global optimization, set to 1.0 for local)
-%   thinlength: spacing of data to output (default = winlength - 1)
+%   thinlength: spacing of data to output, same length as winlength (default = winlength - 1)
 %   thetL0: hyperparameters of GP model (default optimizes)
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Tue May 20 17:59:24 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Wed May 21 09:45:20 EDT 2014
 %
 
 defval('thetL0',[]);
-defval('winlength',11);
-defval('thinlength',winlength-1);
+defval('winlengths',11);
+defval('thinlengths',max(1,winlengths));
 defval('optimizemode',1.1); % set to 1.0 for local optimization only
+defval('thinyrstart',[]);
 
 TGDefineCovFuncs;
 
@@ -40,15 +41,18 @@ TGmodellocal.ub=tluL(:,3)';
 TGmodellocal.subfixed=[];
 TGmodellocal.sublength=[];
 
-clear TGdata2 thetL;
-TGdata2.datid=[];
-TGdata2.time1=[];
-TGdata2.Y=[];
-TGdata2.dY =[];
-TGdata2.lat=[];
-TGdata2.long=[];
-TGdata2.Ycv=[];
+clear TGdata2s thetL;
 
+for kkk=1:length(winlengths)
+    TGdata2s{kkk}.datid=[];
+    TGdata2s{kkk}.time1=[];
+    TGdata2s{kkk}.Y=[];
+    TGdata2s{kkk}.dY =[];
+    TGdata2s{kkk}.lat=[];
+    TGdata2s{kkk}.long=[];
+    TGdata2s{kkk}.Ycv=[];
+end
+        
 for nn=1:length(TGdata.siteid)
 
     % find the subset of data for each site
@@ -72,7 +76,12 @@ for nn=1:length(TGdata.siteid)
     TGtestsitedef.sites=[TGdatasub.siteid TGdatasub.sitecoords];
     TGtestsitedef.names=TGdatasub.sitenames;
     TGtestsitedef.names2=TGtestsitedef.names;
-    TGtestsitedef.t = floor(min(TGdata.time1(sub)-winlength/2)):ceil(max(TGdata.time1(sub)+winlength/2));
+    if length(thinyrstart)==0
+        TGtestsitedef.t = floor(min(TGdata.time1(sub)-max(winlengths)/2)):min([thinlengths 1]):ceil(max(TGdata.time1(sub)+max(winlengths)/2));
+    else
+        TGtestsitedef.t = floor(min(min(TGdata.time1(sub)-max(winlengths)/2),thinyrstart)):min([thinlengths 1]):ceil(max(TGdata.time1(sub)+max(winlengths)/2));
+    end
+    
     noiseMasks = ones(1,size(thetL,2));
     noiseMasklabels={'full'};
     trainsub=find(TGdatasub.limiting==0);
@@ -81,49 +90,75 @@ for nn=1:length(TGdata.siteid)
     % check for bad fit, and do a global optimization if need me
     if min(diag(TGV))<0
         if (length(thetL0)==0) .* (optimizemode<1.1)
-             [thetL(nn,:)]=OptimizeHoloceneCovariance(TGdatasub,TGmodellocal,1.1)
-             [TGf,TGsd,TGV,TGtestlocs]=RegressHoloceneDataSets(TGdatasub,TGtestsitedef,TGmodellocal,thetL(nn,:),trainsub,noiseMasks,TGtestsitedef.t);
+            [thetL(nn,:)]=OptimizeHoloceneCovariance(TGdatasub,TGmodellocal,1.1)
+            [TGf,TGsd,TGV,TGtestlocs]=RegressHoloceneDataSets(TGdatasub,TGtestsitedef,TGmodellocal,thetL(nn,:),trainsub,noiseMasks,TGtestsitedef.t);
         end
     end
 
-    % now take running averages
-    Mop=abs(bsxfun(@minus,TGtestlocs.X(:,3),TGtestlocs.X(:,3)'))<(winlength/2);
-    Mop=Mop.*bsxfun(@eq,TGtestlocs.reg,TGtestlocs.reg');
-    adder=sum(Mop,2);
-    sub=find(adder==winlength);
-    Mop=Mop(sub,:)/winlength;
-    t2=Mop*TGtestlocs.X(:,3);
-    reg2=round(Mop*TGtestlocs.reg*10)/10;
-    selsub=[];
-    for ii=1:length(TGdatasub.siteid)
-        subO=find(TGdatasub.datid==TGdatasub.siteid(ii));
-        sub=find((reg2==TGdatasub.siteid(ii)).*(t2>=min(TGdatasub.time1(subO))).*(t2<=max(TGdatasub.time1(subO))));
-        sub3=sub(1:thinlength:end);
-        selsub=[selsub ; sub3];
+    for kkk=1:length(winlengths)
+    
+        winlength=winlengths(kkk);
+        thinlength=thinlengths(kkk);
+
+        % now take running averages
+        Mop=abs(bsxfun(@minus,TGtestlocs.X(:,3),TGtestlocs.X(:,3)'))<=(winlength/2);
+        Mop=Mop.*bsxfun(@eq,TGtestlocs.reg,TGtestlocs.reg');
+        adder=sum(Mop,2);
+        sub=find(adder>=winlength);
+        Mop=bsxfun(@rdivide,Mop(sub,:),adder(sub));
+        t2=Mop*TGtestlocs.X(:,3);
+        t2=round(t2*1000)/1000;
+        if length(thinyrstart)==0
+            [selt2, selsub] = intersect(t2,min(TGdatasub.time1):thinlength:max(TGdatasub.time1));
+        else
+            timegrid = thinyrstart:thinlength:(max(TGdatasub.time1)+thinlength);
+            subq = find((timegrid>=min(TGdatasub.time1)).*(timegrid<=max(TGdatasub.time1)));
+            if subq(1)>1
+                if length(find(timegrid==min(TGdatasub.time1)))==0
+                    subq = [subq(1)-1 subq];
+                end
+            end
+            if subq(end)<length(timegrid)
+                if length(find(timegrid==max(TGdatasub.time1)))==0
+                    subq = [subq subq(end)+1];
+                end
+            end
+            
+            [selt2, selsub] = intersect(t2,timegrid(subq));
+        end
+        
+        Mop=Mop(selsub,:);
+        t2=t2(selsub);
+
+        TGf2=Mop*TGf;
+        TGV2=Mop*TGV*Mop';
+        TGsd2=sqrt(diag(TGV2));
+
+        % and put back in a data structure
+        TGdata2s{kkk}.datid=[TGdata2s{kkk}.datid ; round(Mop*TGtestlocs.reg)];
+        TGdata2s{kkk}.time1=[TGdata2s{kkk}.time1 ; t2];
+        TGdata2s{kkk}.Y=[TGdata2s{kkk}.Y ; TGf2];
+        TGdata2s{kkk}.dY =[TGdata2s{kkk}.dY ; TGsd2];
+        TGdata2s{kkk}.lat=[TGdata2s{kkk}.lat ; Mop*TGtestlocs.X(:,1)];
+        TGdata2s{kkk}.long=[TGdata2s{kkk}.long ; Mop*TGtestlocs.X(:,2)];
+        TGdata2s{kkk}.Ycv(length(TGdata2s{kkk}.Ycv)+[1:length(TGf2)],length(TGdata2s{kkk}.Ycv)+[1:length(TGf2)])=sparse(TGV2);
+
+        TGdata2s{kkk}.compactcorr=zeros(size(TGdata2s{kkk}.datid));
+        TGdata2s{kkk}.time2=TGdata2s{kkk}.time1;
+        TGdata2s{kkk}.meantime=TGdata2s{kkk}.time1;
+        TGdata2s{kkk}.limiting=zeros(size(TGdata2s{kkk}.datid));
+        TGdata2s{kkk}.istg = ones(size(TGdata2s{kkk}.datid));
+        TGdata2s{kkk}.siteid=TGdata.siteid;
+        TGdata2s{kkk}.sitenames=TGdata.sitenames;
+        TGdata2s{kkk}.sitecoords=TGdata.sitecoords;
+        TGdata2s{kkk}.sitelen=TGdata.sitelen;
     end
-    Mop=Mop(selsub,:);
+    
 
-    TGf2=Mop*TGf;
-    TGV2=Mop*TGV*Mop';
-    TGsd2=sqrt(diag(TGV2));
 
-    % and put back in a data structure
-    TGdata2.datid=[TGdata2.datid ; round(Mop*TGtestlocs.reg)];
-    TGdata2.time1=[TGdata2.time1 ; Mop*TGtestlocs.X(:,3)];
-    TGdata2.Y=[TGdata2.Y ; TGf2];
-    TGdata2.dY =[TGdata2.dY ; TGsd2];
-    TGdata2.lat=[TGdata2.lat ; Mop*TGtestlocs.X(:,1)];
-    TGdata2.long=[TGdata2.long ; Mop*TGtestlocs.X(:,2)];
-    TGdata2.Ycv(length(TGdata2.Ycv)+[1:length(TGf2)],length(TGdata2.Ycv)+[1:length(TGf2)])=sparse(TGV2);
 
-    TGdata2.compactcorr=zeros(size(TGdata2.datid));
-    TGdata2.time2=TGdata2.time1;
-    TGdata2.meantime=TGdata2.time1;
-    TGdata2.limiting=zeros(size(TGdata2.datid));
-    TGdata2.istg = ones(size(TGdata2.datid));
-    TGdata2.siteid=TGdata.siteid;
-    TGdata2.sitenames=TGdata.sitenames;
-    TGdata2.sitecoords=TGdata.sitecoords;
-    TGdata2.sitelen=TGdata.sitelen;
-
+end
+    
+if length(winlengths)==1
+    TGdata2s = TGdata2s{1};
 end

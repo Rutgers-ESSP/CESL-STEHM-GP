@@ -1,6 +1,6 @@
-function makeplots_sldecomp(dataset,f2s,sd2s,V2s,testloc,labl,doplots,difftimestep)
+function makeplots_sldecomp(dataset,f2s,sd2s,V2s,testloc,labl,doplots,difftimestep,xlim0)
 
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Apr 21 08:18:17 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Wed May 21 10:31:35 EDT 2014
 
 
 
@@ -12,7 +12,7 @@ function makeplots_sldecomp(dataset,f2s,sd2s,V2s,testloc,labl,doplots,difftimest
 defval('labl','');
 defval('doplots',[]);
 defval('difftimestep',100);
-xlim0=[-1000 2010];
+defval('xlim0',[-1000 2010]);
 
 numrows=1+(difftimestep>0);
 

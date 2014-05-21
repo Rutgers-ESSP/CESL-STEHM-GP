@@ -1,6 +1,6 @@
 function [hp,hl,hl2,df,dsd,dV,outtable,difftimes,diffreg]=PlotPSLOverlay(years,regions,selregions,slf,slV,colrs,starttimes,endtimes,do2s,difftimestep,regionlabels)
 
-% Last updated by  Bob Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri Mar 7 16:34:43 EST 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Wed May 21 01:09:42 EDT 2014
 
 defval('regions',ones(size(years)));
 defval('selregions',unique(regions));
@@ -38,21 +38,24 @@ for i=1:length(selregions)
         outtable = [outtable '\n' regionlabels{i} sprintf('\nYear\tmm\t1s')];
     end
     sub=find((years>=starttimes(i)).*(years<=endtimes(i)).*(regions==selregions(i)));
-    hl(i)=plot(years(sub),slf(sub),[colrs{i}],'linew',2); hold on;
-    plot(years(sub),slf(sub)+slsd(sub),[colrs{i} '--']);
-    plot(years(sub),slf(sub)-slsd(sub),[colrs{i} '--']);
-    if do2s>-1
+    if length(sub)>0
+        hl(i)=plot(years(sub),slf(sub),[colrs{i}],'linew',2); hold on;
         plot(years(sub),slf(sub)+slsd(sub),[colrs{i} '--']);
         plot(years(sub),slf(sub)-slsd(sub),[colrs{i} '--']);
-    end
-    if do2s>0
-        plot(years(sub),slf(sub)+2*slsd(sub),[colrs{i} ':']);
-        plot(years(sub),slf(sub)-2*slsd(sub),[colrs{i} ':']);
+        if do2s>-1
+            plot(years(sub),slf(sub)+slsd(sub),[colrs{i} '--']);
+            plot(years(sub),slf(sub)-slsd(sub),[colrs{i} '--']);
+        end
+        if do2s>0
+            plot(years(sub),slf(sub)+2*slsd(sub),[colrs{i} ':']);
+            plot(years(sub),slf(sub)-2*slsd(sub),[colrs{i} ':']);
+        end
+        
+        for jj=1:length(sub)
+            outtable=[outtable sprintf('\n%0.0f',years(sub(jj))) sprintf('\t%0.2f', [slf(sub(jj)) slsd(sub(jj))])];
+        end
     end
     
-    for jj=1:length(sub)
-        outtable=[outtable sprintf('\n%0.0f',years(sub(jj))) sprintf('\t%0.2f', [slf(sub(jj)) slsd(sub(jj))])];
-    end
 end
 
 xlabel('Year');
@@ -87,19 +90,22 @@ if difftimestep>0
      	end
         if length(sub)>0
             sub=find((difftimes>=starttimes(i)).*(difftimes<=endtimes(i)).*(diffreg==selregions(i)));
-            hl2(i)=plot(difftimes(sub),df(sub),[colrs{i}],'linew',2); hold on;
-            if do2s>-1
-                plot(difftimes(sub),df(sub)+dsd(sub),[colrs{i} '--']);
-                plot(difftimes(sub),df(sub)-dsd(sub),[colrs{i} '--']);
-            end
-            if do2s>0
-                plot(difftimes(sub),df(sub)+2*dsd(sub),[colrs{i} ':']);
-                plot(difftimes(sub),df(sub)-2*dsd(sub),[colrs{i} ':']);
+            if length(sub)>0
+                hl2(i)=plot(difftimes(sub),df(sub),[colrs{i}],'linew',2); hold on;
+                if do2s>-1
+                    plot(difftimes(sub),df(sub)+dsd(sub),[colrs{i} '--']);
+                    plot(difftimes(sub),df(sub)-dsd(sub),[colrs{i} '--']);
+                end
+                if do2s>0
+                    plot(difftimes(sub),df(sub)+2*dsd(sub),[colrs{i} ':']);
+                    plot(difftimes(sub),df(sub)-2*dsd(sub),[colrs{i} ':']);
+                end
+                
+                for jj=1:length(sub)
+                    outtable=[outtable sprintf('\n%0.0f',difftimes(sub(jj))) sprintf('\t%0.3f', [df(sub(jj)) dsd(sub(jj))]) sprintf('\t%0.3f',normcdf(df(sub(jj))./dsd(sub(jj))))];
+                end
             end
             
-            for jj=1:length(sub)
-                outtable=[outtable sprintf('\n%0.0f',difftimes(sub(jj))) sprintf('\t%0.3f', [df(sub(jj)) dsd(sub(jj))]) sprintf('\t%0.3f',normcdf(df(sub(jj))./dsd(sub(jj))))];
-            end
         end
     end
     
