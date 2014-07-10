@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri May 16 09:38:09 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Wed Jul 09 20:43:39 EDT 2014
 
 defval('firsttime',-1000);
 
@@ -11,7 +11,7 @@ datid=[]; time1=[]; time2=[]; mediantime=[]; limiting=[]; Y=[]; dY = []; compact
 istg = []; lat=[]; long=[];
 siteid=[]; sitenames={}; sitecoords=[];
 
-datPX = importdata(fullfile(IFILES,'RSL_May2014.csv'));
+datPX = importdata(fullfile(IFILES,'RSL_July2014.csv'));
 datPX.textdata=datPX.textdata(2:end,:);
 
 % catch entries without age errors
@@ -224,10 +224,12 @@ clear datasets;
 datasets{1}=MergeDataStructures(TGNOCW,PX);
 datasets{2}=PX;
 datasets{3}=MergeDataStructures(TGNOCW,PXnoEH);
+datasets{4}=MergeDataStructures(TG,PXnoEH);
 
 datasets{1}.label='TG+PX';
 datasets{2}.label='PX';
-datasets{3}.label='TG+PXnoEH';
+datasets{3}.label='TG+GS+PXnoEH';
+datasets{4}.label='TG+GSL+PXnoEH';
 
 for jj=1:length(PXsub)
     datasets{end+1}=MergeDataStructures(TGNOCW,PXsub{jj});

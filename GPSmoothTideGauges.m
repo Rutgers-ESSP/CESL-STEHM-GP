@@ -1,4 +1,4 @@
-function TGdata2s = GPSmoothTideGauges(TGdata,winlengths,optimizemode,thinlengths,thetL0,thinyrstart)
+function [TGdata2s,thetL,TGmodellocal] = GPSmoothTideGauges(TGdata,winlengths,optimizemode,thinlengths,thetL0,thinyrstart)
 
 % TGdata2 = GPSmoothTideGauges(TGdata,[winlength],[optimizemode],[thinlength],[thetL0])
 %
@@ -10,7 +10,7 @@ function TGdata2s = GPSmoothTideGauges(TGdata,winlengths,optimizemode,thinlength
 %   thinlength: spacing of data to output, same length as winlength (default = winlength - 1)
 %   thetL0: hyperparameters of GP model (default optimizes)
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Wed May 21 09:45:20 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun May 25 16:53:21 EDT 2014
 %
 
 defval('thetL0',[]);

@@ -1,6 +1,6 @@
 % Master script for Common Era proxy + tide gauge sea-level analysis
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri May 16 09:47:43 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Wed Jul 09 20:44:35 EDT 2014
 
 pd=pwd;
 addpath('~/Dropbox/Code/TGAnalysis/MFILES');
@@ -9,13 +9,13 @@ IFILES=[pd '/IFILES'];
 addpath(pd)
 savefile='~/tmp/CESL';
 
-WORKDIR='140516';
+WORKDIR='140709';
 if ~exist(WORKDIR,'dir')
     mkdir(WORKDIR);
 end
 cd(WORKDIR);
 
-GIAfiles=([pd '/../GIA/RSL2/rsl*.out']);
+GIAfiles=([pd '/../GIA/RSL4/rsl*.out.gz']);
 
 %
 firsttime=-1000;
@@ -29,7 +29,7 @@ addpath(pd)
 
 save(savefile,'datasets','modelspec');
 addpath(pwd)
-trainsets=[3];
+trainsets=[4];
 trainspecs=[1];
 trainlabels={'default'};
 
@@ -575,6 +575,7 @@ for iii=1:length(regresssets)
 
     clear pairsets;
     pairsets{1}=[1 2; 2 3; 2 4; 3 4; 5 3; 5 4 ; 7 3];
+    pairsets{2}=[1 2; 1 3 ; 1 4 ; 2 3; 2 4 ; 3 4];
     for mmm=1:length(pairsets)
         for dodetrend=[0 1]
             
@@ -606,6 +607,7 @@ for iii=1:length(regresssets)
                 Mgrad(:,sub2(uj(end))) = Mgrad(:,sub2(uj(end)))-1;
                 
                 if dodetrend
+                    %                   wf1=wf2; wV1=wV2; labl2=['_' num2str(mmm) '_detrended1000']; ; % always detrend with respect to 1000-1800
                     wf = wf1; wV = wV1;
                     q = Mgrad*wf;
                     if sum(isnan(q))
@@ -616,7 +618,7 @@ for iii=1:length(regresssets)
                     q=Mgrad*wf;
                 end
                 
-                   
+                
                 if sum(~isnan(q))>1
 
                     gradf = [gradf ; q];
@@ -628,7 +630,7 @@ for iii=1:length(regresssets)
                     wpairnames={wpairnames{:},pairnames{i}};
                 end
                 
-                    
+                
                 
             end 
             
@@ -660,12 +662,7 @@ for iii=1:length(regresssets)
                     lastyears= [1800 1800 1000 1700 1800 1900 2000 1500 1300 1800 2000];
                     [fslopeavg,sdslopeavg,fslopeavgdiff,sdslopeavgdiff,diffplus,diffless]=SLRateCompare(gradf,gradV,wdiffpair,gradpair,gradt,firstyears,lastyears);
                     
-                    if dodetrend
-                        fid=fopen(['RSLgrad_' num2str(timesteps) 'y' labl '_detrended.tsv'],'w');
-                    else
-                        
-                        fid=fopen(['RSLgrad_' num2str(timesteps) 'y' labl '.tsv'],'w');
-                    end
+                    fid=fopen(['RSLgrad_' num2str(timesteps) 'y' labl labl2 '.tsv'],'w');
                     
                     
                     fprintf(fid,'Pair');
@@ -709,19 +706,30 @@ for iii=1:length(regresssets)
         [GIAt,GIAsl,GIAsites,GIAicehist,GIAsolidearth] = readJXMSiteGIA(GIAfiles,GIAtimes);
         
         t0 = find(GIAt==.15);
-        t1 = find(GIAt==.95);
+        t1 = find(GIAt==1.05);
         t2 = find(GIAt==1.95);
+        t3 = find(GIAt==0.25);
+        t4 = find(GIAt==0.05);
         
         GIAavg = squeeze([GIAsl(t0,:,:)-GIAsl(t2,:,:)])/-(.15-1.95);       
-        GIAavgA = squeeze([GIAsl(t0,:,:)-GIAsl(t1,:,:)])/-(.15-.95);
-        GIAavgB = squeeze([GIAsl(t1,:,:)-GIAsl(t2,:,:)])/-(.95-1.95);
-        GIAsitetarg={'FloridaNassau','NorthCarolinaSandPoint','NewJerseyLeedsPoint','ChristmasIs.Multiple','MassachusettsWoodIsland'};
+        GIAavgA = squeeze([GIAsl(t0,:,:)-GIAsl(t1,:,:)])/-(.15-1.05);
+        GIAavgB = squeeze([GIAsl(t1,:,:)-GIAsl(t2,:,:)])/-(1.05-1.95);
+        GIAavgZ = squeeze([GIAsl(t4,:,:)-GIAsl(t3,:,:)])/(.25-.05);
+        
+        GIAsitetarg={'Florida-Nassau','NorthCarolina-SandPoint','NewJersey-LeedsPoint','ChristmasIsland-Multiple','Massachusetts-WoodIsland','EH12_1','EH12_2','EH12_3','EH12_4','EH12_5','EH12_6','EH12_7','EH12_8','EH12_9','EH12_10','EH12_11','EH12_13','EH12_14','EH12_16'};
+        %GIAsitetarg={'Florida-Nassau','NorthCarolina-SandPoint','NewJersey-LeedsPoint','ChristmasIsland-Multiple','EH12_6','EH12_7','EH12_8','EH12_9','EH12_10','EH12_11','EH12_13','EH12_14','EH12_16'};
+        
         clear GIAsub;
         for pp=1:length(GIAsitetarg)
             GIAsub(pp)=find(strcmpi(GIAsitetarg{pp},GIAsites));
         end
         GIAavg=GIAavg(GIAsub,:);
-        selsitenames={'Florida-Nassau','NorthCarolina-SandPoint','NewJersey-LeedsPoint','ChristmasIsland','Massachusetts'};
+        GIAavgA=GIAavgA(GIAsub,:);
+        GIAavgB=GIAavgB(GIAsub,:);
+        GIAavgZ=GIAavgZ(GIAsub,:);
+        
+                selsitenames={'Florida-Nassau','NorthCarolina-SandPoint','NewJersey-LeedsPoint','ChristmasIsland','Massachusetts','EH12_1','EH12_2','EH12_3','EH12_4','EH12_5','EH12_6','EH12_7','EH12_8','EH12_9','EH12_10','EH12_11','EH12_13','EH12_14','EH12_16'};
+                %selsitenames={'Florida-Nassau','NorthCarolina-SandPoint','NewJersey-LeedsPoint','ChristmasIsland','EH12_6','EH12_7','EH12_8','EH12_9','EH12_10','EH12_11','EH12_13','EH12_14','EH12_16'};
         sitesub=[];
         for kk=1:length(selsitenames)
             q=find(strcmpi(selsitenames{kk},testsitedef.names));
@@ -729,7 +737,9 @@ for iii=1:length(regresssets)
                 sitesub=[sitesub q(1)];
             end
         end
-        [fsl,Vsl]=SLRateMultisite(f2s{ii,jj}(:,1),V2s{ii,jj}(:,:,1),testsites(sitesub,:),testreg,testX(:,3),0,1800)
+        [fsl,Vsl]=SLRateMultisite(f2s{ii,jj}(:,1),V2s{ii,jj}(:,:,1),testsites(sitesub,:),testreg,testX(:,3),0,1800);
+        [fslA,sdslA,fslAd,sdslAd]=SLRateCompare(f2s{ii,jj}(:,1),V2s{ii,jj}(:,:,1),testsites(sitesub,:),testreg,testX(:,3),[0 900],[900 1800])
+
         Mdiff=zeros(length(sitesub)-1,length(sitesub)); Mdiff(:,1)=-1; Mdiff(:,2:end)=eye(length(sitesub)-1);
         
         GIAavg2=Mdiff*GIAavg;
@@ -744,10 +754,11 @@ for iii=1:length(regresssets)
         probwts=probwts/sum(probwts);
         
         GIAwtmean = sum(bsxfun(@times,reshape(probwts,1,1,[]),GIAsl),3);
-        GIAwtrate = (GIAwtmean(t0,:)-GIAwtmean(t2,:))/(.15-1.95);
-        GIAwtmeandetr = GIAwtmean-bsxfun(@times,GIAwtrate,GIAt'-.15); GIAwtmeandetr=bsxfun(@minus,GIAwtmeandetr,GIAwtmeandetr(t0,:));
+        GIAwtrate = (GIAwtmean(t0,:)-GIAwtmean(t2,:))/-(.15-1.95);
+        GIAwtmeandetr = GIAwtmean+bsxfun(@times,GIAwtrate,GIAt'-.15); GIAwtmeandetr=bsxfun(@minus,GIAwtmeandetr,GIAwtmeandetr(t0,:));
+       GIAwtrate2 = (GIAwtmeandetr(t0,:)-GIAwtmeandetr(t2,:))/-(.15-1.95);
         
-        GIAsitetarg={'FloridaNassau','NorthCarolinaSandPoint','NewJerseyLeedsPoint','NovaScotiaChezzetcook'};
+        GIAsitetarg={'Florida-Nassau','NorthCarolina-SandPoint','NewJersey-LeedsPoint','NovaScotia-Chezzetcook'};
         shortnames={'FL','NC','NJ','NS'};
         diffpairs={[2 1],[3 2],[4 2],[4 3]}; 
         colrs={'r','b','m','g'};
@@ -773,6 +784,77 @@ for iii=1:length(regresssets)
         legend(pairnames,'location','northeast');
         xlabel('Year (CE)'); ylabel('mm'); title('Detrended mean GIA estimate');
         pdfwrite(['GIAwtmeandetr_grad' labl]);
+        %%%%%
+        
+        [lsort,lsorti]=sort(testsitedef.sites(sitesub,2));
+% $$$ 
+% $$$         clf;
+% $$$         subplot(1,2,1);
+% $$$         clear hp;
+% $$$         hp(1)=plot(GIAwtrate(GIAsub(lsorti)),lsort,'k','linew',2); hold on;
+% $$$         for nnnn=1:length(selsitenames)
+% $$$             hp(2)=plot(fsl(nnnn),testsitedef.sites(sitesub(nnnn),2),'rd'); hold on;
+% $$$             plot(fsl(nnnn)+[-1 1]*2*sqrt(Vsl(nnnn,nnnn)),testsitedef.sites(sitesub(nnnn),2)*[1 1],'r-'); hold on;
+% $$$         end
+% $$$         xlabel('Avg. rate (0-1800 CE), mm/y');
+% $$$         legend(hp,'GIA Model','Proxy','Location','Southwest');
+% $$$         ylabel('Latitude');
+% $$$         ylim([31 45]); xlim([0 2]);
+% $$$         
+% $$$         pdfwrite('GIAwtratebylat');
+        
+        %%%%
+        [slogp,slogpi]=sort(logp,'descend');
+        fid=fopen('GIAcompare.tsv','w');
+        fprintf(fid,'\tlat\tlong');
+        fprintf(fid,'\trate\t2s');
+        for nnnn=slogpi(:)'
+            fprintf(fid,['\t' GIAicehist{nnnn} '_' GIAsolidearth{nnnn}]);
+        end
+        fprintf(fid,'\n');
+        fprintf(fid,'Relative log L\t\t\t\t');
+        fprintf(fid,'\t%0.3e',slogp);
+        fprintf(fid,'\n');
+        
+        fprintf(fid,'Rates\n');
+        for nnnn=1:length(selsitenames)
+            fprintf(fid,selsitenames{nnnn});
+            fprintf(fid,'\t%0.2f',testsitedef.sites(sitesub(nnnn),2:3));
+            fprintf(fid,'\t%0.2f',[fsl(nnnn) 2*sqrt(Vsl(nnnn,nnnn))]);
+            fprintf(fid,'\t%0.2f',GIAavg(nnnn,slogpi));
+            fprintf(fid,'\n');
+        end
+        
+        
+        fprintf(fid,['Rate differences rel. to ' selsitenames{1} '\n']);      
+        for nnnn=2:length(selsitenames)
+            fprintf(fid,selsitenames{nnnn});
+            fprintf(fid,'\t%0.2f',testsitedef.sites(sitesub(nnnn),2:3));
+            fprintf(fid,'\t%0.2f',[fsl2(nnnn-1) 2*sqrt(Vsl2(nnnn-1,nnnn-1))]);
+            fprintf(fid,'\t%0.2f',GIAavg2(nnnn-1,slogpi));
+            fprintf(fid,'\n');
+        end
+        
+        fprintf(fid,'Rates difference, 900-1800 vs 0-900 CE \n');
+        for nnnn=1:length(selsitenames)
+            fprintf(fid,selsitenames{nnnn});
+            fprintf(fid,'\t%0.2f',testsitedef.sites(sitesub(nnnn),2:3));
+            fprintf(fid,'\t%0.2f',[fslAd(nnnn) 2*sdslAd(nnnn)]);            
+            fprintf(fid,'\t%0.2f',GIAavgA(nnnn,slogpi)-GIAavgB(nnnn,slogpi));
+            fprintf(fid,'\n');
+        end        
+        
+        fprintf(fid,'Rates, 1700-1900 CE\t\t\t\tICE5G VM2-90 \n');
+        for nnnn=1:length(selsitenames)
+            fprintf(fid,selsitenames{nnnn});
+            fprintf(fid,'\t%0.2f',testsitedef.sites(sitesub(nnnn),2:3));
+            fprintf(fid,'\t');            
+            fprintf(fid,'\t%0.2f',testsitedef.GIA(sitesub(nnnn)));            
+            fprintf(fid,'\t%0.2f',GIAavgZ(nnnn,slogpi));
+            fprintf(fid,'\n');
+        end        
+                
+        fclose(fid);
    
     
     save(savefile,'datasets','modelspec','f2s','sd2s','V2s', ...

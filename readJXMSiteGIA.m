@@ -2,7 +2,7 @@ function [testt,testsl,sites,icehist,solidearth] = readJXMSiteGIA(files,testt)
 
 % [testt,testsl,sites,icehist,solidearth] = readJXMSiteGIA(files,testt)
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon May 05 08:56:06 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun May 25 22:04:07 EDT 2014
 
 defval('testt',[]);
 defval('files','*.out.gz');
@@ -47,7 +47,7 @@ for i=1:length(files)
             curlabel=[curlabel S{jj}];
         elseif readingseries == 0
             %disp(curlabel);
-            indx=strmatch(curlabel,sites);
+            indx=strmatch(curlabel,sites,'exact');
             if length(indx)==0
                 sites={sites{:},curlabel};
                 indx = length(sites);

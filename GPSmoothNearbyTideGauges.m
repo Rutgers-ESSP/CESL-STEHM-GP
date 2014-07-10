@@ -4,7 +4,7 @@ function [TGdata2,TGdata,thetL,TGmodellocal] = GPSmoothNearbyTideGauges(targcoor
 % fit GP model to them in order to interpolate and take running averge.
 %
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Tue May 20 18:07:20 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun May 25 16:52:50 EDT 2014
 %
 
 defval('minlength',[150 75 20]);  % minimum length for global curves, most purposes and minimum
@@ -13,6 +13,7 @@ defval('winlength',11);
 defval('thinlength',winlength-1);
 defval('optimizemode',1.1); % set to 1.0 for local optimization only
 defval('maxdist',2);
+defval('thinyrstart',1700);
 
 defval('targcoords',[
 34.97  -76.38; %Tump Point, NC
@@ -79,4 +80,4 @@ TGdata.sitelen=sitelen(sitesub);
 
 %%%%%%%%%%
 
-TGdata2 = GPSmoothTideGauges(TGdata,winlength,optimizemode,thinlength,thetL0);
+[TGdata2,thetL,TGmodellocal] = GPSmoothTideGauges(TGdata,winlength,optimizemode,thinlength,thetL0,thinyrstart);
