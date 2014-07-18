@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Tue Jul 15 07:06:38 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri Jul 18 09:36:38 EDT 2014
 
 defval('firsttime',-1000);
 
@@ -126,8 +126,8 @@ PX0=PX;
 
 % drop too old, and too near field
 sub=find(PX.time1>=firsttime);
-sub=intersect(sub,find(abs(PX.lat)<=59));
-subS=find(abs(PX.sitecoords(:,1))<=59);
+sub=intersect(sub,find(abs(PX.lat)<=60));
+subS=find(abs(PX.sitecoords(:,1))<=60);
 
 PX=SubsetDataStructure(PX,sub,subS);
 
@@ -171,6 +171,66 @@ end
 % $$$ PXslim=SubsetDataStructure(PX,sub,subS);
 
 
+%%%%%%%
+%old tide gauges
+
+clear TGold;
+TGold.datid = [];
+TGold.meantime=[];
+TGold.Y=[];
+TGold.dY=[];
+TGold.lat=[];
+TGold.long=[];
+TGold.siteid=[];
+TGold.sitenames={};
+TGold.sitecoords=[];
+TGold.sitelen=[];
+
+for ppp=1:3
+    if ppp==1
+        dat=importdata(fullfile(IFILES,'amsterdam.sea.level.txt'));
+        wsite='AMSTERDAM_OLD'; wcurid=5001;
+        wlat = [52.3667]; wlong=[4.9000];
+        wdatid = ones(length(dat.data),1)*wcurid;
+        wtime = dat.data(:,1);
+        wY = dat.data(:,2);
+    elseif ppp==2
+        dat=importdata(fullfile(IFILES,'Kronstadt_ReportsFGI_Bogdanov_appendix.csv'));
+        wsite='KRONSTADT_OLD'; wcurid=5002;
+        wlat = [59.98]; wlong=[29.77];
+        wdatid = ones(length(dat.data),1)*wcurid;
+        wtime = dat.data(:,1);
+        wY = dat.data(:,3);
+    elseif ppp==3
+         dat=importdata(fullfile(IFILES,'ekman_2003_stockholm.csv'));
+        wsite='STOCKHOLM_OLD'; wcurid=5003;
+        wlat = [59.32]; wlong=[18.08];
+        wdatid = ones(length(dat.data),1)*wcurid;
+        wtime = dat.data(:,1);
+        wY = dat.data(:,3);
+    end
+    
+    TGold.datid = [TGold.datid;wdatid];
+    TGold.meantime = [TGold.meantime; wtime];
+    TGold.Y=[TGold.Y ; wY];
+    TGold.dY = ones(size(TGold.Y))*3;
+    TGold.lat = [TGold.lat ; ones(size(wY))*wlat];
+    TGold.long = [TGold.lat ; ones(size(wY))*wlong];
+    TGold.siteid = [TGold.siteid ; wcurid];
+    TGold.sitenames={TGold.sitenames{:},wsite};
+    TGold.sitecoords=[TGold.sitecoords ; wlat wlong];
+    TGold.sitelen = [TGold.sitelen ; length(wY)]; 
+
+ end
+
+TGold.time1 = TGold.meantime;
+TGold.time2 = TGold.meantime;
+TGold.limiting = zeros(size(TGold.datid));
+TGold.compactcorr = zeros(size(TGold.datid));
+TGold.istg = ones(size(TGold.datid));
+TGold.Ycv=sparse(diag(TGold.dY.^2));
+
+TGoldS = GPSmoothTideGauges(TGold,11,1.0,10,[],1700);
 %%%%%%%%%%%%%%%
 
 % First load tide gauge data
@@ -180,17 +240,6 @@ psmsldir=fullfile(IFILES,'rlr_annual');
 gslfile=fullfile(IFILES,'/CSIRO_Recons_gmsl_yr_2011.csv');
 
 [TG,TG0,thetL,TGmodellocal] = GPSmoothNearbyTideGauges(PX.sitecoords,[],[],[],[],[],optimizemode,psmsldir,gslfile);
-
-% drop near field
-sub=union(find(abs(TG.lat)<=52),find(TG.lat>100));
-subS=union(find(abs(TG.sitecoords(:,1))<=52),find(TG.sitecoords(:,1)>100));
-
-TG=SubsetDataStructure(TG,sub,subS);
-
-%
-
-sub=find(TG.datid~=0); subS = find(TG.siteid~=0);
-TGNOCW=SubsetDataStructure(TG,sub,subS);
 
 % account for additional uncertainties in GSL curve;
 
@@ -205,6 +254,21 @@ GSLtrenderror = 0.1/2;
 GSLnewcv = GSLnewcv + bsxfun(@times,(TG.meantime(sub)-2000),(TG.meantime(sub)'-2000)) * (GSLtrenderror)^2;
 TG.dY(sub)=sqrt(diag(GSLnewcv));
 TG.Ycv(sub,sub)=GSLnewcv;
+
+
+% drop near field
+sub=union(find(abs(TG.lat)<=53),find(TG.lat>100));
+subS=union(find(abs(TG.sitecoords(:,1))<=53),find(TG.sitecoords(:,1)>100));
+
+TG=SubsetDataStructure(TG,sub,subS);
+
+% add in old tide gauges
+TG=MergeDataStructures(TG,TGoldS);
+
+%
+
+sub=find(TG.datid~=0); subS = find(TG.siteid~=0);
+TGNOCW=SubsetDataStructure(TG,sub,subS);
 
 
 %%%%%%%%%%%%%%%%

@@ -2,6 +2,8 @@
 %
 % Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri Jul 18 07:37:28 EDT 2014
 
+dosldecomp = 0;
+
 pd=pwd;
 addpath('~/Dropbox/Code/TGAnalysis/MFILES');
 addpath([pd '/MFILES']);
@@ -232,7 +234,9 @@ for iii=1:length(regresssets)
     end
     fclose(fid)    
     
-    makeplots_sldecomp(wdataset,f2s{ii,jj},sd2s{ii,jj},V2s{ii,jj},testlocs{ii,jj},labl);
+    if dosldecomp
+        makeplots_sldecomp(wdataset,f2s{ii,jj},sd2s{ii,jj},V2s{ii,jj},testlocs{ii,jj},labl);
+    end
     
     testreg=testlocs{ii,jj}.reg;
     testsites=testlocs{ii,jj}.sites;
