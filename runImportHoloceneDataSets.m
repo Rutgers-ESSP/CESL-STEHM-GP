@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Wed Jul 09 20:43:39 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Tue Jul 15 07:06:38 EDT 2014
 
 defval('firsttime',-1000);
 
@@ -86,7 +86,7 @@ for curreg=1:length(HoloRegions)
     wdY=datHolo.data(sub,11)*1000;
     wlat=datHolo.data(sub,3);
     wlong=-datHolo.data(sub,4);
-    wcompactcorr = wY*.1;
+    wcompactcorr = wY;
     
     datid = [datid ; wdatid];
     time1 = [time1 ; wtime1];
@@ -126,8 +126,8 @@ PX0=PX;
 
 % drop too old, and too near field
 sub=find(PX.time1>=firsttime);
-sub=intersect(sub,find(abs(PX.lat)<=52));
-subS=find(abs(PX.sitecoords(:,1))<=52);
+sub=intersect(sub,find(abs(PX.lat)<=59));
+subS=find(abs(PX.sitecoords(:,1))<=59);
 
 PX=SubsetDataStructure(PX,sub,subS);
 
@@ -192,6 +192,20 @@ TG=SubsetDataStructure(TG,sub,subS);
 sub=find(TG.datid~=0); subS = find(TG.siteid~=0);
 TGNOCW=SubsetDataStructure(TG,sub,subS);
 
+% account for additional uncertainties in GSL curve;
+
+sub=find(TG.datid==0);
+GSLnewcv = TG.Ycv(sub,sub);
+
+% reduced degrees of freedom (1/4 year)
+GSLnewcv = GSLnewcv * 4;
+
+% 2s trend error of 0.1 mm/y over a century due to GIA
+GSLtrenderror = 0.1/2;
+GSLnewcv = GSLnewcv + bsxfun(@times,(TG.meantime(sub)-2000),(TG.meantime(sub)'-2000)) * (GSLtrenderror)^2;
+TG.dY(sub)=sqrt(diag(GSLnewcv));
+TG.Ycv(sub,sub)=GSLnewcv;
+
 
 %%%%%%%%%%%%%%%%
 
@@ -225,11 +239,13 @@ datasets{1}=MergeDataStructures(TGNOCW,PX);
 datasets{2}=PX;
 datasets{3}=MergeDataStructures(TGNOCW,PXnoEH);
 datasets{4}=MergeDataStructures(TG,PXnoEH);
+datasets{5}=MergeDataStructures(TG,PX);
 
 datasets{1}.label='TG+PX';
 datasets{2}.label='PX';
-datasets{3}.label='TG+GS+PXnoEH';
+datasets{3}.label='TG+PXnoEH';
 datasets{4}.label='TG+GSL+PXnoEH';
+datasets{5}.label='TG+GSL+PX';
 
 for jj=1:length(PXsub)
     datasets{end+1}=MergeDataStructures(TGNOCW,PXsub{jj});

@@ -1,6 +1,6 @@
 % Master script for Common Era proxy + tide gauge sea-level analysis
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Wed Jul 09 20:44:35 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri Jul 18 07:37:28 EDT 2014
 
 pd=pwd;
 addpath('~/Dropbox/Code/TGAnalysis/MFILES');
@@ -9,7 +9,7 @@ IFILES=[pd '/IFILES'];
 addpath(pd)
 savefile='~/tmp/CESL';
 
-WORKDIR='140709';
+WORKDIR='140718';
 if ~exist(WORKDIR,'dir')
     mkdir(WORKDIR);
 end
@@ -29,19 +29,41 @@ addpath(pd)
 
 save(savefile,'datasets','modelspec');
 addpath(pwd)
-trainsets=[4];
-trainspecs=[1];
-trainlabels={'default'};
 
-clear thetTGG trainsubsubset;
+% let's start with full data set, but no sites requiring compaction correction 
+% then add a compaction correction as a last step
+
+%trainsets=[3 4 1 5];
+%trainspecs=[1 1 1 1];
+%trainlabels={'trTGPXnoEH','trTGPXGSLnoEH','trTGPX','trTGPXGSL'};
+
+% need to see what happens if we drop EH from a constrained data set 
+trainsets = [1 5];
+trainspecs = [1 1];
+trainfirsttime = [-1000 -1000];
+trainrange=[100 100 100 100 2000 ; 100 100 100 100 2000];
+trainlabels={'trTGPX','trTGPXGSL'};
+
+modelspec0=modelspec;
+
+clear thetTGG thethist trainsubsubset;
 for ii=1:length(trainspecs)
-    [thetTGG{ii},trainsubsubset{ii},logp(ii)]= ...
+    % first only fit ones without a compaction correction
+    [thetTGG{ii},trainsubsubset{ii},logp(ii),thethist{ii}]= ...
         OptimizeHoloceneCovariance(datasets{trainsets(ii)}, ...
-                                   modelspec(trainspecs(ii)),[2.4 2.0 3.0]);
+                                   modelspec(trainspecs(ii)),[2.4 2.0 3.4 3.0 3.0],trainfirsttime(ii),trainrange(ii,:),.01);
+
+    % now add compaction correction factor
+    ms = modelspec(trainspecs(ii));
+    ms.thet0 = thetTGG{ii}(1:end-1);
+    ms.subfixed = 1:length(ms.thet0);
+    [thetTGG{ii},trainsubsubset{ii},logp(ii),thethist{ii}(end+1,:)]= ...
+        OptimizeHoloceneCovariance(datasets{trainsets(ii)}, ...
+                                   ms,[2.01],trainfirsttime(ii),trainrange(ii,end),1e6);    
     
     fid=fopen('thetTGG.tsv','w');
     for iii=1:length(thetTGG)
-        fprintf(fid,[datasets{trainsets(iii)}.label '\t' ...
+        fprintf(fid,[trainlabels{iii} '\t' datasets{trainsets(iii)}.label '\t' ...
                      modelspec(trainspecs(iii)).label '\t']);
         fprintf(fid,['(%0.2f)\t'],logp(iii));
         fprintf(fid,'%0.3f\t',thetTGG{iii});
@@ -128,8 +150,8 @@ end
 
 testt = [-1000:20:2000 2010];
 
-regresssets=[1 2 3];
-regressparams=[1 1 1];
+regresssets=[1 2 5 1 5];
+regressparams=[1 1 1 2 2];
 clear regresslabels;
 for i=1:length(regresssets)
     regresslabels{i} = [datasets{regresssets(i)}.label '_' trainlabels{regressparams(i)}];
@@ -217,8 +239,8 @@ for iii=1:length(regresssets)
     testX=testlocs{ii,jj}.X;
     testnames2=testlocs{ii,jj}.names2;
 
-    firstyears=[ 0 1000  200  -500  -300 700 1700 1800 1900 860  1000 1080 1460 1560 1800 1860];
-    lastyears=[1800 1800 1000 1000 700 1700 1800 1900 2000 1560 1400 1360 1880 1800 1880 1900];
+    firstyears=[ 0 1000  200  -500  -300 700 1700 1800 1900 900 900  1000 1000 1500 1500 860  1000 1080 1460 1560 1800 1860];
+    lastyears=[1800 1800 1000 1000 700 1700 1800 1900 2000 1400 1500 1400 1500 1800 1860 1560 1400 1360 1880 1800 1880 1900];
 
      [fslopeavg,sdslopeavg,fslopeavgdiff,sdslopeavgdiff,diffplus,diffless]=SLRateCompare(f2s{ii,jj}(:,1),V2s{ii,jj}(:,:,1),testsites,testreg,testX(:,3),firstyears,lastyears);
      [fslopelin,sdslopelin]=SLRateCompare(f2s{ii,jj}(:,5),V2s{ii,jj}(:,:,5),testsites,testreg,testX(:,3),testt(end-1),testt(end));
@@ -262,80 +284,115 @@ for iii=1:length(regresssets)
         labl2=[num2str(firstyears(pp)) '-' num2str(lastyears(pp))];
         
         figure;
-        plotcont; hold on;
+        worldmap('world');
+        setm(gca,'parallellabel','off','meridianlabel','off','flinewidth',1);
+        ax=gca;
+        geoshow('landareas.shp','facecolor','none');
+  
+        %
+        %        plotcont; hold on;
 
-        % plot tide gauge locations
+         % plot tide gauge locations
         sub=find((testsites(:,2)<1e3).*(testsites(:,1)<5e3));
         sub1=intersect(sub,find(isnan(fslope)));
-        hq=scatter(mod(testsites(sub1,3),360),testsites(sub1,2),10,[.5 .5 .5],'d'); hold on;
+        hq=scatterm(testsites(sub1,2),mod(testsites(sub1,3),360),10,[.5 .5 .5],'d'); hold on;
+        %        hq=scatter(mod(testsites(sub1,3),360),testsites(sub1,2),10,[.5 .5 .5],'d'); hold on;
+        hq=getkids(hq);
         set(hq,'linew',1);
         sub1=intersect(sub,find(~isnan(fslope)));
-        scatter(mod(testsites(sub1,3),360),testsites(sub1,2),10,fslope(sub1),'filled','d'); hold on;
-
-        % plot proxy sites (exlcuding EH)
-        sub=find((testsites(:,2)<1e3).*(testsites(:,1)>=5e3).*(testsites(:,1)<1e6));        
+        %        scatter(mod(testsites(sub1,3),360),testsites(sub1,2),10,fslope(sub1),'filled','d'); hold on;
+        scatterm(testsites(sub1,2),mod(testsites(sub1,3),360),10,fslope(sub1),'filled','d'); hold on;
+        
+        % plot proxy sites
+        sub=find((testsites(:,2)<1e3).*(testsites(:,1)>=5e3).*(testsites(:,1)<1e6));
         sub1=intersect(sub,find(isnan(fslope)));
-        hq=scatter(mod(testsites(sub1,3),360),testsites(sub1,2),20,[.5 .5 .5]); hold on;
+        %hq=scatter(mod(testsites(sub1,3),360),testsites(sub1,2),20,[.5 .5 .5]); hold on;
+        hq=scatterm(testsites(sub1,2),mod(testsites(sub1,3),360),20,[.5 .5 .5]); hold on;
+        hq=getkids(hq);
         set(hq,'linew',1);
         sub1=intersect(sub,find(~isnan(fslope)));
-        scatter(mod(testsites(sub1,3),360),testsites(sub1,2),30,fslope(sub1),'filled'); hold on;
+        %scatter(mod(testsites(sub1,3),360),testsites(sub1,2),30,fslope(sub1),'filled'); hold on;
+        scatterm(testsites(sub1,2),mod(testsites(sub1,3),360),30,fslope(sub1),'filled'); hold on;
 
         % plot proxy sites (EH12)
         sub=find((testsites(:,1)>=1e6));        
         sub1=intersect(sub,find(~isnan(fslope)));
-        hq=scatter(mod(testsites(sub1,3),360),testsites(sub1,2),10,fslope(sub1),'s','filled'); hold on;
-        set(hq,'linew',1);
-
+        %hq=scatter(mod(testsites(sub1,3),360),testsites(sub1,2),10,fslope(sub1),'filled','s'); hold on;
+        hq=scatterm(testsites(sub1,2),mod(testsites(sub1,3),360),10,fslope(sub1),'filled','s'); hold on;
+        
         axis tight;
         colorbar;
-        box on;
+        
+        %        box on;
         if firstyears(pp)<1900
-            caxis([0 2.2]);
+           caxis([-0.5 2.0]);
         end
         
         title(['Sea level  rates, ' labl2 ' CE (mm/y)']);
         pdfwrite(['map_linrates_global' labl '_' labl2]);
 
-        figure;
+        
+        %%%%
+        clf;
+        worldmap([27 49],[265 300]);
+        setm(gca,'parallellabel','off','meridianlabel','off','flinewidth',1);
+        ax=gca;
+        %geoshow('landareas.shp','facecolor','none');
         usstates = shaperead('usastatehi', 'UseGeoCoords', true);
-        plot((mod([usstates.Lon],360)),[usstates.Lat],'k','linew',.5); hold on;
+        stateColor='none';
+        geoshow(ax(1), usstates,  'FaceColor', stateColor);
         if exist([IFILES '/province/PROVINCE.SHP']); canada = shaperead([IFILES '/province/PROVINCE.SHP'],'UseGeoCoords',true); else; canada=[]; end
-        if length(canada)>0 ; plot((mod([canada.Lon],360)),[canada.Lat],'k','linew',.5); end
-        xl=xlim;
-        yl=ylim;
+        geoshow(ax(1), canada,  'FaceColor', stateColor);
+        setm(ax, 'ParallelLabel', 'on', 'MeridianLabel', 'on')
+
+
+        %figure;
+        %usstates = shaperead('usastatehi', 'UseGeoCoords', true);
+        %plot((mod([usstates.Lon],360)),[usstates.Lat],'k','linew',.5); hold on;
+        %if exist([IFILES '/province/PROVINCE.SHP']); canada = shaperead([IFILES '/province/PROVINCE.SHP'],'UseGeoCoords',true); else; canada=[]; end
+        %if length(canada)>0 ; plot((mod([canada.Lon],360)),[canada.Lat],'k','linew',.5); end
+        %xl=xlim;
+        %yl=ylim;
 
         % plot tide gauge locations
         sub=find((testsites(:,2)<1e3).*(testsites(:,1)<5e3));
         sub1=intersect(sub,find(isnan(fslope)));
-        hq=scatter(mod(testsites(sub1,3),360),testsites(sub1,2),30,[.5 .5 .5],'d'); hold on;
+        hq=scatterm(testsites(sub1,2),mod(testsites(sub1,3),360),30,[.5 .5 .5],'d'); hold on;
+        %        hq=scatter(mod(testsites(sub1,3),360),testsites(sub1,2),30,[.5 .5 .5],'d'); hold on;
+        hq=getkids(hq);
         set(hq,'linew',1);
         sub1=intersect(sub,find(~isnan(fslope)));
-        scatter(mod(testsites(sub1,3),360),testsites(sub1,2),30,fslope(sub1),'filled','d'); hold on;
-
+        %        scatter(mod(testsites(sub1,3),360),testsites(sub1,2),30,fslope(sub1),'filled','d'); hold on;
+        scatterm(testsites(sub1,2),mod(testsites(sub1,3),360),30,fslope(sub1),'filled','d'); hold on;
+        
         % plot proxy sites
         sub=find((testsites(:,2)<1e3).*(testsites(:,1)>=5e3).*(testsites(:,1)<1e6));
         sub1=intersect(sub,find(isnan(fslope)));
-        hq=scatter(mod(testsites(sub1,3),360),testsites(sub1,2),70,[.5 .5 .5]); hold on;
+        %hq=scatter(mod(testsites(sub1,3),360),testsites(sub1,2),70,[.5 .5 .5]); hold on;
+        hq=scatterm(testsites(sub1,2),mod(testsites(sub1,3),360),70,[.5 .5 .5]); hold on;
+        hq=getkids(hq);
         set(hq,'linew',1);
         sub1=intersect(sub,find(~isnan(fslope)));
-        scatter(mod(testsites(sub1,3),360),testsites(sub1,2),100,fslope(sub1),'filled'); hold on;
+        %scatter(mod(testsites(sub1,3),360),testsites(sub1,2),100,fslope(sub1),'filled'); hold on;
+        scatterm(testsites(sub1,2),mod(testsites(sub1,3),360),100,fslope(sub1),'filled'); hold on;
 
         % plot proxy sites (EH12)
         sub=find((testsites(:,1)>=1e6));        
         sub1=intersect(sub,find(~isnan(fslope)));
-        hq=scatter(mod(testsites(sub1,3),360),testsites(sub1,2),30,fslope(sub1),'filled','s'); hold on;
+        %hq=scatter(mod(testsites(sub1,3),360),testsites(sub1,2),30,fslope(sub1),'filled','s'); hold on;
+        hq=scatterm(testsites(sub1,2),mod(testsites(sub1,3),360),30,fslope(sub1),'filled','s'); hold on;
         
         axis tight;
         colorbar;
         if firstyears(pp)<1900
-            caxis([0 2.2]);
+            caxis([-0.5 2]);
         end
 
-        box on;
+        %box on;
         title(['Sea level  rates, ' labl2 ' CE (mm/y)']);
         
-        xlim([265 300]);
-        ylim([27 49]);
+        %       xlim([265 300]);
+        %ylim([27 49]);
 
         pdfwrite(['map_linrates_NA' labl '_' labl2]);
         
@@ -702,7 +759,7 @@ for iii=1:length(regresssets)
         % weight GIA models
         
         GIAtimes=[.15 .95 1.95];
-        GIAtimes=union(GIAtimes,[.05:.2:1.95]);
+        GIAtimes=union(GIAtimes,[0 .05:.2:3.05 ]);
         [GIAt,GIAsl,GIAsites,GIAicehist,GIAsolidearth] = readJXMSiteGIA(GIAfiles,GIAtimes);
         
         t0 = find(GIAt==.15);
@@ -737,7 +794,7 @@ for iii=1:length(regresssets)
                 sitesub=[sitesub q(1)];
             end
         end
-        [fsl,Vsl]=SLRateMultisite(f2s{ii,jj}(:,1),V2s{ii,jj}(:,:,1),testsites(sitesub,:),testreg,testX(:,3),0,1800);
+        [fsl,Vsl]=SLRateMultisite(f2s{ii,jj}(:,1),V2s{ii,jj}(:,:,1),testsites(sitesub,:),testreg,testX(:,3),1000,1800);
         [fslA,sdslA,fslAd,sdslAd]=SLRateCompare(f2s{ii,jj}(:,1),V2s{ii,jj}(:,:,1),testsites(sitesub,:),testreg,testX(:,3),[0 900],[900 1800])
 
         Mdiff=zeros(length(sitesub)-1,length(sitesub)); Mdiff(:,1)=-1; Mdiff(:,2:end)=eye(length(sitesub)-1);
@@ -772,6 +829,80 @@ for iii=1:length(regresssets)
         legend(shortnames,'location','northeast');
         xlabel('Year (CE)'); ylabel('mm'); title('Detrended mean GIA estimate');
         pdfwrite(['GIAwtmeandetr' labl]);
+
+        clf;
+        subplot(2,1,1);
+        for pp=1:length(GIAsitetarg)
+            GIAsub(pp)=find(strcmpi(GIAsitetarg{pp},GIAsites));
+            plot(1950-1000*GIAt,1000*GIAwtmean(:,GIAsub(pp)),colrs{pp},'linew',2); hold on;
+        end
+        legend(shortnames,'location','southeast');
+        xlabel('Year (CE)'); ylabel('mm'); title('Mean GIA estimate');
+        pdfwrite(['GIAwtmean' labl]);
+
+        
+        
+        %%
+ 
+        for dodetrend=[0 1]
+            wf=f2s{ii,jj}(:,1); wV=V2s{ii,jj}(:,:,1);
+            colrs={'r','b','m','g'};
+
+            sitesub2=[];
+            Mdiff=speye(length(wf));
+            for kk=1:length(GIAsitetarg)
+                q=find(strcmpi(GIAsitetarg{kk},testsitedef.names));
+                if length(q)>0
+                    sitesub2=[sitesub2 q(1)];
+                    datsub=find(testreg==testsitedef.sites(q(1)));
+                    wf(datsub,:)=wf(datsub,:)-interp1(1950-GIAt*1000,1000*GIAwtmean(:,GIAsub(kk)),testX(datsub,3),'linear','extrap');
+                    basesub=intersect(datsub,find((testX(:,3)>=2000).*(testX(:,3)<=2000)));
+                    Mdiff(datsub,basesub)= Mdiff(datsub,basesub)-1/length(basesub);
+                end
+            end
+
+            datsub=find(ismember(testreg,testsites(sitesub2)));
+            datsub=intersect(datsub,find(~isnan(wf)));
+
+            labl2='';
+            
+            if dodetrend
+                [wf(datsub,:),wV(datsub,datsub)]=DetrendSLReconstruction(wf(datsub,:),wV(datsub,datsub),testsites(sitesub2,:),testreg(datsub),testX(datsub,3),1000,1800,refyear);
+                labl2='_detrended';
+            end
+
+            wf=Mdiff*wf;
+            wV=Mdiff*wV*Mdiff';
+            
+
+            clf;
+            
+            [hp,hl,~,~,~,~,outtable]=PlotPSLOverlay(testX(datsub,3),testreg(datsub),testsites(sitesub2,1),wf(datsub),wV(datsub,datsub),colrs,testsitedef.firstage(sitesub2),testt(end),0,200,testnames2(sitesub2));
+            
+            if selmask==1
+                legend(hl,shortnames,'Location','Southwest');
+            else
+                legend(hl,shortnames,'Location','Southwest');
+            end
+            set(hp,'xlim',[-500 2010]);
+            set(hp(2),'ylim',[-.5 3.2]);
+            delete(hp(2));
+            if dodetrend
+                title(hp(1),'RSL less wt mean GIA - detrended');
+            else
+                title(hp(1),'RSL less wt mean GIA');
+            end
+            
+            pdfwrite(['rsllessGIAwtmean' labl labl2]);
+            
+            fid=fopen(['rsllessGIAwtmean_' noiseMasklabels{selmask} labl labl2 '.tsv'],'w');
+            fprintf(fid,outtable);
+            fclose(fid);
+            
+        end
+        
+        %%
+        
         
         clf;
         subplot(2,1,1);
@@ -805,7 +936,7 @@ for iii=1:length(regresssets)
         
         %%%%
         [slogp,slogpi]=sort(logp,'descend');
-        fid=fopen('GIAcompare.tsv','w');
+        fid=fopen(['GIAcompare' labl labl2 '.tsv'],'w');
         fprintf(fid,'\tlat\tlong');
         fprintf(fid,'\trate\t2s');
         for nnnn=slogpi(:)'

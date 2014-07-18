@@ -1,6 +1,6 @@
 function [thet,logp,hessin,hessin2]=SLGPOptimize(y0,traincv,thet0,lb,ub,globl,basisX)
 
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Tue Apr 22 16:48:55 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Tue Jul 15 07:54:51 EDT 2014
 
 defval('globl',0)
 

@@ -1,8 +1,13 @@
-function [thetTGG,trainsub,logp]=OptimizeHoloceneCovariance(dataset,modelspec,optimizesteps,mintime)
+function [thetTGG,trainsub,logp,thethist]=OptimizeHoloceneCovariance(dataset,modelspec,optimizesteps,mintime,maxageerror,maxcompactcorrallowed)
 
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Tue Apr 22 16:50:35 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Tue Jul 15 16:29:07 EDT 2014
 
-defval('maxcompactcorrfactor',.25);
+defval('maxcompactcorrfactor',1);
+defval('maxageerror',ones(size(optimizesteps))*Inf);
+defval('maxcompactcorrallowed',Inf);
+
+defval('optimizesteps',[1.1 2.11]);
+defval('mintime',-1000);
 
 istg = dataset.istg;
 lat=dataset.lat;
@@ -25,6 +30,13 @@ else
     obsGISfp=ones(size(lat));
 end
 
+if (length(maxageerror)==1).*(length(maxageerror)<length(optimizesteps))
+    maxageerror=repmat(maxageerror,1,length(optimizesteps));
+end
+
+if (length(maxcompactcorrallowed)==1).*(length(maxcompactcorrallowed)<length(optimizesteps))
+    maxcompactcorrallowed=repmat(maxcompactcorrallowed,1,length(optimizesteps));
+end
 
 cvfuncTGG=modelspec.cvfunc;
 traincvTGG=modelspec.traincv;
@@ -39,9 +51,6 @@ angd= @(Lat0,Long0,lat,long) (180/pi)*(atan2(sqrt((cosd(lat).*sind(long-Long0)).
 
 dYears=@(years1,years2) abs(bsxfun(@minus,years1',years2));
 dDist=@(x1,x2)angd(repmat(x1(:,1),1,size(x2,1)),repmat(x1(:,2),1,size(x2,1)),repmat(x2(:,1)',size(x1,1),1),repmat(x2(:,2)',size(x1,1),1))'+1e6*(bsxfun(@plus,x1(:,1)',x2(:,1))>1000);
-
-defval('optimizesteps',[1.1 2.11]);
-defval('mintime',-1000);
 
 donetg=0;
 addedcompactcorr=0;
@@ -101,15 +110,15 @@ for nnn=1:length(optimizesteps)
         if donetg
             subfixed=union(subfixed,sublength); % fix length scales at those determined from the tide gauge data
         end
-        subnotfixed=setdiff(1:length(thetTGG),subfixed);
-        Mfixed=sparse(length(subnotfixed),length(thetTGG));
+        subnotfixed=setdiff(1:length(thetTGG)-1,subfixed);
+        Mfixed=sparse(length(subnotfixed),length(thetTGG)-1);
         for i=1:length(subnotfixed)
             Mfixed(i,subnotfixed(i))=1;
         end
-        fixedvect = 0*thetTGG; fixedvect(subfixed)=thetTGG(subfixed);
-        subnotfixed = [subnotfixed length(thetTGG)];
+        fixedvect = 0*thetTGG(1:end-1); fixedvect(subfixed)=thetTGG(subfixed);
+        subnotfixed = unique([subnotfixed length(thetTGG)]);
         trainsub = find((limiting==0));
-        trainsub=intersect(trainsub,find(meantime>=mintime));
+        trainsub=intersect(trainsub,find((meantime>=mintime).*(abs(time2-time1)<maxageerror(nnn)).*(abs(compactcorr)<=maxcompactcorrallowed(nnn))));
         %trainsub=intersect(trainsub,find(datid<1e6));
         
 %        % remove extreme points
@@ -158,10 +167,10 @@ for nnn=1:length(optimizesteps)
         if floor(optimizesteps(nnn))==3
             dt = abs(time2-time1)/4;
          for doglob=doglobs
-                [thetTGG(subnotfixed),logp] = ...
+             [thetTGG(subnotfixed),logp] = ...
                     SLNIGPOptimize(meantime(trainsub),Y(trainsub), ...
                                    dt(trainsub),dY(trainsub),@(thet) ...
-                                   diag(thet(end)*compactcorr(trainsub)).^2, @(x1,x2,thet,xxx,yyy) cvfuncTGG(x1,x2,dYears(x1,x2),thet,dy1y1(xxx,yyy)',fp1fp1(xxx,yyy)'),thetTGG(subnotfixed),lbTGG(subnotfixed),ubTGG(subnotfixed),doglob,[1:length(trainsub)]');
+                                   diag(thet(end)*compactcorr(trainsub)).^2, @(x1,x2,thet,xxx,yyy) cvfuncTGG(x1,x2,dYears(x1,x2),thet(1:end-1)*Mfixed+fixedvect,dy1y1(xxx,yyy)',fp1fp1(xxx,yyy)'),thetTGG(subnotfixed),lbTGG(subnotfixed),ubTGG(subnotfixed),doglob,[1:length(trainsub)]');
                 disp(sprintf('%0.3f ',thetTGG));
             end
         else
@@ -195,7 +204,7 @@ for nnn=1:length(optimizesteps)
         end
         
     end
-
+    thethist(nnn,:)=thetTGG;
 end
 
 % thetTGG2 = [138.548 37.565 59.492 44.370 360.619 1.195 3.435 0.482 0.178 2.020 0.009 1.000 1.000 0.713 ]
