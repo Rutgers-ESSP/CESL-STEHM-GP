@@ -990,7 +990,79 @@ for iii=1:length(regresssets)
         end        
                 
         fclose(fid);
-   
+
+        
+        %% do data sensitivity tests
+     
+        
+        wtestsitedef.sites=[0 1e6 1e6];
+        wtestsitedef.names={'GSL'};
+        wtestsitedef.names2={'GSL'};
+        wtestsitedef.firstage=min(oldest);
+
+        wtestt=[1300 1700];
+        Mdiff = [-1 1]/diff(wtestt);
+
+        sitesub=(find(wdataset.siteid>9999));
+        dosites=wdataset.siteid(sitesub);
+        dositenames=wdataset.sitenames(sitesub);
+        trainsub0=find((wdataset.limiting==0));
+        
+        clear sensf senssd sensnames;
+        for qqq=0:length(dosites)
+            for doexcl=0:1
+                if qqq==0
+                    if doexcl
+                        trainsub=1;
+                        wdataset2=wdataset; wdataset2.dY=ones(size(wdataset2.Y))*1e6; wdataset2.meantime=ones(size(wdataset2.Y))*1e5;
+                        wdataset2.time1=wdataset2.meantime; wdataset2.time2=wdataset2.meantime;
+                    else
+                        wdataset2=wdataset; trainsub=trainsub0;                    
+                    end
+                    sensnames{qqq+1} = 'All';
+                else
+                    wdataset2=wdataset;
+                    
+                    if doexcl
+                        trainsub=intersect(trainsub0,find(wdataset2.datid~=dosites(qqq)));
+                    else                   
+                        trainsub=intersect(trainsub0,find(wdataset2.datid==dosites(qqq)));
+                    end
+                    sensnames{qqq+1}=dositenames{qqq};
+                end
+                disp(sensnames{qqq+1});
+                
+                if length(trainsub)>0
+                    
+                     [wf,wsd,wV]=RegressHoloceneDataSets(wdataset2,wtestsitedef,modelspec(trainspecs(jj)),thetTGG{jj},trainsub,noiseMasks(1,:),wtestt,refyear,collinear);
+                    wf2=Mdiff*wf; wsd2=sqrt(diag(Mdiff*wV*Mdiff'));
+                else
+                    wf2=NaN; wsd2=NaN;
+                end
+                
+                
+                sensf(qqq+1,doexcl+1) = wf2;
+                senssd(qqq+1,doexcl+1) = wsd2;
+                
+            end
+            
+        end
+        
+        varnormalizer = senssd(1,2)^2;
+        sensvarnormed = senssd.^2/varnormalizer;
+        
+        fid=fopen(['sitesensitivity' labl '.tsv'],'w');
+        fprintf(fid,'Site sensitivity tests\n');
+        fprintf(fid,'GSL rate, %0.0f to %0.0f\n\n',wtestt);
+        fprintf(fid,'Site\tInclusive f (mm/y)\t1s\tpercent var reduction\tExclusive f (mm/y)\t1s\tpercent var increase\n');
+        for qqq=1:size(sensf,1)
+            fprintf(fid,sensnames{qqq});
+            fprintf(fid,'\t%0.3f',[sensf(qqq,1) 1*senssd(qqq,1) 100*(1-sensvarnormed(qqq,1)) sensf(qqq,2) 1*senssd(qqq,2) 100*(sensvarnormed(qqq,2)-sensvarnormed(1,1))]);
+            fprintf(fid,'\n');
+        end        
+        fclose(fid);
+        
+        
     
     save(savefile,'datasets','modelspec','f2s','sd2s','V2s', ...
          'testlocs','logp','testsitedef','trainspecs','thetTGG','GISfpt','ICE5G','noiseMasks','testt','refyear');
