@@ -1,6 +1,6 @@
 % Master script for Common Era proxy + tide gauge sea-level analysis
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri Jul 18 07:37:28 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sat Jul 19 08:04:48 EDT 2014
 
 dosldecomp = 0;
 
@@ -11,7 +11,7 @@ IFILES=[pd '/IFILES'];
 addpath(pd)
 savefile='~/tmp/CESL';
 
-WORKDIR='140718';
+WORKDIR='140719';
 if ~exist(WORKDIR,'dir')
     mkdir(WORKDIR);
 end

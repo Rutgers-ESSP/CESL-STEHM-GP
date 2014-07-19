@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri Jul 18 09:36:38 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sat Jul 19 08:05:42 EDT 2014
 
 defval('firsttime',-1000);
 
@@ -11,7 +11,7 @@ datid=[]; time1=[]; time2=[]; mediantime=[]; limiting=[]; Y=[]; dY = []; compact
 istg = []; lat=[]; long=[];
 siteid=[]; sitenames={}; sitecoords=[];
 
-datPX = importdata(fullfile(IFILES,'RSL_July2014.csv'));
+datPX = importdata(fullfile(IFILES,'RSL_July2014b.csv'));
 datPX.textdata=datPX.textdata(2:end,:);
 
 % catch entries without age errors
@@ -126,8 +126,8 @@ PX0=PX;
 
 % drop too old, and too near field
 sub=find(PX.time1>=firsttime);
-sub=intersect(sub,find(abs(PX.lat)<=60));
-subS=find(abs(PX.sitecoords(:,1))<=60);
+sub=intersect(sub,find(abs(PX.lat)<=70));
+subS=find(abs(PX.sitecoords(:,1))<=70);
 
 PX=SubsetDataStructure(PX,sub,subS);
 
