@@ -1,6 +1,6 @@
 % Master script for Common Era proxy + tide gauge sea-level analysis
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sat Jul 19 08:04:48 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Jul 21 15:05:15 EDT 2014
 
 dosldecomp = 0;
 
@@ -11,7 +11,7 @@ IFILES=[pd '/IFILES'];
 addpath(pd)
 savefile='~/tmp/CESL';
 
-WORKDIR='140719';
+WORKDIR='140721';
 if ~exist(WORKDIR,'dir')
     mkdir(WORKDIR);
 end
@@ -903,6 +903,9 @@ for iii=1:length(regresssets)
             fprintf(fid,outtable);
             fclose(fid);
             
+            % TO DO: ADD GRADIENTS
+            
+            
         end
         
         %%
@@ -1000,15 +1003,16 @@ for iii=1:length(regresssets)
         wtestsitedef.names2={'GSL'};
         wtestsitedef.firstage=min(oldest);
 
-        wtestt=[1300 1700];
+        wtestt=[1000 1800];
         Mdiff = [-1 1]/diff(wtestt);
 
         sitesub=(find(wdataset.siteid>9999));
         dosites=wdataset.siteid(sitesub);
         dositenames=wdataset.sitenames(sitesub);
+        docoords=wdataset.sitecoords(sitesub,:);
         trainsub0=find((wdataset.limiting==0));
         
-        clear sensf senssd sensnames;
+        clear sensf senssd sensnames senscoords;
         for qqq=0:length(dosites)
             for doexcl=0:1
                 if qqq==0
@@ -1017,18 +1021,20 @@ for iii=1:length(regresssets)
                         wdataset2=wdataset; wdataset2.dY=ones(size(wdataset2.Y))*1e6; wdataset2.meantime=ones(size(wdataset2.Y))*1e5;
                         wdataset2.time1=wdataset2.meantime; wdataset2.time2=wdataset2.meantime;
                     else
-                        wdataset2=wdataset; trainsub=trainsub0;                    
+                        wdataset2=wdataset; trainsub=trainsub0; Nincl(qqq+1)=length(trainsub);                   
                     end
                     sensnames{qqq+1} = 'All';
+                    senscoords(qqq+1,:)=[NaN NaN];
                 else
                     wdataset2=wdataset;
                     
                     if doexcl
                         trainsub=intersect(trainsub0,find(wdataset2.datid~=dosites(qqq)));
                     else                   
-                        trainsub=intersect(trainsub0,find(wdataset2.datid==dosites(qqq)));
+                        trainsub=intersect(trainsub0,find(wdataset2.datid==dosites(qqq))); Nincl(qqq+1)=length(trainsub);
                     end
                     sensnames{qqq+1}=dositenames{qqq};
+                    senscoords(qqq+1,:)=docoords(qqq,:);
                 end
                 disp(sensnames{qqq+1});
                 
@@ -1054,10 +1060,12 @@ for iii=1:length(regresssets)
         fid=fopen(['sitesensitivity' labl '.tsv'],'w');
         fprintf(fid,'Site sensitivity tests\n');
         fprintf(fid,'GSL rate, %0.0f to %0.0f\n\n',wtestt);
-        fprintf(fid,'Site\tInclusive f (mm/y)\t1s\tpercent var reduction\tExclusive f (mm/y)\t1s\tpercent var increase\n');
+        fprintf(fid,'Site\tLat\tLong\tN\tInclusive f (mm/y)\t1s\tpercent var reduction\tpercent var reduction/N\tExclusive f (mm/y)\t1s\tpercent var increase\tpercent var increase/N\n');
         for qqq=1:size(sensf,1)
             fprintf(fid,sensnames{qqq});
-            fprintf(fid,'\t%0.3f',[sensf(qqq,1) 1*senssd(qqq,1) 100*(1-sensvarnormed(qqq,1)) sensf(qqq,2) 1*senssd(qqq,2) 100*(sensvarnormed(qqq,2)-sensvarnormed(1,1))]);
+            fprintf(fid,'\t%0.3f',senscoords(qqq,:));
+            fprintf(fid,'\t%0.0f',Nincl(qqq));
+            fprintf(fid,'\t%0.3f',[sensf(qqq,1) 1*senssd(qqq,1) 100*(1-sensvarnormed(qqq,1)) 100*(1-sensvarnormed(qqq,1))/Nincl(qqq) sensf(qqq,2) 1*senssd(qqq,2) 100*(sensvarnormed(qqq,2)-sensvarnormed(1,1)) 100*(sensvarnormed(qqq,2)-sensvarnormed(1,1))/Nincl(qqq)]);
             fprintf(fid,'\n');
         end        
         fclose(fid);
