@@ -1,6 +1,6 @@
 % Master script for Common Era proxy + tide gauge sea-level analysis
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Jul 21 15:05:15 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri Jul 25 14:32:08 MDT 2014
 
 dosldecomp = 0;
 
@@ -11,7 +11,7 @@ IFILES=[pd '/IFILES'];
 addpath(pd)
 savefile='~/tmp/CESL';
 
-WORKDIR='140721';
+WORKDIR='140725';
 if ~exist(WORKDIR,'dir')
     mkdir(WORKDIR);
 end
@@ -40,11 +40,11 @@ addpath(pwd)
 %trainlabels={'trTGPXnoEH','trTGPXGSLnoEH','trTGPX','trTGPXGSL'};
 
 % need to see what happens if we drop EH from a constrained data set 
-trainsets = [1 5];
-trainspecs = [1 1];
-trainfirsttime = [-1000 -1000];
-trainrange=[100 100 100 100 2000 ; 100 100 100 100 2000];
-trainlabels={'trTGPX','trTGPXGSL'};
+trainsets = [1 5 6];
+trainspecs = [1 1 1];
+trainfirsttime = [-1000 -1000 -1000];
+trainrange=[100 100 100 100 2000 ; 100 100 100 100 2000 ; 100 100 100 100 2000];
+trainlabels={'trTGPX','trTGPXGSL','trTGPXGSLnonf'};
 
 modelspec0=modelspec;
 
@@ -152,8 +152,8 @@ end
 
 testt = [-1000:20:2000 2010];
 
-regresssets=[1 2 5 1 5];
-regressparams=[1 1 1 2 2];
+regresssets=[1 2 5 1 5 7];
+regressparams=[1 1 1 2 2 3];
 clear regresslabels;
 for i=1:length(regresssets)
     regresslabels{i} = [datasets{regresssets(i)}.label '_' trainlabels{regressparams(i)}];
@@ -847,7 +847,7 @@ for iii=1:length(regresssets)
         
         
         %%
- 
+        
         for dodetrend=[0 1]
             wf=f2s{ii,jj}(:,1); wV=V2s{ii,jj}(:,:,1);
             colrs={'r','b','m','g'};
@@ -864,7 +864,8 @@ for iii=1:length(regresssets)
                     Mdiff(datsub,basesub)= Mdiff(datsub,basesub)-1/length(basesub);
                 end
             end
-
+            
+            
             datsub=find(ismember(testreg,testsites(sitesub2)));
             datsub=intersect(datsub,find(~isnan(wf)));
 
@@ -876,9 +877,41 @@ for iii=1:length(regresssets)
             end
 
             wf=Mdiff*wf;
-            wV=Mdiff*wV*Mdiff';
-            
+            wV=Mdiff*wV*Mdiff';    
 
+            gradf=[]; gradsd=[]; gradt=[]; gradpair=[]; gradV=[]; ...
+                  gradstarttimes=[]; wdiffpair=[]; wpairnames={}; clear pairnames;
+            for i=1:length(diffpairs)
+                pairnames{i} = [shortnames{diffpairs{i}(2)} '-' shortnames{diffpairs{i}(1)}];
+                q1=find(strcmpi(GIAsitetarg{diffpairs{i}(1)},testsitedef.names));
+                q2=find(strcmpi(GIAsitetarg{diffpairs{i}(2)},testsitedef.names));
+                
+                sub1=find(testreg==testsitedef.sites(q1(1)));
+                sub2=find(testreg==testsitedef.sites(q2(1)));
+                
+                [u,ui,uj]=intersect(testX(sub1,3),testX(sub2,3));
+                Mgrad=sparse(length(u),length(testX));
+                Mgrad(:,sub1(ui))=-eye(length(ui));
+                Mgrad(:,sub1(ui(end))) = Mgrad(:,sub1(ui(end)))+1;
+                
+                Mgrad(:,sub2(uj)) = Mgrad(:,sub2(uj)) + eye(length(uj));
+                Mgrad(:,sub2(uj(end))) = Mgrad(:,sub2(uj(end)))-1;
+                
+                q = Mgrad*wf;
+                
+                if sum(~isnan(q))>1
+
+                    gradf = [gradf ; q];
+                    gradV(length(gradV) + [1:length(u)],length(gradV) + [1:length(u)]) = Mgrad*wV*Mgrad';
+                    gradt = [gradt ; u];
+                    gradpair = [gradpair ; ones(length(u),1)*i];
+                    gradstarttimes=[gradstarttimes ; u(1)];
+                    wdiffpair = [wdiffpair ; i];
+                    wpairnames={wpairnames{:},pairnames{i}};
+                end
+                
+            end 
+            
             clf;
             
             [hp,hl,~,~,~,~,outtable]=PlotPSLOverlay(testX(datsub,3),testreg(datsub),testsites(sitesub2,1),wf(datsub),wV(datsub,datsub),colrs,testsitedef.firstage(sitesub2),testt(end),0,200,testnames2(sitesub2));
@@ -903,8 +936,24 @@ for iii=1:length(regresssets)
             fprintf(fid,outtable);
             fclose(fid);
             
-            % TO DO: ADD GRADIENTS
+            gradsd = sqrt(diag(gradV));
+
+            %       [gradf,gradV,gradsd]=DetrendSLReconstruction(gradf,gradV,[1:length(diffpairs)]',gradpair,gradt,[0 1000],1800,refyear);
             
+            for timesteps=[100]
+
+                clf;
+                [hp,hl,hl2,dGSL,dGSLsd,dGSLV,outtable,difftimes,diffreg]=PlotPSLOverlay(gradt,gradpair,wdiffpair,gradf,gradV,colrs,gradstarttimes,2010,0,timesteps,wpairnames);
+                set(hp,'xlim',[-500 2000]);
+                legend(hl,wpairnames,'Location','Southwest');
+                delete(hp(2));                
+                pdfwrite(['rsllessGIAwtmeangrad_' num2str(timesteps) 'y' labl labl2]);
+                
+                fid=fopen(['rsllessGIAwtmeangrad_' noiseMasklabels{selmask} labl labl2 '.tsv'],'w');
+                fprintf(fid,outtable);
+                fclose(fid);               
+                
+            end
             
         end
         
@@ -1079,20 +1128,91 @@ end
 
 % plot of relevant forcing proxies
 
-colrs={'b','r'};
+
+clear proxy;
+
+proxy.time1 = Chesapeake.yr;
+proxy.Y = Chesapeake.T/10;
+proxy.dY = ones(size(Chesapeake.T))*.01;
+proxy.datid = ones(size(Chesapeake.T));
+proxy.sitelen = length(Chesapeake.T);
+
+sub=find(RothJoos.yr>-1000);
+proxy.time1 = [proxy.time1 ; RothJoos.yr(sub)];
+proxy.Y = [proxy.Y ; (RothJoos.TSI(sub) - 1365)*1000];
+proxy.dY = [proxy.dY ; ones(size(RothJoos.TSI(sub)))*1];
+proxy.datid = [proxy.datid ; ones(size(RothJoos.yr(sub)))*2];
+proxy.sitelen = [proxy.sitelen ; length(sub)];
+
+sub=find((haug.yr>-1000).*(~isnan(haug.Ti)));
+proxy.time1 = [proxy.time1 ; round(haug.yr(sub))];
+proxy.Y = [proxy.Y ; haug.Ti(sub)*1000];
+proxy.dY = [proxy.dY ; ones(size(haug.Ti(sub)))*1];
+proxy.datid = [proxy.datid ; ones(size(haug.Ti(sub)))*3];
+proxy.sitelen = [proxy.sitelen ; length(haug.Ti(sub))];
+
+
+proxy.time2 = proxy.time1; proxy.meantime=proxy.time1;
+proxy.limiting = zeros(size(proxy.Y));
+proxy.compactcorr = zeros(size(proxy.Y));
+proxy.lat = proxy.datid; proxy.long = proxy.datid;
+proxy.Ycv = sparse(diag(proxy.dY).^2);
+proxy.istg = zeros(size(proxy.Y));
+proxy.siteid = [1 2 3]';
+proxy.sitenames={'Chesapeake','TSI','Cariacao'};
+proxy.sitecoords=[1 1 ; 2 2; 3 3 ];
+
+smoothwindow=101;
+
+[proxys] = GPSmoothTideGauges(proxy,smoothwindow,2.0,20)
+sub=find((proxys.datid==1).*(proxys.meantime>=(min(Chesapeake.yr)+smoothwindow/2)).*(proxys.meantime<=(max(Chesapeake.yr)-smoothwindow/2)));
+ChesapeakeS.yr=proxys.meantime(sub);
+ChesapeakeS.T=proxys.Y(sub)*10;
+
+sub=find((proxys.datid==2).*(proxys.meantime>=(-1000+smoothwindow/2)).*(proxys.meantime<=(max(RothJoos.yr)-smoothwindow/2)));
+RothJoosS.yr=proxys.meantime(sub);
+RothJoosS.TSI=proxys.Y(sub)/1000+1365;
+
+sub=find((proxys.datid==3).*(proxys.meantime>=(-1000+smoothwindow/2)).*(proxys.meantime<=(max(haug.yr)-smoothwindow/2)));
+haugS.yr=proxys.meantime(sub);
+haugS.Ti=proxys.Y(sub)/1000;
+
+colrs={'b','r','g'};
 figure;
 hp=subplot(2,1,1);
-plot(Chesapeake.yr,Chesapeake.T,colrs{1},'linew',2); hold on
-set(hp,'box','off','ylim',[8 17]);
-xlabel('Year (CE)');
-ylabel('Chesapeake T (C)');
+plot(ChesapeakeS.yr,ChesapeakeS.T,colrs{1},'linew',2); hold on
+set(hp,'box','off');
+ylim([min(ChesapeakeS.T)-.5  max(ChesapeakeS.T)+.5]);
+xlabel('Year');
+hyl=ylabel('Chesapeake T (C)'); set(hyl,'Color',colrs{1});
 
 hp(2)=axes('Position',get(hp(1),'Position'));
 plot(Lundtransport.yr,Lundtransport.Sv,colrs{2},'linew',2); hold on
 plot(Lundtransport.yr,Lundtransport.Sv+Lundtransport.dSv,[colrs{2} '--']); hold on
 plot(Lundtransport.yr,Lundtransport.Sv-Lundtransport.dSv,[colrs{2} '--']); hold on
 set(hp(2),'Color','none','XAxisLoc','top','YAxisLoc','right','box','off','xtickl',{''});
-ylabel({'Florida Current','Transport (Sv)'});
+ylim([27.5 32]);
+hyl=ylabel({'Florida Current','Transport (Sv)'}); set(hyl,'Color',colrs{2});
 
 set(hp,'xlim',[-500 2000]);
-pdfwrite('forcingproxies');
+pdfwrite('forcingproxies1');
+
+figure;
+
+hp=subplot(2,1,1);
+plot(RothJoosS.yr,RothJoosS.TSI,colrs{1},'linew',2); hold on
+set(hp,'box','off','ylim',[8 17]);
+sub=find(RothJoosS.yr>=-500);
+ylim([min(RothJoosS.TSI(sub))-.05 max(RothJoosS.TSI(sub))+.05]);
+hyl=ylabel('TSI (W/m^2)'); set(hyl,'Color',colrs{1});
+xlabel('Year');
+
+hp(2)=axes('Position',get(hp(1),'Position'));
+plot(haugS.yr,haugS.Ti,colrs{2},'linew',1); hold on
+set(hp(2),'Color','none','XAxisLoc','top','YAxisLoc','right','box','off','xtickl',{''});
+sub=find(haugS.yr>=-500);
+ylim([min(haugS.Ti(sub))-.02  max(haugS.Ti(sub))+.02]);
+hyl=ylabel({'Cariaco Basin % Ti','(lower = dryer)'}); set(hyl,'Color',colrs{2});
+
+set(hp,'xlim',[-500 2000]);
+pdfwrite('forcingproxies2');

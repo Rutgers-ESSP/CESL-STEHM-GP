@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Jul 21 15:00:13 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri Jul 25 07:16:55 MDT 2014
 
 defval('firsttime',-1000);
 
@@ -11,7 +11,7 @@ datid=[]; time1=[]; time2=[]; mediantime=[]; limiting=[]; Y=[]; dY = []; compact
 istg = []; lat=[]; long=[];
 siteid=[]; sitenames={}; sitecoords=[];
 
-datPX = importdata(fullfile(IFILES,'RSL_July2014c.csv'));
+datPX = importdata(fullfile(IFILES,'RSL_July2014d.csv'));
 datPX.textdata=datPX.textdata(2:end,:);
 
 % catch entries without age errors
@@ -135,22 +135,29 @@ sub = find(PX.datid<1e6);
 subS = find(PX.siteid<1e6);
 PXnoEH = SubsetDataStructure(PX,sub,subS);
 
-incls = {{'North Carolina','New Jersey','Florida'},{'Florida','New Jersey','North Carolina','Nova Scotia'},{'Florida','New Jersey','North Carolina','Nova Scotia','New Zealand','Cook Islands'},{'Florida','New Jersey','North Carolina','Nova Scotia','New Zealand','Cook Islands','Massachusetts','Maine','Louisiana'}};
+% drop Greenland and Iceland
 
-for ii=1:length(incls);
-    incl=incls{ii};
-    subincl=[]; subinclS=[];
-    for jj=1:length(incl)
-        doincl=find(strncmp(incl{jj},PX.sitenames, ...
-                            length(incl{jj})));
-        subinclS=union(subinclS,doincl);
-        for kk=1:length(doincl)
-            subincl=union(subincl,find(PX.datid==PX.siteid(doincl(kk))));
-        end
-    end
-    sub=subincl; subS=subinclS;
-    PXsub{ii}=SubsetDataStructure(PX,sub,subS);
-end
+subexcl = union(strmatch('Greenland',PX.sitenames),strmatch('Iceland',PX.sitenames));
+sub = find(~ismember(PX.datid,PX.siteid(subexcl)));
+subS = find(~ismember(PX.siteid,PX.siteid(subexcl)));
+PXnonf = SubsetDataStructure(PX,sub,subS);
+
+% $$$ incls = {{'North Carolina','New Jersey','Florida'},{'Florida','New Jersey','North Carolina','Nova Scotia'},{'Florida','New Jersey','North Carolina','Nova Scotia','New Zealand','Cook Islands'},{'Florida','New Jersey','North Carolina','Nova Scotia','New Zealand','Cook Islands','Massachusetts','Maine','Louisiana'}};
+% $$$ 
+% $$$ for ii=1:length(incls);
+% $$$     incl=incls{ii};
+% $$$     subincl=[]; subinclS=[];
+% $$$     for jj=1:length(incl)
+% $$$         doincl=find(strncmp(incl{jj},PX.sitenames, ...
+% $$$                             length(incl{jj})));
+% $$$         subinclS=union(subinclS,doincl);
+% $$$         for kk=1:length(doincl)
+% $$$             subincl=union(subincl,find(PX.datid==PX.siteid(doincl(kk))));
+% $$$         end
+% $$$     end
+% $$$     sub=subincl; subS=subinclS;
+% $$$     PXsub{ii}=SubsetDataStructure(PX,sub,subS);
+% $$$ end
 
 % now create a slimmed version for training
 % $$$ excl={'France','Tasmania','Spain','New Zealand','Italy','Israel',['Isle ' ...
@@ -304,17 +311,21 @@ datasets{2}=PX;
 datasets{3}=MergeDataStructures(TGNOCW,PXnoEH);
 datasets{4}=MergeDataStructures(TG,PXnoEH);
 datasets{5}=MergeDataStructures(TG,PX);
+datasets{6}=MergeDataStructures(TG,PXnonf);
+datasets{7}=MergeDataStructures(TGNOCW,PXnonf);
 
 datasets{1}.label='TG+PX';
 datasets{2}.label='PX';
 datasets{3}.label='TG+PXnoEH';
 datasets{4}.label='TG+GSL+PXnoEH';
 datasets{5}.label='TG+GSL+PX';
+datasets{6}.label='TG+GSL+PXnonf';
+datasets{7}.label='TG+PXnonf';
 
-for jj=1:length(PXsub)
-    datasets{end+1}=MergeDataStructures(TGNOCW,PXsub{jj});
-    datasets{end}.label=['TG+PXsub' num2str(jj)];
-end
+%for jj=1:length(PXsub)
+%    datasets{end+1}=MergeDataStructures(TGNOCW,PXsub{jj});
+%    datasets{end}.label=['TG+PXsub' num2str(jj)];
+%end
 
 
 for ii=1:length(datasets)
@@ -386,5 +397,11 @@ impt=importdata(fullfile(IFILES,'Cronin2010_ChesapeakeT.txt'));
 Chesapeake.yr = impt(:,1);
 Chesapeake.T = impt(:,2);
 
+impt=importdata(fullfile(IFILES,'RothJoos2013TSI.csv'));
+RothJoos.yr = impt.data(:,1);
+RothJoos.TSI = impt.data(:,2);
+RothJoos.TSIerr = impt.data(:,3);
 
-
+impt=importdata(fullfile(IFILES,'haug2001_cariaco_ti.txt'));
+haug.yr = 1950-impt.data(:,1);
+haug.Ti = impt.data(:,2);
