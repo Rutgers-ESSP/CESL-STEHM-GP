@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri Jul 25 07:16:55 MDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Jul 31 16:00:54 EDT 2014
 
 defval('firsttime',-1000);
 
@@ -11,7 +11,7 @@ datid=[]; time1=[]; time2=[]; mediantime=[]; limiting=[]; Y=[]; dY = []; compact
 istg = []; lat=[]; long=[];
 siteid=[]; sitenames={}; sitecoords=[];
 
-datPX = importdata(fullfile(IFILES,'RSL_July2014d.csv'));
+datPX = importdata(fullfile(IFILES,'RSL_July2014e.csv'));
 datPX.textdata=datPX.textdata(2:end,:);
 
 % catch entries without age errors
@@ -396,6 +396,10 @@ Lundtransport.dSv=impt.data(:,3);
 impt=importdata(fullfile(IFILES,'Cronin2010_ChesapeakeT.txt'));
 Chesapeake.yr = impt(:,1);
 Chesapeake.T = impt(:,2);
+
+impt=importdata(fullfile(IFILES,'Richey2007_GulfOfMexico.csv'));
+GOM.yr = 1950-impt.data(:,1);
+GOM.T = impt.data(:,4);
 
 impt=importdata(fullfile(IFILES,'RothJoos2013TSI.csv'));
 RothJoos.yr = impt.data(:,1);

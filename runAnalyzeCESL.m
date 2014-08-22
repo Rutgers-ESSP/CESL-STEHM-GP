@@ -415,6 +415,19 @@ for iii=1:length(regresssets)
 
     end
     Mref=sparse(Mref);
+    
+    refyear2=1900;
+    Mref2 = eye(size(testX,1));
+    for i=1:size(testsites,1)
+        
+        sub1=find(testreg==testsites(i,1));
+        sub2=intersect(sub1,find(testX(:,3)==refyear2));
+        
+        Mref2(sub1,sub2)=Mref2(sub1,sub2)-1;
+
+    end
+    Mref2=sparse(Mref2);    
+    
     selsitenames={'Florida-Nassau','NorthCarolina-SandPoint','NewJersey-LeedsPoint','NovaScotia-Chezzetcook'};
     shortnames = {'FL','NC','NJ','NS'};
     sitesub=[];
@@ -485,6 +498,12 @@ for iii=1:length(regresssets)
     wV=Mref*V2s{ii,jj}(:,:,selmask)*Mref';
     wsd=sqrt(diag(wV));
 
+    wf1900=Mref2*f2s{ii,jj}(:,selmask);
+    wV1900=Mref2*V2s{ii,jj}(:,:,selmask)*Mref2';
+    wsd1900=sqrt(diag(wV1900));
+
+
+    
     for dodetrend=[0 1]
         labl3='';
         if dodetrend
@@ -561,8 +580,9 @@ for iii=1:length(regresssets)
             end
             fclose(fid);
             
-            
+     
         end
+           
 
         % output GSL covariance
         
@@ -579,7 +599,15 @@ for iii=1:length(regresssets)
         
         fclose(fid);
     end
+
     
+    [~,~,~,~,~,~,outtable1900]=PlotPSLOverlay(testX(datsub,3),testreg(datsub),testsites(sitesub,1),wf1900(datsub),wV1900(datsub,datsub),colrs,testsitedef.firstage(sitesub),testt(end),0,100,{'GSL'});
+    
+    labl2=labl;
+    fid=fopen(['GSL_' num2str(timesteps) 'y' labl2 '_ref1900.tsv'],'w');
+    fprintf(fid,outtable1900);
+    fclose(fid);
+   
     
     %%%
 
@@ -630,13 +658,14 @@ for iii=1:length(regresssets)
             sitesub=[sitesub q(1)];
         end
     end
-    colrs={'k','r','c','b','g','m','y'};
+    colrs={'r','m','g','b','c','k','y'};
 
     selmask=1;
 
     clear pairsets;
     pairsets{1}=[1 2; 2 3; 2 4; 3 4; 5 3; 5 4 ; 7 3];
     pairsets{2}=[1 2; 1 3 ; 1 4 ; 2 3; 2 4 ; 3 4];
+    pairsets{3}=[1 2 ; 3 2 ; 4 3]
     for mmm=1:length(pairsets)
         for dodetrend=[0 1]
             
@@ -699,7 +728,7 @@ for iii=1:length(regresssets)
 
             %       [gradf,gradV,gradsd]=DetrendSLReconstruction(gradf,gradV,[1:length(diffpairs)]',gradpair,gradt,[0 1000],1800,refyear);
             
-            for timesteps=[100 60]
+            for timesteps=[100 60 40 20 ]
 
                 clf;
                 [hp,hl,hl2,dGSL,dGSLsd,dGSLV,outtable,difftimes,diffreg]=PlotPSLOverlay(gradt,gradpair,wdiffpair,gradf,gradV,colrs,gradstarttimes,2010,0,timesteps,wpairnames);
@@ -718,9 +747,9 @@ for iii=1:length(regresssets)
                 
                 
                 
-                if (mmm==1)
-                    firstyears=[ 0   1000  200 700  1700 1800 1900 900  1000 1600 1860];
-                    lastyears= [1800 1800 1000 1700 1800 1900 2000 1500 1300 1800 2000];
+                %if (mmm==1)
+                    firstyears=[ 0   1000  200 700  1700 1800 1900 900  1000 1600 1860 1940 1980];
+                    lastyears= [1800 1800 1000 1700 1800 1900 2000 1500 1300 1800 2000 1980 2010];
                     [fslopeavg,sdslopeavg,fslopeavgdiff,sdslopeavgdiff,diffplus,diffless]=SLRateCompare(gradf,gradV,wdiffpair,gradpair,gradt,firstyears,lastyears);
                     
                     fid=fopen(['RSLgrad_' num2str(timesteps) 'y' labl labl2 '.tsv'],'w');
@@ -751,7 +780,7 @@ for iii=1:length(regresssets)
                     
                     fprintf(fid,outtable);
                     fclose(fid);
-                end
+                    % end
                 
                 
                 
@@ -830,7 +859,8 @@ for iii=1:length(regresssets)
             GIAsub(pp)=find(strcmpi(GIAsitetarg{pp},GIAsites));
             plot(1950-1000*GIAt,1000*GIAwtmeandetr(:,GIAsub(pp)),colrs{pp},'linew',2); hold on;
         end
-        legend(shortnames,'location','northeast');
+        legend(shortnames,'location','southeast');
+        xlim([-500 2000]);
         xlabel('Year (CE)'); ylabel('mm'); title('Detrended mean GIA estimate');
         pdfwrite(['GIAwtmeandetr' labl]);
 
@@ -842,6 +872,7 @@ for iii=1:length(regresssets)
         end
         legend(shortnames,'location','southeast');
         xlabel('Year (CE)'); ylabel('mm'); title('Mean GIA estimate');
+        xlim([-500 2000]);
         pdfwrite(['GIAwtmean' labl]);
 
         
@@ -968,7 +999,7 @@ for iii=1:length(regresssets)
             pairnames{pp}=[shortnames{diffpairs{pp}(1)} '-' shortnames{diffpairs{pp}(2)}];
         end
        
-        legend(pairnames,'location','northeast');
+        legend(pairnames,'location','southeast');
         xlabel('Year (CE)'); ylabel('mm'); title('Detrended mean GIA estimate');
         pdfwrite(['GIAwtmeandetr_grad' labl]);
         %%%%%
@@ -1042,6 +1073,50 @@ for iii=1:length(regresssets)
         end        
                 
         fclose(fid);
+        
+        
+                
+        %%%%
+        % Do GIA comparison 
+        t0 = find(GIAt==.15);
+        t1 = find(GIAt==1.05);
+        t2 = find(GIAt==1.95);
+        t3 = find(GIAt==0.25);
+        t4 = find(GIAt==0.05);
+        
+        GIAavg2 = squeeze([GIAsl(t0,:,:)-GIAsl(t2,:,:)])/-(.15-1.95);       
+        GIAavgA2 = squeeze([GIAsl(t0,:,:)-GIAsl(t1,:,:)])/-(.15-1.05);
+        GIAavgB2 = squeeze([GIAsl(t1,:,:)-GIAsl(t2,:,:)])/-(1.05-1.95);
+        GIAavgZ2 = squeeze([GIAsl(t4,:,:)-GIAsl(t3,:,:)])/(.25-.05);
+        
+        
+        [slogp,slogpi]=sort(logp,'descend');
+        fid=fopen(['GIAmodels' labl labl2 '.tsv'],'w');
+        for nnnn=slogpi(:)'
+            fprintf(fid,['\t' GIAicehist{nnnn} '_' GIAsolidearth{nnnn}]);
+        end
+        fprintf(fid,'\n');
+        fprintf(fid,'Relative log L');
+        fprintf(fid,'\t%0.3e',slogp);
+        fprintf(fid,'\n');
+        
+        fprintf(fid,'Rates 0-1800\n');
+        for nnnn=1:length(GIAsites)
+            fprintf(fid,GIAsites{nnnn});
+            fprintf(fid,'\t%0.2f',GIAavg2(nnnn,slogpi));
+            fprintf(fid,'\n');
+        end       
+        
+        fprintf(fid,'\n\nRates 1700-1900 \n');
+         for nnnn=1:length(GIAsites)
+            fprintf(fid,GIAsites{nnnn});
+            fprintf(fid,'\t%0.2f',GIAavgZ2(nnnn,slogpi));
+            fprintf(fid,'\n');
+         end
+         
+                
+        fclose(fid);
+        
 
         
         %% do data sensitivity tests
@@ -1129,70 +1204,105 @@ end
 % plot of relevant forcing proxies
 
 
-clear proxy;
+clear proxyT proxyO;
 
-proxy.time1 = Chesapeake.yr;
-proxy.Y = Chesapeake.T/10;
-proxy.dY = ones(size(Chesapeake.T))*.01;
-proxy.datid = ones(size(Chesapeake.T));
-proxy.sitelen = length(Chesapeake.T);
+proxyT.time1 = Chesapeake.yr;
+sub=find((Chesapeake.yr>=1000).*(Chesapeake.yr<=1800));
+Chesapeake.offset=mean(Chesapeake.T(sub));
+proxyT.Y = (Chesapeake.T-Chesapeake.offset)/10;
+proxyT.dY = ones(size(Chesapeake.T))*.01;
+proxyT.datid = ones(size(Chesapeake.T));
+proxyT.sitelen = length(Chesapeake.T);
+
+proxyT.time1 = [proxyT.time1 ; round(GOM.yr)];
+sub=find((GOM.yr>=1000).*(GOM.yr<=1800));
+GOM.offset=mean(GOM.T(sub));
+proxyT.Y = [proxyT.Y ; (GOM.T-GOM.offset)/5];
+proxyT.dY = [proxyT.dY ; ones(size(GOM.T))*.01];
+proxyT.datid = [proxyT.datid ; 2*ones(size(GOM.T))];
+proxyT.sitelen = [proxyT.sitelen ; length(GOM.T)];
+
+proxyT.time2 = proxyT.time1; proxyT.meantime=proxyT.time1;
+proxyT.limiting = zeros(size(proxyT.Y));
+proxyT.compactcorr = zeros(size(proxyT.Y));
+proxyT.lat = proxyT.datid; proxyT.long = proxyT.datid;
+proxyT.Ycv = sparse(diag(proxyT.dY).^2);
+proxyT.istg = zeros(size(proxyT.Y));
+proxyT.siteid = [1 2]';
+proxyT.sitenames={'Chesapeake','GOM'};
+proxyT.sitecoords=[1 1 ; 2 2];
+
+%%
 
 sub=find(RothJoos.yr>-1000);
-proxy.time1 = [proxy.time1 ; RothJoos.yr(sub)];
-proxy.Y = [proxy.Y ; (RothJoos.TSI(sub) - 1365)*1000];
-proxy.dY = [proxy.dY ; ones(size(RothJoos.TSI(sub)))*1];
-proxy.datid = [proxy.datid ; ones(size(RothJoos.yr(sub)))*2];
-proxy.sitelen = [proxy.sitelen ; length(sub)];
+proxyO.time1 = [RothJoos.yr(sub)];
+proxyO.Y = [(RothJoos.TSI(sub) - 1365)*1000];
+proxyO.dY = [ ones(size(RothJoos.TSI(sub)))*1];
+proxyO.datid = [ones(size(RothJoos.yr(sub)))*1];
+proxyO.sitelen = [ length(sub)];
 
 sub=find((haug.yr>-1000).*(~isnan(haug.Ti)));
-proxy.time1 = [proxy.time1 ; round(haug.yr(sub))];
-proxy.Y = [proxy.Y ; haug.Ti(sub)*1000];
-proxy.dY = [proxy.dY ; ones(size(haug.Ti(sub)))*1];
-proxy.datid = [proxy.datid ; ones(size(haug.Ti(sub)))*3];
-proxy.sitelen = [proxy.sitelen ; length(haug.Ti(sub))];
+proxyO.time1 = [proxyO.time1 ; round(haug.yr(sub))];
+proxyO.Y = [proxyO.Y ; haug.Ti(sub)*1000];
+proxyO.dY = [proxyO.dY ; ones(size(haug.Ti(sub)))*1];
+proxyO.datid = [proxyO.datid ; ones(size(haug.Ti(sub)))*2];
+proxyO.sitelen = [proxyO.sitelen ; length(haug.Ti(sub))];
 
+proxyO.time2 = proxyO.time1; proxyO.meantime=proxyO.time1;
+proxyO.limiting = zeros(size(proxyO.Y));
+proxyO.compactcorr = zeros(size(proxyO.Y));
+proxyO.lat = proxyO.datid; proxyO.long = proxyO.datid;
+proxyO.Ycv = sparse(diag(proxyO.dY).^2);
+proxyO.istg = zeros(size(proxyO.Y));
+proxyO.siteid = [1 2]';
+proxyO.sitenames={'TSI','Cariacao'};
+proxyO.sitecoords=[1 1 ; 2 2];
 
-proxy.time2 = proxy.time1; proxy.meantime=proxy.time1;
-proxy.limiting = zeros(size(proxy.Y));
-proxy.compactcorr = zeros(size(proxy.Y));
-proxy.lat = proxy.datid; proxy.long = proxy.datid;
-proxy.Ycv = sparse(diag(proxy.dY).^2);
-proxy.istg = zeros(size(proxy.Y));
-proxy.siteid = [1 2 3]';
-proxy.sitenames={'Chesapeake','TSI','Cariacao'};
-proxy.sitecoords=[1 1 ; 2 2; 3 3 ];
 
 smoothwindow=101;
 
-[proxys] = GPSmoothTideGauges(proxy,smoothwindow,2.0,20)
-sub=find((proxys.datid==1).*(proxys.meantime>=(min(Chesapeake.yr)+smoothwindow/2)).*(proxys.meantime<=(max(Chesapeake.yr)-smoothwindow/2)));
-ChesapeakeS.yr=proxys.meantime(sub);
-ChesapeakeS.T=proxys.Y(sub)*10;
+[proxyTs,proxyTthet] = GPSmoothTideGauges(proxyT,smoothwindow,2.0,20)
+[proxyOs,proxyOthet] = GPSmoothTideGauges(proxyO,smoothwindow,2.0,20)
+[proxyTs] = GPSmoothTideGauges(proxyT,smoothwindow,0,20,proxyTthet(1,:));
 
-sub=find((proxys.datid==2).*(proxys.meantime>=(-1000+smoothwindow/2)).*(proxys.meantime<=(max(RothJoos.yr)-smoothwindow/2)));
-RothJoosS.yr=proxys.meantime(sub);
-RothJoosS.TSI=proxys.Y(sub)/1000+1365;
+sub=find((proxyTs.datid==1).*(proxyTs.meantime>=(min(Chesapeake.yr)+smoothwindow/2)).*(proxyTs.meantime<=(max(Chesapeake.yr)-smoothwindow/2)));
+ChesapeakeS.yr=proxyTs.meantime(sub);
+ChesapeakeS.Tanom=proxyTs.Y(sub)*10;
+ChespeakeS.T=ChesapeakeS.Tanom+Chesapeake.offset;
 
-sub=find((proxys.datid==3).*(proxys.meantime>=(-1000+smoothwindow/2)).*(proxys.meantime<=(max(haug.yr)-smoothwindow/2)));
-haugS.yr=proxys.meantime(sub);
-haugS.Ti=proxys.Y(sub)/1000;
+sub=find((proxyTs.datid==2).*(proxyTs.meantime>=(min(GOM.yr)+smoothwindow/2)).*(proxyTs.meantime<=(max(GOM.yr)-smoothwindow/2)));
+GOMS.yr=proxyTs.meantime(sub);
+GOMS.Tanom=proxyTs.Y(sub)*5;
+GOMS.T=GOMS.Tanom+GOM.offset;
 
-colrs={'b','r','g'};
+sub=find((proxyOs.datid==1).*(proxyOs.meantime>=(-1000+smoothwindow/2)).*(proxyOs.meantime<=(max(RothJoos.yr)-smoothwindow/2)));
+RothJoosS.yr=proxyOs.meantime(sub);
+RothJoosS.TSI=proxyOs.Y(sub)/1000+1365;
+
+sub=find((proxyOs.datid==2).*(proxyOs.meantime>=(-1000+smoothwindow/2)).*(proxyOs.meantime<=(max(haug.yr)-smoothwindow/2)));
+haugS.yr=proxyOs.meantime(sub);
+haugS.Ti=proxyOs.Y(sub)/1000;
+
+colrs={'b','g','r'};
+clear ha;
 figure;
 hp=subplot(2,1,1);
-plot(ChesapeakeS.yr,ChesapeakeS.T,colrs{1},'linew',2); hold on
+ha(1)=plot(ChesapeakeS.yr,ChesapeakeS.Tanom,colrs{1},'linew',2); hold on
+ha(2)=plot(GOMS.yr,GOMS.Tanom,colrs{2},'linew',2); hold on
+ha(3)=plot(-1000,-1000,colrs{3},'linew',2);
 set(hp,'box','off');
-ylim([min(ChesapeakeS.T)-.5  max(ChesapeakeS.T)+.5]);
+ylim([min([ChesapeakeS.Tanom ; GOMS.Tanom])-.5  max([ChesapeakeS.Tanom ; GOMS.Tanom])+.5]);
 xlabel('Year');
-hyl=ylabel('Chesapeake T (C)'); set(hyl,'Color',colrs{1});
+hyl=ylabel('Sea Surface Temperature (C)'); %set(hyl,'Color',colrs{1});
+legend(ha,sprintf('Chesapeake - %0.1f C',Chesapeake.offset),sprintf('Gulf of Mexico - %0.1f C',GOM.offset),'Florida Current (Sv)','Location','Southwest')
 
 hp(2)=axes('Position',get(hp(1),'Position'));
-plot(Lundtransport.yr,Lundtransport.Sv,colrs{2},'linew',2); hold on
-plot(Lundtransport.yr,Lundtransport.Sv+Lundtransport.dSv,[colrs{2} '--']); hold on
-plot(Lundtransport.yr,Lundtransport.Sv-Lundtransport.dSv,[colrs{2} '--']); hold on
+ha(3)=plot(Lundtransport.yr,Lundtransport.Sv,colrs{3},'linew',2); hold on
+plot(Lundtransport.yr,Lundtransport.Sv+Lundtransport.dSv,[colrs{3} '--']); hold on
+plot(Lundtransport.yr,Lundtransport.Sv-Lundtransport.dSv,[colrs{3} '--']); hold on
 set(hp(2),'Color','none','XAxisLoc','top','YAxisLoc','right','box','off','xtickl',{''});
 ylim([27.5 32]);
-hyl=ylabel({'Florida Current','Transport (Sv)'}); set(hyl,'Color',colrs{2});
+hyl=ylabel({'Transport (Sv)'}); set(hyl,'Color',colrs{3});
 
 set(hp,'xlim',[-500 2000]);
 pdfwrite('forcingproxies1');
@@ -1216,3 +1326,15 @@ hyl=ylabel({'Cariaco Basin % Ti','(lower = dryer)'}); set(hyl,'Color',colrs{2});
 
 set(hp,'xlim',[-500 2000]);
 pdfwrite('forcingproxies2');
+
+M=[ChesapeakeS.yr,ChesapeakeS.T];
+save -ascii ChesapeakeS.asc M
+
+M=[GOMS.yr,GOMS.T];
+save -ascii GOM.asc M
+
+M=[RothJoosS.yr,RothJoosS.TSI];
+save -ascii RothJoosS.asc M
+
+M=[haugS.yr,haugS.Ti];
+save -ascii haugS.asc M
