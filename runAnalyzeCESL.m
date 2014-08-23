@@ -299,7 +299,7 @@ for iii=1:length(regresssets)
          % plot tide gauge locations
         sub=find((testsites(:,2)<1e3).*(testsites(:,1)<5e3));
         sub1=intersect(sub,find(isnan(fslope)));
-        hq=scatterm(testsites(sub1,2),mod(testsites(sub1,3),360),10,[.5 .5 .5],'d'); hold on;
+        hq=scatterm(testsites(sub1,2),mod(testsites(sub1,3),360),10,[.5 .5 .5],'filled','d'); hold on;
         %        hq=scatter(mod(testsites(sub1,3),360),testsites(sub1,2),10,[.5 .5 .5],'d'); hold on;
         hq=getkids(hq);
         set(hq,'linew',1);
@@ -311,7 +311,7 @@ for iii=1:length(regresssets)
         sub=find((testsites(:,2)<1e3).*(testsites(:,1)>=5e3).*(testsites(:,1)<1e6));
         sub1=intersect(sub,find(isnan(fslope)));
         %hq=scatter(mod(testsites(sub1,3),360),testsites(sub1,2),20,[.5 .5 .5]); hold on;
-        hq=scatterm(testsites(sub1,2),mod(testsites(sub1,3),360),20,[.5 .5 .5]); hold on;
+        hq=scatterm(testsites(sub1,2),mod(testsites(sub1,3),360),20,[.5 .5 .5],'filled'); hold on;
         hq=getkids(hq);
         set(hq,'linew',1);
         sub1=intersect(sub,find(~isnan(fslope)));
@@ -361,7 +361,7 @@ for iii=1:length(regresssets)
         % plot tide gauge locations
         sub=find((testsites(:,2)<1e3).*(testsites(:,1)<5e3));
         sub1=intersect(sub,find(isnan(fslope)));
-        hq=scatterm(testsites(sub1,2),mod(testsites(sub1,3),360),30,[.5 .5 .5],'d'); hold on;
+        hq=scatterm(testsites(sub1,2),mod(testsites(sub1,3),360),30,[.5 .5 .5],'filled','d'); hold on;
         %        hq=scatter(mod(testsites(sub1,3),360),testsites(sub1,2),30,[.5 .5 .5],'d'); hold on;
         hq=getkids(hq);
         set(hq,'linew',1);
@@ -373,7 +373,7 @@ for iii=1:length(regresssets)
         sub=find((testsites(:,2)<1e3).*(testsites(:,1)>=5e3).*(testsites(:,1)<1e6));
         sub1=intersect(sub,find(isnan(fslope)));
         %hq=scatter(mod(testsites(sub1,3),360),testsites(sub1,2),70,[.5 .5 .5]); hold on;
-        hq=scatterm(testsites(sub1,2),mod(testsites(sub1,3),360),70,[.5 .5 .5]); hold on;
+        hq=scatterm(testsites(sub1,2),mod(testsites(sub1,3),360),70,[.5 .5 .5],'filled'); hold on;
         hq=getkids(hq);
         set(hq,'linew',1);
         sub1=intersect(sub,find(~isnan(fslope)));
