@@ -1,6 +1,6 @@
-function [thetTGG,trainsub,logp,thethist]=OptimizeHoloceneCovariance(dataset,modelspec,optimizesteps,mintime,maxageerror,maxcompactcorrallowed)
+function [thetTGG,trainsub,logp,thethist]=OptimizeHoloceneCovariance(dataset,modelspec,optimizesteps,mintime,maxageerror,maxcompactcorrallowed,startcompact)
 
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Jul 24 09:15:07 MDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri Aug 29 10:10:06 EDT 2014
 
 defval('optimizesteps',[1.1 2.11]);
 defval('mintime',-1000);
@@ -8,6 +8,7 @@ defval('mintime',-1000);
 defval('maxcompactcorrfactor',1);
 defval('maxageerror',ones(size(optimizesteps))*Inf);
 defval('maxcompactcorrallowed',Inf);
+defval('startcompact',.1);
 
 istg = dataset.istg;
 lat=dataset.lat;
@@ -101,7 +102,7 @@ for nnn=1:length(optimizesteps)
 %            lbTGG(1:5) = thetTGG(1:5); % set lower bound of amplitudes and temporal scale
 %        end
         if ~addedcompactcorr
-            thetTGG = [thetTGG .1];
+            thetTGG = [thetTGG startcompact];
             ubTGG = [ubTGG maxcompactcorrfactor];
             lbTGG = [lbTGG 1e-6];
             addedcompactcorr = 1;
