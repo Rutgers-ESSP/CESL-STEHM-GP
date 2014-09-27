@@ -2,7 +2,7 @@ function [wf2,wV2,wsd2,sitespec]=DetrendSLReconstruction(wf,wV,testsites,testreg
 
 %
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon May 12 10:36:15 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri Sep 26 20:56:41 EDT 2014
 
 %%%
 
@@ -27,7 +27,7 @@ for kk=1:size(testsites,1)
     sub2=find((testts(sub)==lastyears(1)));
     if (length(sub1)==1)&&(length(sub2)==1)
         M(sub,sub(sub1(1)))=-1; M(sub,sub(sub2(1)))=1;
-        M(sub,sub)=M(sub,sub)/(testts(sub2(1))-testts(sub1(1)));
+        M(sub,sub)=M(sub,sub)/(testts(sub(sub2(1)))-testts(sub(sub1(1))));
         selfirstyear(kk) = firstyears(pp);
     end
     trend(kk)=M(sub(1),sub)*wf(sub);
@@ -35,6 +35,7 @@ for kk=1:size(testsites,1)
         trend(kk)=NaN;
     end
 end
+
 
 M0=M;
 M=eye(size(M))-diag(testts-refyear(end))*M0;
