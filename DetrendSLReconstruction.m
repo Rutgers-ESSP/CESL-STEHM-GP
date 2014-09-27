@@ -11,6 +11,7 @@ defval('firstyears',0);
 defval('lastyears',1800);
 
 M=zeros(length(wf),length(wf));
+Mavg=eye(length(wf),length(wf));
 selfirstyear=ones(size(testsites,1),1)*NaN;
 for kk=1:size(testsites,1)
     sub=find((testreg==testsites(kk,1)));
@@ -40,9 +41,10 @@ end
 M0=M;
 M=eye(size(M))-diag(testts-refyear(end))*M0;
 if length(refyear)==2
-    Mavg = (testts(:)'>=firstyears).*(testts(:)'<=firstyears);
-    Mavg=Mavg/sum(Mavg);
-    Mavg=repmat(Mavg,length(testts),1);
+    Mavg=bsxfun(@eq,testreg,testreg');
+    Mavg=bsxfun(@times,Mavg,(testts(:)'>=refyear(1)));    
+    Mavg=bsxfun(@times,Mavg,(testts(:)'<=refyear(2)));
+    Mavg=bsxfun(@rdivide,Mavg,max(1,sum(Mavg,2)));
     M=(eye(size(M))-Mavg)*M;
 end
 
