@@ -1,6 +1,6 @@
 function makeplots_sldecomp(dataset,f2s,sd2s,V2s,testloc,labl,doplots,difftimestep,xlim0)
 
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Wed May 21 10:31:35 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sat Oct 11 14:52:40 EDT 2014
 
 
 
@@ -77,15 +77,23 @@ for i=1:size(testsites,1)
 			for nn=1:length(subB)
 				plot([1 1]*meantime(subB(nn)),Y(subB(nn))+[-1 1]*dY(subB(nn)));
 				plot([time1(subB(nn)) time2(subB(nn))],Y(subB(nn))*[1 1]);
+                                if limiting(subB(nn))==0
+                                    plot([1 1]*meantime(subB(nn)),Y(subB(nn)),'.');
+                                elseif limiting(subB(nn))==1
+                                    plot([1 1]*meantime(subB(nn)),Y(subB(nn)),'v');
+                                elseif limiting(subB(nn))==-1
+                                    plot([1 1]*meantime(subB(nn)),Y(subB(nn)),'^');
+                                end
+                                
 			end
 		end
 		
 		if j==3
-			title('Regional + Local');
+                    %			title('Regional + Local');
 		elseif j==4
-			title('Regional + Local non-linear');
+                    %	title('Regional + Local non-linear');
 		elseif j==6
-			title('Greenland');
+                    %	title('Greenland');
 		end
 
 
@@ -93,6 +101,9 @@ for i=1:size(testsites,1)
 		if length(wxlim)==0
     		wxlim = xlim0;
     		wxlim(1) = max(floor(min(testX(subA,3))/100)*100,xlim0(1));
+                if length(subB)>0
+                    wxlim(1) = min(wxlim(1),floor(min(time1(subB))/100)*100);
+                end
         end
 		xlim(wxlim);
 				

@@ -1,9 +1,9 @@
 function [thetTGG,trainsub,logp,thethist]=OptimizeHoloceneCovariance(dataset,modelspec,optimizesteps,mintime,maxageerror,maxcompactcorrallowed,startcompact,maxcompactcorrfactor)
 
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Wed Sep 03 21:04:20 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Tue Oct 21 14:16:19 EDT 2014
 
 defval('optimizesteps',[1.1 2.11]);
-defval('mintime',-1000);
+defval('mintime',-Inf);
 
 defval('maxcompactcorrfactor',1);
 defval('maxageerror',ones(size(optimizesteps))*Inf);
