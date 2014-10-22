@@ -1,6 +1,6 @@
 function [thet,logp,hessin,hessin2]=SLGPOptimize(y0,traincv,thet0,lb,ub,globl,basisX)
 
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Wed Oct 22 10:59:02 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Wed Oct 22 11:05:09 EDT 2014
 
 defval('globl',0)
 
@@ -36,7 +36,7 @@ elseif globl==2
 		[optm1.coeffs,optm1.fval] = ga(@(x) -logprob(y0,traincv,exp(x),basisX),length(thet0),[],[],[],[],log(lb),log(ub),[],fitoptions);	
 elseif globl==3
 		rng(10,'twister') % for reproducibility
-		fitoptions=saoptimset('Display','iter','MaxFunEval',8000,'TolFun',2e-2,'temperaturefcn',@temperaturefast,'TimeLimit',3000,'StallIterLimit',1000);
+		fitoptions=saoptimset('Display','iter','MaxFunEval',8000,'TolFun',2e-2,'TemperatureFcn',@temperaturefast,'TimeLimit',3000,'StallIterLimit',1000);
 		[optm1.coeffs,optm1.fval] = simulannealbnd(@(x) -logprob(y0,traincv,exp(x),basisX),log(thet0),log(lb),log(ub),fitoptions);
 else
 	if nargout>1

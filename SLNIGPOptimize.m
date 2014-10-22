@@ -2,7 +2,7 @@ function [thet,logp,hessin,hessin2]=SLNIGPOptimize(x0,y0,dx0,dy0,traincvaug,cvfu
 
 % cvfunc must be a function of (x0,theta)
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri Apr 25 01:44:16 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Wed Oct 22 14:57:32 EDT 2014
 
 defval('globl',0)
 
@@ -39,7 +39,7 @@ elseif globl==2
 		[optm1.coeffs,optm1.fval] = ga(@(x) -logprobNI(x0,y0,dx0,dy0,traincvaug,cvfunc,exp(x),spacex),length(thet0),[],[],[],[],log(lb),log(ub),[],fitoptions);	
 elseif globl==3
 		rng(10,'twister') % for reproducibility
-		fitoptions=saoptimset('Display','iter','MaxFunEval',8000,'TolFun',2e-2,'temperaturefcn',@temperaturefast,'TimeLimit',3000);
+		fitoptions=saoptimset('Display','iter','MaxFunEval',8000,'TolFun',2e-2,'TemperatureFcn',@temperaturefast,'TimeLimit',3000,'StallIterLimit',1000);
 		[optm1.coeffs,optm1.fval] = simulannealbnd(@(x) -logprobNI(x0,y0,dx0,dy0,traincvaug,cvfunc,exp(x),spacex),log(thet0),log(lb),log(ub),fitoptions); 
 else
 	if nargout>1
