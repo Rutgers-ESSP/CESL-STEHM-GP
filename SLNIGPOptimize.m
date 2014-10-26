@@ -2,7 +2,7 @@ function [thet,logp,hessin,hessin2]=SLNIGPOptimize(x0,y0,dx0,dy0,traincvaug,cvfu
 
 % cvfunc must be a function of (x0,theta)
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Wed Oct 22 14:57:32 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sat Oct 25 22:57:12 EDT 2014
 
 defval('globl',0)
 
@@ -22,7 +22,7 @@ if globl==1
 	problem = createOptimProblem('fmincon','x0',log(thet0),'objective',(@(x) -logprobNI(x0,y0,dx0,dy0,traincvaug,cvfunc,exp(x),spacex)),'lb',log(lb),'ub',log(ub),'options',fitoptions);
 	[x fval eflag output] = fmincon(problem);
 	%ms=MultiStart('TolX',1e-2,'MaxTime',2000,'Display','iter');
-	gs=GlobalSearch('TolX',1e-2,'MaxTime',2000,'Display','iter');
+	gs=GlobalSearch('TolX',1e-2,'MaxTime',4000,'Display','iter');
 	[optm1.coeffs,optm1.fval,optm1.exitflag,optm1.output,optm1.manymin] = run(gs,problem);
 	if nargout>1
 		hessin = optm1.manymin;
@@ -39,7 +39,7 @@ elseif globl==2
 		[optm1.coeffs,optm1.fval] = ga(@(x) -logprobNI(x0,y0,dx0,dy0,traincvaug,cvfunc,exp(x),spacex),length(thet0),[],[],[],[],log(lb),log(ub),[],fitoptions);	
 elseif globl==3
 		rng(10,'twister') % for reproducibility
-		fitoptions=saoptimset('Display','iter','MaxFunEval',8000,'TolFun',2e-2,'TemperatureFcn',@temperaturefast,'TimeLimit',3000,'StallIterLimit',1000);
+		fitoptions=saoptimset('Display','iter','MaxFunEval',8000,'TolFun',2e-2,'TemperatureFcn',@temperaturefast,'TimeLimit',4000,'StallIterLimit',1000);
 		[optm1.coeffs,optm1.fval] = simulannealbnd(@(x) -logprobNI(x0,y0,dx0,dy0,traincvaug,cvfunc,exp(x),spacex),log(thet0),log(lb),log(ub),fitoptions); 
 else
 	if nargout>1

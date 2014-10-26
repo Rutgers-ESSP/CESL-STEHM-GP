@@ -1,6 +1,6 @@
 % Master script for Common Era proxy + tide gauge sea-level analysis
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri Jul 25 14:32:08 MDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sat Oct 25 20:00:31 EDT 2014
 
 dosldecomp = 0;
 
@@ -11,7 +11,7 @@ IFILES=[pd '/IFILES'];
 addpath(pd)
 savefile='~/tmp/CESL';
 
-WORKDIR='140923';
+WORKDIR='141025';
 if ~exist(WORKDIR,'dir')
     mkdir(WORKDIR);
 end
@@ -40,39 +40,135 @@ addpath(pwd)
 %trainlabels={'trTGPXnoEH','trTGPXGSLnoEH','trTGPX','trTGPXGSL'};
 
 % need to see what happens if we drop EH from a constrained data set 
-trainsets = [1 5 6];
-trainspecs = [1 1 1];
-trainfirsttime = [-1000 -1000 -1000];
-trainrange=[100 100 100 100 2000 ; 100 100 100 100 2000 ; 100 100 100 100 2000];
-trainlabels={'trTGPX','trTGPXGSL','trTGPXGSLnonf'};
 
-modelspec0=modelspec;
 
-clear thetTGG thethist trainsubsubset;
+trainsets=[]; trainspecs=[]; trainlabels={};
+             
+for ii=1:length(modelspec)
+    trainsets(ii) = 5;
+    trainspecs(ii) = ii;
+    trainlabels = {trainlabels{:}, [datasets{trainsets(ii)}.label '_' modelspec(ii).label]};
+end
+
+trainrange=[100 100 2000 2000];
+trainfirsttime = -1000;
+
+clear thetTGG thethist trainsubsubset logp;
 for ii=1:length(trainspecs)
     % first only fit ones without a compaction correction
     [thetTGG{ii},trainsubsubset{ii},logp(ii),thethist{ii}]= ...
         OptimizeHoloceneCovariance(datasets{trainsets(ii)}, ...
-                                   modelspec(trainspecs(ii)),[2.4 2.0 3.4 3.0 3.0],trainfirsttime(ii),trainrange(ii,:),.01);
+                                   modelspec(trainspecs(ii)),[2.4 3.4 3.4 3.0],trainfirsttime,trainrange,.01);
 
     % now add compaction correction factor
     ms = modelspec(trainspecs(ii));
     ms.thet0 = thetTGG{ii}(1:end-1);
     ms.subfixed = 1:length(ms.thet0);
-    [thetTGG{ii},trainsubsubset{ii},logp(ii),thethist{ii}(end+1,:)]= ...
+    [thetTGG{ii},trainsubsubset{ii},logp(ii),thist]= ...
         OptimizeHoloceneCovariance(datasets{trainsets(ii)}, ...
-                                   ms,[2.01],trainfirsttime(ii),trainrange(ii,end),1e6);    
+                                   ms,[3.4 3.0],trainfirsttime(end),trainrange(end),1e6);   
+    thethist{ii}=[thethist{ii}; thist];
     
     fid=fopen('thetTGG.tsv','w');
+    fprintf(fid,'set\ttraining data\tmodel\tlogp\tN\n');
     for iii=1:length(thetTGG)
         fprintf(fid,[trainlabels{iii} '\t' datasets{trainsets(iii)}.label '\t' ...
-                     modelspec(trainspecs(iii)).label '\t']);
-        fprintf(fid,['(%0.2f)\t'],logp(iii));
-        fprintf(fid,'%0.3f\t',thetTGG{iii});
+                     modelspec(trainspecs(iii)).label]);
+        fprintf(fid,['\t(%0.2f)'],logp(iii));
+        fprintf(fid,'\t%0.0f',length(trainsubsubset{ii}));
+        fprintf(fid,'\t%0.3f',thetTGG{iii});
         fprintf(fid,'\n');
     end
     fclose(fid);
 end
+
+% cross-validation -- doesn't work yet
+Nk=10;
+trainsub=trainsubsubset{1};
+trainsubr=trainsub(randperm(length(trainsub)));
+ntodo = length(trainsub)/Nk;
+partitions=reshape(trainsubr(1:Nk*floor(ntodo)),Nk,[]);
+alwaysdo = trainsubr((Nk*floor(ntodo))+1:end);
+
+for ii=1:length(trainspecs)
+       wdataset=datasets{trainsets(ii)};
+       collinear=modelspec(trainspecs(ii)).subamplinear(1);
+
+
+         u=unique(wdataset.datid);
+        clear fp sdp;
+        clear testsitedefp;
+        subps=[];
+        for pp=1:length(u)
+            subp=find(wdataset.datid==u(pp));
+            subq=find(wdataset.siteid==u(pp));
+            if length(subp)>0
+                testtsp{pp}=wdataset.meantime(subp);
+                testsitedefp.sites(pp,:)=[wdataset.siteid(subq) ...
+                                    wdataset.sitecoords(subq,:)];
+                testsitedefp.names(pp)=wdataset.sitenames(subq);
+                testsitedefp.names2(pp)=wdataset.sitenames(subq);
+                testsitedefp.firstage(pp)=min(wdataset.meantime(subp));
+                testsitedefp.GISfp(pp)=wdataset.siteGISfp(subq);
+                testsitedefp.GIA(pp)=wdataset.siteGIA(subq);
+            end
+            subps=[subps ; subp];
+        end
+        [fp(subps),sdp(subps),~,testlocp,logpa,passderivs]=RegressHoloceneDataSets(wdataset,testsitedefp,modelspec(trainspecs(ii)),thetTGG{ii},trainsub,ones(1,length(thetTGG{ii})),testtsp,refyear,collinear);
+        
+        clear fp1 sdp1;
+        clear testsitedefp1;
+        fp1 = zeros(size(fp));
+        sdp1 = zeros(size(sdp));
+        
+        clear subps omit trainsubdo;
+        for kk=1:Nk
+            trainsubdo{kk} = partitions(setdiff(1:Nk,kk),:);
+            trainsubdo{kk} = sort(union(trainsubdo{kk}(:)',alwaysdo));
+            omit{kk} = sort(partitions(kk,:));
+
+            u = unique(wdataset.datid(omit{kk}));
+            subps{kk}=[];
+               
+            for pp=1:length(u)
+                subp=intersect(find(wdataset.datid==u(pp)),omit{kk});
+                subq=find(wdataset.siteid==u(pp));
+                if length(subp)>0
+                    testsitedefp1{kk}.testtsp1{pp}=wdataset.meantime(subp);
+                    testsitedefp1{kk}.sites(pp,:)=[wdataset.siteid(subq) ...
+                                        wdataset.sitecoords(subq,:)];
+                    testsitedefp1{kk}.names(pp)=wdataset.sitenames(subq);
+                    testsitedefp1{kk}.names2(pp)=wdataset.sitenames(subq);
+                    testsitedefp1{kk}.firstage(pp)=min(wdataset.meantime(subp));
+                    testsitedefp1{kk}.GISfp(pp)=wdataset.siteGISfp(subq);
+                    testsitedefp1{kk}.GIA(pp)=wdataset.siteGIA(subq);
+                end
+                subps{kk}=[subps{kk} ; subp];
+            end
+            
+                
+        end
+        
+        for kk=1:Nk
+            disp(kk);
+            
+            [intr,ij,ik] = intersect(trainsub,trainsubdo{kk});
+            pd=passderivs;
+            pd.dK=pd.dK(ij);
+            pd.yoffset=pd.yoffset(ij);
+            pd.df=pd.df(ij);
+            
+            [fp1(subps{kk}),sdp1(subps{kk}),Vp1,testlocp1]=RegressHoloceneDataSets(wdataset,testsitedefp1{kk},modelspec(trainspecs(ii)),thetTGG{ii},trainsubdo{kk},ones(1,length(thetTGG{ii})),testsitedefp1{kk}.testtsp1,refyear,collinear,pd);
+            
+            L=chol(V[1,'lower');
+            alfa=L'\(L\(wdataset.Y(subps{kk})'-fp1(subps{kk})));
+            
+            logpps(subps{kk}) = -.5 * (wdataset.Y(subps{kk})'-fp1(subps{kk})*alfa - .5 * log(2*pi) * length(subps{kk}) - sum(log(diag(L)));
+            
+        end
+        logpp(ii)=sum(logpps);     
+end
+
 
 save thetTGG thetTGG trainsubsubset
 
