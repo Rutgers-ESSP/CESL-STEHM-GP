@@ -1,4 +1,4 @@
-function [dK,df,d2f,yoffset,f0] = GPRdx2(x0,y0,dx0,dy0,cvfunc0,Nderivs,spacex,varargin)
+function [dK,df,d2f,yoffset,f0] = GPRdx(x0,y0,dx0,dy0,cvfunc0,Nderivs,spacex,varargin)
 
 % [dK,df,d2f,yoffset,f0] = GPRdx(x0,y0,dx0,dy0,cvfunc,[Nderivs],[spacex])
 % [dK,df,d2f,yoffset,f0] = GPRdx(x0,y0,dx0,dy0,modelspec)
@@ -56,7 +56,7 @@ function [dK,df,d2f,yoffset,f0] = GPRdx2(x0,y0,dx0,dy0,cvfunc0,Nderivs,spacex,va
         d2f=[];
         Ndim=1;
         yoffset=zeros(size(y0));
-
+        Nderivs=1;
     else
         
         

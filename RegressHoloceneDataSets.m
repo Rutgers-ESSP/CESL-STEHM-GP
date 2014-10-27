@@ -1,4 +1,4 @@
-function [f2s,sd2s,V2s,testlocs,logp,passderivs,invcv]=RegressHoloceneDataSets2(dataset,testsitedef,modelspec,thetTGG,trainsub,noiseMasks,testt,refyear,collinear,passderivs,invcv)
+function [f2s,sd2s,V2s,testlocs,logp,passderivs,invcv]=RegressHoloceneDataSets(dataset,testsitedef,modelspec,thetTGG,trainsub,noiseMasks,testt,refyear,collinear,passderivs,invcv)
 
 % Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Oct 26 13:43:00 EDT 2014
 
@@ -87,7 +87,7 @@ else
             mspec.cvfunc = @(x1,x2,xxx,yyy) cvfuncTGG(x1,x2,dYears(x1,x2),thetTGG,dy1y1(xxx,yyy)',fp1fp1(xxx,yyy)');
             mspec.dcvfunc = @(x1,x2,xxx,yyy) dcvfuncTGG(x1,x2,dYears(x1,x2),thetTGG,dy1y1(xxx,yyy)',fp1fp1(xxx,yyy)');
             mspec.ddcvfunc = @(x1,x2,xxx,yyy) ddcvfuncTGG(x1,x2,dYears(x1,x2),thetTGG,dy1y1(xxx,yyy)',fp1fp1(xxx,yyy)');
-            [dK,df,d2f,yoffset] = GPRdx2(meantime(trainsub),Y(trainsub),dt(trainsub),dY(trainsub),mspec,1,[1:length(trainsub)]');
+            [dK,df,d2f,yoffset] = GPRdx(meantime(trainsub),Y(trainsub),dt(trainsub),dY(trainsub),mspec,1,[1:length(trainsub)]');
         else
             wcvfunc = @(x1,x2,thet,xxx,yyy) cvfuncTGG(x1,x2,dYears(x1,x2),thet,dy1y1(xxx,yyy)',fp1fp1(xxx,yyy)');
            

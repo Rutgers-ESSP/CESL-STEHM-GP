@@ -1,6 +1,6 @@
 function [thetTGG,trainsub,logp,thethist]=OptimizeHoloceneCovariance(dataset,modelspec,optimizesteps,mintime,maxageerror,maxcompactcorrallowed,startcompact,maxcompactcorrfactor)
 
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sat Oct 25 22:55:57 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Oct 27 13:13:33 EDT 2014
 
 defval('optimizesteps',[1.1 2.11]);
 defval('mintime',-Inf);
@@ -31,6 +31,8 @@ else
     obsGISfp=ones(size(lat));
 end
 
+
+
 if (length(maxageerror)==1).*(length(maxageerror)<length(optimizesteps))
     maxageerror=repmat(maxageerror,1,length(optimizesteps));
 end
@@ -47,6 +49,15 @@ lbTGG=modelspec.lb;
 subfixed=modelspec.subfixed;
 sublength=modelspec.sublength;
 doneglob=0;
+
+analyticalderiv = 0;
+if isfield(modelspec,'ddcvfunc')
+    if length(modelspec.ddcvfunc)>0
+        dcvfuncTGG = modelspec.dcvfunc;
+        ddcvfuncTGG = modelspec.ddcvfunc;
+        analyticalderiv = 1;
+    end
+end
 
 angd= @(Lat0,Long0,lat,long) (180/pi)*(atan2(sqrt((cosd(lat).*sind(long-Long0)).^2+(cosd(Lat0).*sind(lat)-sind(Lat0).*cosd(lat).*cosd(long-Long0)).^2),(sind(Lat0).*sind(lat)+cosd(Lat0).*cosd(lat).*cosd(long-Long0))));
 
@@ -95,12 +106,12 @@ for nnn=1:length(optimizesteps)
             
         end
 
-     elseif floor(optimizesteps(nnn))>=2
+    elseif floor(optimizesteps(nnn))>=2
 
         % optimize ignoring geochronological uncertainty
-%        if donetg
-%            lbTGG(1:5) = thetTGG(1:5); % set lower bound of amplitudes and temporal scale
-%        end
+        %        if donetg
+        %            lbTGG(1:5) = thetTGG(1:5); % set lower bound of amplitudes and temporal scale
+        %        end
         if ~addedcompactcorr
             thetTGG = [thetTGG startcompact];
             ubTGG = [ubTGG maxcompactcorrfactor];
@@ -122,8 +133,8 @@ for nnn=1:length(optimizesteps)
         trainsub=intersect(trainsub,find((meantime>=mintime).*(abs(time2-time1)<maxageerror(nnn)).*(abs(compactcorr)<=maxcompactcorrallowed(nnn))));
         %trainsub=intersect(trainsub,find(datid<1e6));
         
-%        % remove extreme points
-%        trainsub=intersect(trainsub,find(abs((Y-mean(Y))/std(Y))<3));
+        %        % remove extreme points
+        %        trainsub=intersect(trainsub,find(abs((Y-mean(Y))/std(Y))<3));
         
         dt1t1=dYears(meantime(trainsub),meantime(trainsub));
         dy1y1 = dDist([lat(trainsub) long(trainsub)],[lat(trainsub) long(trainsub)]);
@@ -156,7 +167,7 @@ for nnn=1:length(optimizesteps)
         elseif opttype==0.3
             doglobs=2;
             doneglob=1;
-       elseif opttype==0.4
+        elseif opttype==0.4
             doglobs=3;
             doneglob=1;
         elseif opttype==0.5
@@ -167,11 +178,27 @@ for nnn=1:length(optimizesteps)
 
         if floor(optimizesteps(nnn))==3
             dt = abs(time2-time1)/4;
-         for doglob=doglobs
-             [thetTGG(subnotfixed),logp] = ...
-                    SLNIGPOptimize(meantime(trainsub),Y(trainsub), ...
-                                   dt(trainsub),dY(trainsub),@(thet) ...
-                                   diag(thet(end)*compactcorr(trainsub)).^2, @(x1,x2,thet,xxx,yyy) cvfuncTGG(x1,x2,dYears(x1,x2),thet(1:end-1)*Mfixed+fixedvect,dy1y1(xxx,yyy)',fp1fp1(xxx,yyy)'),thetTGG(subnotfixed),lbTGG(subnotfixed),ubTGG(subnotfixed),doglob,[1:length(trainsub)]');
+            for doglob=doglobs
+                
+                if analyticalderiv
+                    mspec.cvfunc = @(x1,x2,thet,xxx,yyy) cvfuncTGG(x1,x2,dYears(x1,x2),thet(1:end-1)*Mfixed+fixedvect,dy1y1(xxx,yyy)',fp1fp1(xxx,yyy)');
+                    mspec.dcvfunc = @(x1,x2,thet,xxx,yyy) dcvfuncTGG(x1,x2,dYears(x1,x2),thet(1:end-1)*Mfixed+fixedvect,dy1y1(xxx,yyy)',fp1fp1(xxx,yyy)');
+                    mspec.ddcvfunc = @(x1,x2,thet,xxx,yyy) ddcvfuncTGG(x1,x2,dYears(x1,x2),thet(1:end-1)*Mfixed+fixedvect,dy1y1(xxx,yyy)',fp1fp1(xxx,yyy)');
+                    
+                    [thetTGG(subnotfixed),logp] = ...
+                        SLNIGPOptimize(meantime(trainsub),Y(trainsub), ...
+                                       dt(trainsub),dY(trainsub),@(thet) ...
+                                       diag(thet(end)*compactcorr(trainsub)).^2, mspec, ...
+                                       thetTGG(subnotfixed),lbTGG(subnotfixed),ubTGG(subnotfixed),doglob,[1:length(trainsub)]');
+                else
+                    
+                    [thetTGG(subnotfixed),logp] = ...
+                        SLNIGPOptimize(meantime(trainsub),Y(trainsub), ...
+                                       dt(trainsub),dY(trainsub),@(thet) ...
+                                       diag(thet(end)*compactcorr(trainsub)).^2, @(x1,x2,thet,xxx,yyy) cvfuncTGG(x1,x2,dYears(x1,x2),thet(1:end-1)*Mfixed+fixedvect,dy1y1(xxx,yyy)',fp1fp1(xxx,yyy)'), ...
+                                       thetTGG(subnotfixed),lbTGG(subnotfixed),ubTGG(subnotfixed),doglob,[1:length(trainsub)]');
+                end
+                
                 disp(sprintf('%0.3f ',thetTGG));
             end
         else
@@ -186,11 +213,19 @@ for nnn=1:length(optimizesteps)
 
                 wcvfunc = @(x1,x2,thet,xxx,yyy) cvfuncTGG(x1,x2,dYears(x1,x2),thet,dy1y1(xxx,yyy)',fp1fp1(xxx,yyy)');
 
-            dt = abs(time2-time1)/4;
- 
+                dt = abs(time2-time1)/4;
+                
+                if analyticalderiv
+                    mspec.cvfunc = @(x1,x2,xxx,yyy) wcvfunc(x1,x2,thetTGG,xxx,yyy);
+                    mspec.dcvfunc = @(x1,x2,xxx,yyy) dcvfuncTGG(x1,x2,dYears(x1,x2),thetTGG,dy1y1(xxx,yyy)',fp1fp1(xxx,yyy)');
+                    mspec.ddcvfunc = @(x1,x2,xxx,yyy) ddcvfuncTGG(x1,x2,dYears(x1,x2),thetTGG,dy1y1(xxx,yyy)',fp1fp1(xxx,yyy)');
+                    [dK,df,d2f,yoffset] = GPRdx(meantime(trainsub),Y(trainsub),dt(trainsub),sqrt(dY(trainsub).^2+(thetTGG(end)*compactcorr(trainsub)).^2),mspec,1,[1:length(trainsub)]');
+                else
+                    
 
-                [dK,df,d2f,yoffset] = GPRdx(meantime(trainsub),Y(trainsub),dt(trainsub),sqrt(dY(trainsub).^2+(thetTGG(end)*compactcorr(trainsub)).^2),@(x1,x2,r1,r2) wcvfunc(x1,x2,thetTGG,r1,r2),1,[1:length(trainsub)]');
-
+                    [dK,df,d2f,yoffset] = GPRdx(meantime(trainsub),Y(trainsub),dt(trainsub),sqrt(dY(trainsub).^2+(thetTGG(end)*compactcorr(trainsub)).^2),@(x1,x2,r1,r2) wcvfunc(x1,x2,thetTGG,r1,r2),1,[1:length(trainsub)]');
+                    
+                end
                 doglobs=0;
                 if opttype==0.4
                     doglobs=3;
