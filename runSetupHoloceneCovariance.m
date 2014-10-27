@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sat Oct 25 19:23:58 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Oct 27 10:11:40 EDT 2014
 
 % Define some covariance functions
 
@@ -11,12 +11,10 @@ kDELTAG = @(ad,thetas)thetas(1).^2.*(abs(ad)<1e-4).*(ad<360);
 % kMat3 = @(dx,thetas)thetas(1).^2.*(1+sqrt(3)*dx/thetas(2)).*exp(-sqrt(3)*dx/thetas(2));
 % kMat1 = @(dx,thetas)thetas(1).^2.*(1).*exp(-dx/thetas(2))
 
-kMat1d = @(dx,thetas)thetas(1).^2.*(-1/thetas(2)).*exp(-dx/thetas(2));
-kMat3d = @(dx,thetas)thetas(1).^2.*(-3/(thetas(2).^2)).*dx*exp(-sqrt(3)*dx/thetas(2));
-kDPd = @(years1,years2,thetas) thetas(1).^2 * bsxfun(@times,(years1-refyear)',ones(size(years2)));
-kMat1dd = @(dx,thetas)thetas(1).^2.*(1/(thetas(2).^2)).*exp(-dx/thetas(2));
-kMat3dd = @(dx,thetas)thetas(1).^2.*(-3/(thetas(2).^2)).*(sqrt(3)*dx/thetas(2)-1)*exp(-sqrt(3)*dx/thetas(2));
-kDPdd = @(years1,years2,thetas) thetas(1).^2 * ones(length(years1),length(years2));
+kMat3d = @(years1,years2,dx,thetas)thetas(1).^2.*(-3/(thetas(2).^2)).*dx.*exp(-sqrt(3)*dx/thetas(2)).*(-1+2*bsxfun(@ge,years1',years2));
+kDPd = @(years1,years2,thetas) thetas(1).^2 * repmat((years1-refyear)',length(years2),1);
+kMat3dd = @(dx,thetas)thetas(1).^2.*(3/(thetas(2).^2)).*(1-sqrt(3)*dx/thetas(2)).*exp(-sqrt(3)*dx/thetas(2));
+kDPdd = @(years1,years2,thetas) thetas(1).^2 * ones(length(years2),length(years1));
 
 
 cvfunc.G = @(dt1t2,thetas) kMat3(dt1t2,thetas(1:2));
@@ -26,10 +24,10 @@ cvfunc.I = @(dt1t2,ad,thetas,fp1fp2,onoff) kMat3(dt1t2,thetas(1:2)) .* (onoff(1)
 cvfunc.W = @(dt1t2,ad,thetas) kDELTA(dt1t2,thetas(1)) .* kDELTAG(ad,1);
 cvfunc.f0 = @(ad,thetas) kDELTAG(ad,thetas(1));
 
-dcvfunc.G = @(dt1t2,thetas) kMat3d(dt1t2,thetas(1:2));
+dcvfunc.G = @(t1,t2,dt1t2,thetas) kMat3d(t1,t2,dt1t2,thetas(1:2));
 dcvfunc.L = @(t1,t2,ad,thetas) kDPd(t1,t2,thetas(1)) .* kMat1(ad,[1 thetas(2)]) .* (ad<360);
-dcvfunc.M = @(dt1t2,ad,thetas) kMat3d(dt1t2,thetas(1:2)) .* kMat1(ad,[1 thetas(3)]) .* (ad<360);
-dcvfunc.I = @(dt1t2,ad,thetas,fp1fp2,onoff) kMat3d(dt1t2,thetas(1:2)) .* (onoff(1) + onoff(2)*fp1fp2);
+dcvfunc.M = @(t1,t2,dt1t2,ad,thetas) kMat3d(t1,t2,dt1t2,thetas(1:2)) .* kMat1(ad,[1 thetas(3)]) .* (ad<360);
+dcvfunc.I = @(t1,t2,dt1t2,ad,thetas,fp1fp2,onoff) kMat3d(t1,t2,dt1t2,thetas(1:2)) .* (onoff(1) + onoff(2)*fp1fp2);
 dcvfunc.W = 0;
 dcvfunc.f0 = 0;
 
@@ -48,7 +46,7 @@ modelspec(1).label = 'GLMIW';
 
 modelspec(1).cvfunc =  @(t1,t2,dt1t2,thetas,ad,fp1fp2) cvfunc.G(dt1t2,thetas(1:2)) + cvfunc.L(t1,t2,ad,thetas(3:4)) + cvfunc.M(dt1t2,ad,thetas(5:7)) + cvfunc.I(dt1t2,ad,thetas(8:9),fp1fp2,thetas(10:11)) + cvfunc.W(dt1t2,ad,thetas(12)) + cvfunc.f0(ad,thetas(13));
 
-modelspec(1).dcvfunc =  @(t1,t2,dt1t2,thetas,ad,fp1fp2) dcvfunc.G(dt1t2,thetas(1:2)) + dcvfunc.L(t1,t2,ad,thetas(3:4)) + dcvfunc.M(dt1t2,ad,thetas(5:7)) + dcvfunc.I(dt1t2,ad,thetas(8:9),fp1fp2,thetas(10:11));
+modelspec(1).dcvfunc =  @(t1,t2,dt1t2,thetas,ad,fp1fp2) dcvfunc.G(t1,t2,dt1t2,thetas(1:2)) + dcvfunc.L(t1,t2,ad,thetas(3:4)) + dcvfunc.M(t1,t2,dt1t2,ad,thetas(5:7)) + dcvfunc.I(t1,t2,dt1t2,ad,thetas(8:9),fp1fp2,thetas(10:11));
 
 modelspec(1).ddcvfunc =  @(t1,t2,dt1t2,thetas,ad,fp1fp2) ddcvfunc.G(dt1t2,thetas(1:2)) + ddcvfunc.L(t1,t2,ad,thetas(3:4)) + ddcvfunc.M(dt1t2,ad,thetas(5:7)) + ddcvfunc.I(dt1t2,ad,thetas(8:9),fp1fp2,thetas(10:11));
 
@@ -162,18 +160,5 @@ freeze= [modelspec(1).subHPregmat];
 
 modelspec(ii) = modelspec(1);
 modelspec(ii).label='GLIW';
-modelspec(ii).thet0(turnoff)=0;
-modelspec(ii).subfixed=union(modelspec(ii).subfixed,freeze);
-
-%%%%%
-
-% 7.  Regional Linear + Regional Matern + GIS + White Noise (LMIW) 
-
-ii=7;
-turnoff= [modelspec(1).subampglobal];
-freeze= [modelspec(1).subHPglobal];
-
-modelspec(ii) = modelspec(1);
-modelspec(ii).label='LMIW';
 modelspec(ii).thet0(turnoff)=0;
 modelspec(ii).subfixed=union(modelspec(ii).subfixed,freeze);

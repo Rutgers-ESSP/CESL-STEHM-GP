@@ -1,6 +1,6 @@
-function [f2s,sd2s,V2s,testlocs,logp,passderivs,invcv]=RegressHoloceneDataSets(dataset,testsitedef,modelspec,thetTGG,trainsub,noiseMasks,testt,refyear,collinear,passderivs,invcv)
+function [f2s,sd2s,V2s,testlocs,logp,passderivs,invcv]=RegressHoloceneDataSets2(dataset,testsitedef,modelspec,thetTGG,trainsub,noiseMasks,testt,refyear,collinear,passderivs,invcv)
 
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Wed Apr 30 08:17:49 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Oct 26 13:43:00 EDT 2014
 
 defval('testt',[-2010:20:2010]);
 defval('refyear',2010);
@@ -17,6 +17,16 @@ end
 
 cvfuncTGG=modelspec.cvfunc;
 traincvTGG=modelspec.traincv;
+
+analyticalderiv = 0;
+if isfield(modelspec,'ddcvfunc')
+    if length(modelspec.ddcvfunc)>0
+        dcvfuncTGG = modelspec.dcvfunc;
+        ddcvfuncTGG = modelspec.ddcvfunc;
+        analyticalderiv = 1;
+    end
+end
+
 
 datid = dataset.datid;
 istg = dataset.istg;
@@ -65,8 +75,6 @@ dt1t1=dYears(meantime(trainsub),meantime(trainsub));
 dy1y1 = dDist([lat(trainsub) long(trainsub)],[lat(trainsub) long(trainsub)]);
 fp1fp1=bsxfun(@times,obsGISfp(trainsub)-1,obsGISfp(trainsub)'-1);
 
-wcvfunc = @(x1,x2,thet,xxx,yyy) cvfuncTGG(x1,x2,dYears(x1,x2),thet,dy1y1(xxx,yyy)',fp1fp1(xxx,yyy)');
-
 dK=0; df=0; d2f=0; yoffset=0;
 dt = abs(time2-time1)/4;
 if length(passderivs)>0
@@ -75,7 +83,17 @@ if length(passderivs)>0
 else
     
     if max(dt)>0
+        if analyticalderiv
+            mspec.cvfunc = @(x1,x2,xxx,yyy) cvfuncTGG(x1,x2,dYears(x1,x2),thetTGG,dy1y1(xxx,yyy)',fp1fp1(xxx,yyy)');
+            mspec.dcvfunc = @(x1,x2,xxx,yyy) dcvfuncTGG(x1,x2,dYears(x1,x2),thetTGG,dy1y1(xxx,yyy)',fp1fp1(xxx,yyy)');
+            mspec.ddcvfunc = @(x1,x2,xxx,yyy) ddcvfuncTGG(x1,x2,dYears(x1,x2),thetTGG,dy1y1(xxx,yyy)',fp1fp1(xxx,yyy)');
+            [dK,df,d2f,yoffset] = GPRdx2(meantime(trainsub),Y(trainsub),dt(trainsub),dY(trainsub),mspec,1,[1:length(trainsub)]');
+        else
+            wcvfunc = @(x1,x2,thet,xxx,yyy) cvfuncTGG(x1,x2,dYears(x1,x2),thet,dy1y1(xxx,yyy)',fp1fp1(xxx,yyy)');
+           
            [dK,df,d2f,yoffset] = GPRdx(meantime(trainsub),Y(trainsub),dt(trainsub),dY(trainsub),@(x1,x2,r1,r2) wcvfunc(x1,x2,thetTGG,r1,r2),1,[1:length(trainsub)]');
+        end
+        
     end
     passderivs.dK = dK;
     passderivs.yoffset = yoffset;

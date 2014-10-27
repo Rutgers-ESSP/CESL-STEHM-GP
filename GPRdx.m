@@ -1,7 +1,7 @@
-function [dK,df,d2f,yoffset,f0] = GPRdx(x0,y0,dx0,dy0,cvfunc0,Nderivs,spacex,varargin)
+function [dK,df,d2f,yoffset,f0] = GPRdx2(x0,y0,dx0,dy0,cvfunc0,Nderivs,spacex,varargin)
 
 % [dK,df,d2f,yoffset,f0] = GPRdx(x0,y0,dx0,dy0,cvfunc,[Nderivs],[spacex])
-% [dK,df,d2f,yoffset,f0] = GPRdx(x0,y0,dx0,dy0,cvfunc,dcvfunc)
+% [dK,df,d2f,yoffset,f0] = GPRdx(x0,y0,dx0,dy0,modelspec)
 % 
 % Calculates increment of training covariance matrix for noisy GP regression.
 %
@@ -14,7 +14,7 @@ function [dK,df,d2f,yoffset,f0] = GPRdx(x0,y0,dx0,dy0,cvfunc0,Nderivs,spacex,var
 %     f0: noise-free mean projection at x0 
 %
 %    
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Oct 26 13:24:49 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Oct 27 12:04:58 EDT 2014
 
 %%%%%
 
@@ -25,26 +25,38 @@ function [dK,df,d2f,yoffset,f0] = GPRdx(x0,y0,dx0,dy0,cvfunc0,Nderivs,spacex,var
     defval('spacex',[]);
     if isstruct(cvfunc0)
         doanalytical=1;
-        cvfunc = Nderivs.cvfunc;
-        dcvfunc = Nderivs.dcvfunc;
-        ddcvfunc = Nderivs.ddcvfunc;
-        Nderivs=1;
     else
         doanalytical=0;
     end
     
     if doanalytical
+        if length(spacex)~=length(x0)
+            cvfunc = @(x1,x2,r1,r2) cvfunc0.cvfunc(x1,x2);
+            dcvfunc = @(x1,x2,r1,r2) cvfunc0.dcvfunc(x1,x2);
+            ddcvfunc = @(x1,x2,r1,r2) cvfunc0.ddcvfunc(x1,x2);
+            spacex = ones(size(x0));
+        else
+            cvfunc = @(x1,x2,r1,r2) cvfunc0.cvfunc(x1,x2,r1,r2);
+            dcvfunc = @(x1,x2,r1,r2) cvfunc0.dcvfunc(x1,x2,r1,r2);
+            ddcvfunc = @(x1,x2,r1,r2) cvfunc0.ddcvfunc(x1,x2,r1,r2);
+        end
+        
+        testcv = cvfunc(x0,x0,spacex,spacex);
+        dtestcv = dcvfunc(x0,x0,spacex,spacex);
+        ddtestcv = ddcvfunc(x0,x0,spacex,spacex);
         if min(size(dy0))==1
             traincv = testcv+diag(dy0).^2;
         else
             traincv = testcv + dy0;
         end
-        testcv = cvfunc(x0,x0);
-        dtestcv = dcvfunc(x0,x0);
-        ddtestcv = ddcvfunc(x0,x0);
-        [f0,~,~,~,~,~,invcv] = GaussianProcessRegression(x0,y0,x0,traincv,testcv,testcv);
-        [df,dV]= GaussianProcessRegression(x0,y0,x,traincv,dtestcv,ddtestcv);
+  
+        %[f0,~,~,~,~,~,invcv] = GaussianProcessRegression(x0,y0,x0,traincv,testcv',testcv);
+        f0=[];
+        [df,dV]= GaussianProcessRegression(x0,y0,x0,traincv,dtestcv',ddtestcv);
         d2f=[];
+        Ndim=1;
+        yoffset=zeros(size(y0));
+
     else
         
         
@@ -86,7 +98,7 @@ function [dK,df,d2f,yoffset,f0] = GPRdx(x0,y0,dx0,dy0,cvfunc0,Nderivs,spacex,var
             traincv = testcv + dy0;
         end
 
-        [f0,~,~,~,~,~,invcv] = GaussianProcessRegression(x0,y0,x0,traincv,testcv,testcv);
+        [f0,~,~,~,~,~,invcv] = GaussianProcessRegression(x0,y0,x0,traincv,testcv',testcv);
         df=zeros(length(y0),1);
         dK=zeros(length(y0),1);
 
