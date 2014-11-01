@@ -1,6 +1,6 @@
 % Master script for Common Era proxy + tide gauge sea-level analysis
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Oct 27 12:27:35 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sat Nov 01 09:52:52 EDT 2014
 
 dosldecomp = 0;
 
@@ -11,7 +11,7 @@ IFILES=[pd '/IFILES'];
 addpath(pd)
 savefile='~/tmp/CESL';
 
-WORKDIR='141027';
+WORKDIR='141101';
 if ~exist(WORKDIR,'dir')
     mkdir(WORKDIR);
 end
@@ -44,10 +44,18 @@ addpath(pwd)
 
 trainsets=[]; trainspecs=[]; trainlabels={};
              
-for ii=1:length(modelspec)
-    trainsets(ii) = 5;
-    trainspecs(ii) = ii;
-    trainlabels = {trainlabels{:}, [datasets{trainsets(ii)}.label '_' modelspec(ii).label]};
+
+% $$$ for ii=1:length(modelspec)
+% $$$     trainsets(ii) = 5;
+% $$$     trainspecs(ii) = ii;
+% $$$     trainlabels = {trainlabels{:}, [datasets{trainsets(ii)}.label '_' modelspec(ii).label]};
+% $$$ end
+
+trainsets = 5;
+trainspecs = 5;
+
+for ii=1:length(trainsets)
+    trainlabels = {trainlabels{:}, [datasets{trainsets(ii)}.label '_' modelspec(trainspecs(ii)).label]};
 end
 
 trainrange=[100 100 2000 2000];
