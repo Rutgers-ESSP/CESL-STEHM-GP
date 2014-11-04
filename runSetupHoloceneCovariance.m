@@ -1,4 +1,15 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Oct 27 13:33:05 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Tue Nov 04 08:01:07 EST 2014
+
+% 1. GLMIW
+% 2. LMW
+% 3. LMIW
+% 4. GLW
+% 5. GLMW
+% 6. GLIW
+% 7. LW
+% 8. GW
+% 9. GMW
+% 10. MW
 
 % Define some covariance functions
 
@@ -55,7 +66,7 @@ modelspec(1).traincv = @(t1,t2,dt1t2,thetas,errcv,ad,fp1fp2) modelspec(1).cvfunc
 tluTGG = [
 
 100 1 1e4 % global non-GIS amplitude
-1e3 1 3e3 % time scale
+1e3 1 3e4 % time scale
 
 .5 1e-3 100 % linear regional amplitude
 5 .5 50 %  linear regional length scale
@@ -157,5 +168,54 @@ freeze= [modelspec(1).subHPregmat];
 
 modelspec(ii) = modelspec(1);
 modelspec(ii).label='GLIW';
+modelspec(ii).thet0(turnoff)=0;
+modelspec(ii).subfixed=union(modelspec(ii).subfixed,freeze);
+
+
+%%%%%
+
+% 7. Regional Linear + White Noise (LW)
+
+ii=7;
+turnoff= [modelspec(1).subampglobal modelspec(1).subampregmat modelspec(1).subampGIS];
+freeze= [modelspec(1).subHPglobal modelspec(1).subHPregmat modelspec(1).subHPGIS];
+
+modelspec(ii) = modelspec(1);
+modelspec(ii).label='LW';
+modelspec(ii).thet0(turnoff)=0;
+modelspec(ii).subfixed=union(modelspec(ii).subfixed,freeze);
+
+% 8. GW
+
+ii=8;
+turnoff= [modelspec(1).subampregmat modelspec(1).subamplinear modelspec(1).subampGIS];
+freeze= [modelspec(1).subHPregmat modelspec(1).subHPlinear modelspec(1).subHPGIS];
+
+modelspec(ii) = modelspec(1);
+modelspec(ii).label='GW';
+modelspec(ii).thet0(turnoff)=0;
+modelspec(ii).subfixed=union(modelspec(ii).subfixed,freeze);
+
+
+% 9. GMW
+
+ii=9;
+turnoff= [modelspec(1).subamplinear modelspec(1).subampGIS];
+freeze= [modelspec(1).subHPlinear modelspec(1).subHPGIS];
+
+modelspec(ii) = modelspec(1);
+modelspec(ii).label='GMW';
+modelspec(ii).thet0(turnoff)=0;
+modelspec(ii).subfixed=union(modelspec(ii).subfixed,freeze);
+
+
+% 10. MW
+
+ii=10;
+turnoff= [modelspec(1).subampglobal modelspec(1).subamplinear modelspec(1).subampGIS];
+freeze= [modelspec(1).subHPglobal modelspec(1).subHPlinear modelspec(1).subHPGIS];
+
+modelspec(ii) = modelspec(1);
+modelspec(ii).label='MW';
 modelspec(ii).thet0(turnoff)=0;
 modelspec(ii).subfixed=union(modelspec(ii).subfixed,freeze);

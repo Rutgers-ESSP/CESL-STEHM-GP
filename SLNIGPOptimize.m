@@ -2,7 +2,7 @@ function [thet,logp,hessin,hessin2]=SLNIGPOptimize(x0,y0,dx0,dy0,traincvaug,cvfu
 
 % cvfunc must be a function of (x0,theta)
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Oct 27 13:16:33 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sat Nov 01 10:28:16 EDT 2014
 
     defval('globl',0)
 
@@ -42,7 +42,7 @@ function [thet,logp,hessin,hessin2]=SLNIGPOptimize(x0,y0,dx0,dy0,traincvaug,cvfu
         disp('Noisy Input GP Optimization - Simulated Annealing');
 
         rng(10,'twister') % for reproducibility
-        fitoptions=saoptimset('Display','iter','MaxFunEval',8000,'TolFun',2e-2,'TemperatureFcn',@temperaturefast,'TimeLimit',4000,'StallIterLimit',1000);
+        fitoptions=saoptimset('Display','iter','MaxFunEval',8000,'TolFun',2e-2,'TemperatureFcn',@temperaturefast,'TimeLimit',6000,'StallIterLimit',1000);
         [optm1.coeffs,optm1.fval] = simulannealbnd(@(x) -logprobNI(x0,y0,dx0,dy0,traincvaug,cvfunc,exp(x),spacex),log(thet0),log(lb),log(ub),fitoptions); 
     else
         disp('Noisy Input GP Optimization - FMinCon');

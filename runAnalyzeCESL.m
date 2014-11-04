@@ -1,17 +1,17 @@
 % Master script for Common Era proxy + tide gauge sea-level analysis
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sat Nov 01 09:52:52 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Tue Nov 04 18:09:17 EST 2014
 
 dosldecomp = 0;
 
 pd=pwd;
-addpath('~/Dropbox/Code/TGAnalysis/MFILES');
+%addpath('~/Dropbox/Code/TGAnalysis/MFILES');
 addpath([pd '/MFILES']);
 IFILES=[pd '/IFILES'];
 addpath(pd)
 savefile='~/tmp/CESL';
 
-WORKDIR='141101';
+WORKDIR='141103';
 if ~exist(WORKDIR,'dir')
     mkdir(WORKDIR);
 end
@@ -25,12 +25,7 @@ firsttime=-1000;
 runSetupHoloceneCovariance;
 runImportHoloceneDataSets;
 
-addpath('~/Dropbox/Code/TGAnalysis/MFILES');
-addpath([pd '/MFILES']);
-addpath(pd)
-
 save(savefile,'datasets','modelspec');
-addpath(pwd)
 
 % let's start with full data set, but no sites requiring compaction correction 
 % then add a compaction correction as a last step
@@ -51,8 +46,11 @@ trainsets=[]; trainspecs=[]; trainlabels={};
 % $$$     trainlabels = {trainlabels{:}, [datasets{trainsets(ii)}.label '_' modelspec(ii).label]};
 % $$$ end
 
-trainsets = 5;
-trainspecs = 5;
+% we will run: GLMW (5), LMW (2), GLW (4), GMW (9), LW (7), GW (8), MW (10)
+
+trainspecs = [5 2 4 9 7 8 10];
+trainsets = [5*ones(size(trainspecs)) 1*ones(size(trainspecs))];
+trainspecs = [trainspecs trainspecs];
 
 for ii=1:length(trainsets)
     trainlabels = {trainlabels{:}, [datasets{trainsets(ii)}.label '_' modelspec(trainspecs(ii)).label]};

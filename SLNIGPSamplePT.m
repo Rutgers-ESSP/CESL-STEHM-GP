@@ -1,22 +1,29 @@
-function [thet,logp,acceptedcount]=SLNIGPSamplePT(x0,y0,dx0,dy0,traincvaug,modelspec,thet0,lb,ub,spacex,temps,Nsamples,Nthin,Nburnin,savefile,plotfile)
+function [thet,logp,acceptedcount]=SLNIGPSamplePT(x0,y0,dx0,dy0,traincvaug,modelspec,thet0,lb,ub,spacex,Ntemps,Nsamples,Nthin,Nburnin,stepsize,savefile,plotfile)
 
 % Parallel tempering MCMC
 % note does not yet implement thinning/burnin
 % currently using log step sizes (I think equivalent to a log-uniform prior)
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sat Nov 01 09:56:15 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sat Nov 01 14:14:43 EDT 2014
 
     defval('spacex',ones(size(x0)));
     defval('Nsamples',1000);
     defval('Nthin',10);
     defval('Nburnin',10);
     defval('savefile','');
-    defval('temps',1:4);
+    defval('Ntemps',4);
     defval('plotfile','');
+    defval('deltaT',.1)
 
+    temps = 1./[1+deltaT*(0:(Ntemps-1))];
+    disp(['Temperatures: ' sprintf('%0.2f ',temps)]);
+    
     %stepsize=(log(ub)-log(lb))/1000;
-    stepsize=ones(size(thet0))*0.01; % 1% change in value
-    Ntemps=length(temps);
+    defval('stepsize',ones(size(thet0))*0.1); % 10% change in value
+    if length(stepsize)==1
+        stepsize=ones(size(thet0))*stepsize;
+    end
+    
     
     testfunc = @logprobNI;
     
@@ -38,22 +45,28 @@ function [thet,logp,acceptedcount]=SLNIGPSamplePT(x0,y0,dx0,dy0,traincvaug,model
                 proposal = wthet;
                 proposal(ii) = exp(log(wthet(ii)) + randn*stepsize(ii));
                 logpproposed=testfunc(x0,y0,dx0,dy0,traincvaug,modelspec,proposal,spacex);
-                if (log(rand) < ((logpproposed-logpold)*temps(pp))).*(sum(proposal<lb)==0).*(sum(proposal>ub)==0)
-                    disp(sprintf('%0.0f -- Round %0.0f - %0.0f -- accepted -- %0.3f (%0.3f)',[pp nn ii logpproposed wlogpold]));
+                selector=log(rand);
+                cutoff = (logpproposed-wlogpold)*temps(pp);
+                boundsok = (sum(proposal<lb)==0).*(sum(proposal>ub)==0);
+                if ~boundsok
+                    disp(sprintf('%0.0f -- Round %0.0f - %0.0f -- out of bounds',[pp nn ii]));
+                elseif (selector < cutoff)
+                    disp(sprintf('%0.0f -- Round %0.0f - %0.0f -- accepted %0.2f -- %0.3f (%0.3f) -- %0.3f < %0.3f',[pp nn ii proposal(ii) logpproposed wlogpold exp(selector) exp(cutoff)]));
                     wlogpold = logpproposed;
                     wthet = proposal;
                     acceptedcount(nn,pp) = acceptedcount(nn,pp)+1/length(thet0);
                 else
-                    disp(sprintf('%0.0f -- Round %0.0f - %0.0f -- rejected -- %0.3f (%0.3f)',[pp nn ii logpproposed wlogpold]));
+                    disp(sprintf('%0.0f -- Round %0.0f - %0.0f -- rejected %0.2f -- %0.3f (%0.3f) -- %0.3f > %0.3f',[pp nn ii proposal(ii) logpproposed wlogpold exp(selector) exp(cutoff)]));
                 end
             end
             logp(nn,pp)=wlogpold;
             thet(nn,:,pp) = wthet;
+            disp([sprintf('%0.0f -- ',pp) sprintf('%0.2f ',wthet)]);
         end
         
         % now mix
         mixers=randperm(Ntemps);
-        for ppp=1:2:length(mixers)
+        for ppp=1
             m1=mixers(ppp); m2=mixers(ppp+1);
             logpmix = temps(m1)*logp(nn,m2) + temps(m2)*logp(nn,m1) - temps(m1)*logp(nn,m1) - temps(m2)*logp(nn,m2);
             if log(rand) < logpmix
