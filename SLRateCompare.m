@@ -1,6 +1,6 @@
 function [fslopeavg,sdslopeavg,fslopeavgdiff,sdslopeavgdiff,diffplus,diffless]=SLRateCompare(wf,wV,testsites,testreg,testts,firstyears,lastyears)
 
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon May 05 15:26:49 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Wed Nov 05 22:41:45 EST 2014
 
 defval('firstyears',[0 1000]);
 defval('lastyears',[1800 1800]);
@@ -64,4 +64,9 @@ sdslope(find(sdslope>1e4))=NaN;
 if dodiff
     fslopediff(find(sdslopediff>1e4))=NaN;
     sdslopediff(find(sdslopediff>1e4))=NaN;
+else
+    fslopeavgdiff=[];
+    sdslopeavgdiff=[];
+    diffplus=[];
+    diffless=[];
 end
