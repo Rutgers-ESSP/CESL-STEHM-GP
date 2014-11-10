@@ -23,7 +23,7 @@ for ii=1:length(trainspecs)
         fprintf(fid,[trainlabels{iii} '\t' datasets{trainsets(iii)}.label '\t' ...
                      modelspec(trainspecs(iii)).label]);
         fprintf(fid,['\t(%0.2f)'],logp(iii));
-        fprintf(fid,'\t%0.0f',length(trainsubsubset{ii}));
+        fprintf(fid,'\t%0.0f',length(trainsubsubset{iii}));
         fprintf(fid,'\t%0.3f',thetTGG{iii});
         fprintf(fid,'\n');
     end

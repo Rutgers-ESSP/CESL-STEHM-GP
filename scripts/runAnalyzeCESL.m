@@ -1,8 +1,14 @@
 % Master script for Common Era proxy + tide gauge sea-level analysis
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Tue Nov 04 18:09:17 EST 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Nov 09 09:50:00 EST 2014
 
-dosldecomp = 0;
+% to do items:
+% 1) GSL comparison plots
+% 2) subset analyses with local optimization
+% 3) ice sheet constraints
+% 4) MCMC
+
+dosldecomp = 1;
 
 pd=pwd;
 %addpath('~/Dropbox/Code/TGAnalysis/MFILES');
@@ -12,7 +18,7 @@ IFILES=[pd '/IFILES'];
 addpath(pd)
 savefile='~/tmp/CESL';
 
-WORKDIR='141103';
+WORKDIR='141109';
 if ~exist(WORKDIR,'dir')
     mkdir(WORKDIR);
 end
@@ -28,69 +34,20 @@ runImportHoloceneDataSets;
 
 save(savefile,'datasets','modelspec');
 
-% let's start with full data set, but no sites requiring compaction correction 
-% then add a compaction correction as a last step
-
-%trainsets=[3 4 1 5];
-%trainspecs=[1 1 1 1];
-%trainlabels={'trTGPXnoEH','trTGPXGSLnoEH','trTGPX','trTGPXGSL'};
-
-% need to see what happens if we drop EH from a constrained data set 
-
-
-trainsets=[]; trainspecs=[]; trainlabels={};
-             
-
-% $$$ for ii=1:length(modelspec)
-% $$$     trainsets(ii) = 5;
-% $$$     trainspecs(ii) = ii;
-% $$$     trainlabels = {trainlabels{:}, [datasets{trainsets(ii)}.label '_' modelspec(ii).label]};
-% $$$ end
-
 % we will run: GLMW (5), LMW (2), GLW (4), GMW (9), LW (7), GW (8), MW (10)
 
 trainspecs = [5 2 4 9 7 8 10];
 trainsets = [5*ones(size(trainspecs)) 1*ones(size(trainspecs))];
 trainspecs = [trainspecs trainspecs];
+trainfirsttime = -1000;
 
+trainlabels={};
 for ii=1:length(trainsets)
     trainlabels = {trainlabels{:}, [datasets{trainsets(ii)}.label '_' modelspec(trainspecs(ii)).label]};
 end
 
-trainrange=[100 100 2000 2000];
-trainfirsttime = -1000;
-
-clear thetTGG thethist trainsubsubset logp;
-for ii=1:length(trainspecs)
-    % first only fit ones without a compaction correction
-    [thetTGG{ii},trainsubsubset{ii},logp(ii),thethist{ii}]= ...
-        OptimizeHoloceneCovariance(datasets{trainsets(ii)}, ...
-                                   modelspec(trainspecs(ii)),[2.4 3.4 3.4 3.0],trainfirsttime,trainrange,.01);
-
-    % now add compaction correction factor
-    ms = modelspec(trainspecs(ii));
-    ms.thet0 = thetTGG{ii}(1:end-1);
-    ms.subfixed = 1:length(ms.thet0);
-    [thetTGG{ii},trainsubsubset{ii},logp(ii),thist]= ...
-        OptimizeHoloceneCovariance(datasets{trainsets(ii)}, ...
-                                   ms,[3.4 3.0],trainfirsttime(end),trainrange(end),1e6);   
-    thethist{ii}=[thethist{ii}; thist];
-    
-    fid=fopen('thetTGG.tsv','w');
-    fprintf(fid,'set\ttraining data\tmodel\tlogp\tN\n');
-    for iii=1:length(thetTGG)
-        fprintf(fid,[trainlabels{iii} '\t' datasets{trainsets(iii)}.label '\t' ...
-                     modelspec(trainspecs(iii)).label]);
-        fprintf(fid,['\t(%0.2f)'],logp(iii));
-        fprintf(fid,'\t%0.0f',length(trainsubsubset{ii}));
-        fprintf(fid,'\t%0.3f',thetTGG{iii});
-        fprintf(fid,'\n');
-    end
-    fclose(fid);
-end
-
+runTrainModels;
 % runCrossValidateModels;
-
 
 save thetTGG thetTGG trainsubsubset
 save(savefile);
@@ -100,17 +57,19 @@ save(savefile);
 % define prediction sites
 
 clear Loc cnt oldest testsitedef;
+wdataset = datasets{1};
+distfrom = dDist(wdataset.sitecoords,wdataset.sitecoords);
 preserveall={'North Carolina','New Jersey','Florida','Nova Scotia'};
-for ii=1:length(PX.sitenames)
+for ii=1:length(wdataset.sitenames)
     s0=0;
     for jj=1:length(preserveall)
-        s0=s0+length(strfind(PX.sitenames{ii},preserveall{jj}));
+        s0=s0+length(strfind(wdataset.sitenames{ii},preserveall{jj}));
     end
-    s=strfind(PX.sitenames{ii},'-');
+    s=strfind(wdataset.sitenames{ii},'-');
     if (s>0).*(s0==0)
-        Loc{ii}=PX.sitenames{ii}(1:s-1);
+        Loc{ii}=wdataset.sitenames{ii}(1:s-1);
     else
-        Loc{ii}=PX.sitenames{ii};
+        Loc{ii}=wdataset.sitenames{ii};
     end
     sub=strfind(Loc{ii},' ');
     Loc{ii}=Loc{ii}(setdiff(1:length(Loc{ii}),sub));
@@ -123,12 +82,19 @@ for ii=1:length(PX.sitenames)
     end
 end
 [uLoc,ui]=unique(Loc);
+clear oldestnear;
+for ii=1:length(wdataset.sitenames)
+    sub=find(distfrom(ii,:)<5);
+    oldestnear(ii) = min(oldest(sub));
+end
 
 clear testsitedef;
 testsitedef.sites=[0 1e6 1e6];
 testsitedef.names={'GSL'};
 testsitedef.names2={'GSL'};
 testsitedef.firstage=min(oldest);
+testsitedef.oldest=min(oldest);
+testsitedef.youngest=2014;
 
 for ii=1:length(uLoc)
     sub=find(strcmpi(uLoc{ii},Loc));
@@ -138,19 +104,21 @@ for ii=1:length(uLoc)
         testsitedef.sites(end+1,:)=[PX.datid(si) PX.lat(si) PX.long(si)];
         testsitedef.names2={testsitedef.names2{:}, PX.sitenames{sub(mi)}};
         testsitedef.names={testsitedef.names{:}, uLoc{ii}};
-        testsitedef.firstage = [testsitedef.firstage min(oldest(sub))];
+        testsitedef.firstage = [testsitedef.firstage min(oldestnear(sub))];
+        testsitedef.oldest = [testsitedef.oldest (oldest(sub(mi)))];
+        testsitedef.youngest = [testsitedef.youngest (youngest(sub(mi)))];
     end
 end
-for si=1:length(TGNOCW.siteid)
-        testsitedef.sites(end+1,:)=[TGNOCW.siteid(si) TGNOCW.sitecoords(si,:)];
-        testsitedef.names2={testsitedef.names2{:}, TGNOCW.sitenames{si}};
-        u=TGNOCW.sitenames{si};
-        testsitedef.names={testsitedef.names{:}, u(setdiff(1:length(u),strfind(u,' ')))};
-        
-        sub=find(TGNOCW.datid==TGNOCW.siteid(si));
-        TGoldest=min(TGNOCW.meantime(sub));
-        testsitedef.firstage = [testsitedef.firstage TGoldest];
-end
+% $$$ for si=1:length(TGNOCW.siteid)
+% $$$         testsitedef.sites(end+1,:)=[TGNOCW.siteid(si) TGNOCW.sitecoords(si,:)];
+% $$$         testsitedef.names2={testsitedef.names2{:}, TGNOCW.sitenames{si}};
+% $$$         u=TGNOCW.sitenames{si};
+% $$$         testsitedef.names={testsitedef.names{:}, u(setdiff(1:length(u),strfind(u,' ')))};
+% $$$         
+% $$$         sub=find(TGNOCW.datid==TGNOCW.siteid(si));
+% $$$         TGoldest=min(TGNOCW.meantime(sub));
+% $$$         testsitedef.firstage = [testsitedef.firstage TGoldest];
+% $$$ end
 
 
 GISfpt.lat=GISfplat;
@@ -212,9 +180,7 @@ for iii=1:length(regresssets)
     
    runTableTGandProxyData;
     
-    if dosldecomp
-        makeplots_sldecomp(wdataset,f2s{ii,jj},sd2s{ii,jj},V2s{ii,jj},testlocs{ii,jj},labl,[1 2],0);
-    end
+    if dosldecomp; makeplots_sldecomp(wdataset,f2s{ii,jj},sd2s{ii,jj},V2s{ii,jj},testlocs{ii,jj},labl,[1 2],0); end
     
     testreg=testlocs{ii,jj}.reg;
     testsites=testlocs{ii,jj}.sites;
@@ -227,7 +193,12 @@ for iii=1:length(regresssets)
     runTableRates;
     runOutputGSL;
     % runGIARateComparison;
-    % runSensitivityTests;
+    
+    if iii=1
+        runSensitivityTests;
+        runPlotOtherGSLCurves;
+    end
+    
 
     %%%%
  
@@ -236,4 +207,4 @@ for iii=1:length(regresssets)
 
 end
 
-runOutputForcingProxies;
+%runOutputForcingProxies;

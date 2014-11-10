@@ -8,7 +8,7 @@ firstyears=[0   -500 1000 1500 1800 1900];
     
     fid=fopen(['linrates' labl '.tsv'],'w');
     fprintf(fid,['Regional+Local Linear Rates (mm/y), ' labl '\n']);
-    fprintf(fid,'Site\tSiteID\tLat\tLong\tICE5G VM2-90\tRate (linear)\t2s');
+    fprintf(fid,'Site\tSiteID\tLat\tLong\tOldest\tYoungest\tICE5G VM2-90\tRate (linear)\t2s');
     for pp=1:length(firstyears)
         fprintf(fid,'\tRate (avg, %0.0f-%0.0f)\t2s',[firstyears(pp) lastyears(pp)]);
     end
@@ -22,6 +22,8 @@ firstyears=[0   -500 1000 1500 1800 1900];
     for kk=1:size(testsites,1)
         fprintf(fid,testnames2{kk});
         fprintf(fid,'\t%0.2f',testsitedef.sites(kk,:));
+        fprintf(fid,'\t%0.0f',testsitedef.oldest(kk));
+        fprintf(fid,'\t%0.0f',testsitedef.youngest(kk));       
         fprintf(fid,'\t%0.2f',testsitedef.GIA(kk));
         fprintf(fid,'\t%0.2f',[fslopelin(kk) 2*sdslopelin(kk)]);
         for pp=1:length(firstyears)

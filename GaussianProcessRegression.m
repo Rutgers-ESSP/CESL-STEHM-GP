@@ -1,4 +1,4 @@
-function [f,V,logp,alfa,errorflags,invtraincv,invcv] = GaussianProcessRegression(x0,y0,x,traincv,cvfunc,varargin)
+function [f,V,logp,alfa,errorflags,invtraincv,invcv] = GaussianProcessRegression(x0,y0,x,traincv,cvfunc,testcv2,invcv)
 
 % [f,V,logp,alfa,errorflags,invtraincv,invcv] = GaussianProcessRegression(x0,y0,x,traincv,cvfunc,[testcv2],[invcv])
 %
@@ -17,27 +17,23 @@ function [f,V,logp,alfa,errorflags,invtraincv,invcv] = GaussianProcessRegression
 % 
 % Assumes a zero-mean Gaussian process; add/subtract the means separately otherwise.
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Wed Apr 30 08:25:57 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Nov 09 18:36:51 EST 2014
 
 %%%%%
     
  	errorflags=0;
 	defval('tol',1e-6);
 	defval('doChol',0);
+        defval('testcv2',[]);
 	defval('invcv',[]);
 
-	if nargin == 5
+	if length(testcv2)==0
 		testcv = feval(cvfunc,x0,x);
 		testcv2 = feval(cvfunc,x,x);
 	else
 		testcv = cvfunc;
-		testcv2 = varargin{1};
 	end
 
-	if nargin>6
-		invcv=varargin{2};
-	end
-	
 	if length(invcv)==0
 		if doChol
 			try
@@ -53,7 +49,7 @@ function [f,V,logp,alfa,errorflags,invtraincv,invcv] = GaussianProcessRegression
 				doChol = 0;
 			end
 		else
-			[alfa,invtraincv,s,r]=svdinv(traincv,y0);
+                    [alfa,invtraincv,s,r]=svdinv(traincv,y0);
 		end
 
 		if nargout>6
