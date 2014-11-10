@@ -147,7 +147,7 @@ if length(ffiles)>0
 	if prod(size(degres))==1
 		%It's a map
 		
-		parfor ind=starting:length(ffiles)
+		parfor ind=startind:length(ffiles)
 			disp(['      AGE ' num2str(age(ind))]); 
 			fname1=fullfile(fpath,ffiles(ind).name);
 			L1=L1s(ind);
