@@ -23,7 +23,8 @@ for i=1:length(files)
         if exist('ssht_inverse')
             [fp0,lo,la] = readjxms_ssht([files(i).name(1:end-3)],0,0,NaN,L3);
         else
-            [fp0,lo,la] = readjxms([files(i).name(1:end-3)],0,0,NaN,L3);
+            [fp0,lo,la] = readjxms([files(i).name(1:end-3)],0,0,NaN,[],L3);
+            lo=lo(:); la=la(:);
         end
         
 	fp(:,:,i)=fp0;

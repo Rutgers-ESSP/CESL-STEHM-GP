@@ -298,7 +298,7 @@ sub=find(ICE5Glon>180); ICE5Glon(sub)=ICE5Glon(sub)-360;
 
 [GISfp,GISfplong,GISfplat]=readFingerprintInd('gis',IFILES);
 sub=find(GISfplong>180); GISfplong(sub)=GISfplong(sub)-360;
-[GISfplong,si]=sort(GISfplong); GISfp=GISfp(:,si);
+[GISfplong,si]=sort(GISfplong); GISGISfp=GISfp(:,si);
 GISfplong=[GISfplong(end)-360 ; GISfplong];
 GISfp=[GISfp(:,end) GISfp];
 GISfp=GISfp*1000;
