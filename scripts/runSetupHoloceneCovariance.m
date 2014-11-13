@@ -13,20 +13,8 @@
 
 % Define some covariance functions
 
-TGDefineCovFuncs;
-
 refyear=2010;
-kDP = @(years1,years2,thetas) thetas(1).^2 * bsxfun(@times,(years1-refyear)',(years2-refyear));
-kDELTAG = @(ad,thetas)thetas(1).^2.*(abs(ad)<1e-4).*(ad<360);
-
-% kMat3 = @(dx,thetas)thetas(1).^2.*(1+sqrt(3)*dx/thetas(2)).*exp(-sqrt(3)*dx/thetas(2));
-% kMat1 = @(dx,thetas)thetas(1).^2.*(1).*exp(-dx/thetas(2))
-
-kMat3d = @(years1,years2,dx,thetas)thetas(1).^2.*(-3/(thetas(2).^2)).*dx.*exp(-sqrt(3)*dx/thetas(2)).*(-1+2*bsxfun(@ge,years1',years2));
-kDPd = @(years1,years2,thetas) thetas(1).^2 * repmat((years1-refyear)',length(years2),1);
-kMat3dd = @(dx,thetas)thetas(1).^2.*(3/(thetas(2).^2)).*(1-sqrt(3)*dx/thetas(2)).*exp(-sqrt(3)*dx/thetas(2));
-kDPdd = @(years1,years2,thetas) thetas(1).^2 * ones(length(years2),length(years1));
-
+CESLDefineCovFuncs;
 
 cvfunc.G = @(dt1t2,thetas) kMat3(dt1t2,thetas(1:2));
 cvfunc.L = @(t1,t2,ad,thetas) kDP(t1,t2,thetas(1)) .* kMat1(ad,[1 thetas(2)]) .* (ad<360);
