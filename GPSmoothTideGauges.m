@@ -10,7 +10,7 @@ function [TGdata2s,thetL,TGmodellocal] = GPSmoothTideGauges(TGdata,winlengths,op
 %   thinlength: spacing of data to output, same length as winlength (default = winlength - 1)
 %   thetL0: hyperparameters of GP model (default optimizes)
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun May 25 16:53:21 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Nov 17 20:58:14 EST 2014
 %
 
 defval('thetL0',[]);
@@ -19,7 +19,7 @@ defval('thinlengths',max(1,winlengths));
 defval('optimizemode',1.1); % set to 1.0 for local optimization only
 defval('thinyrstart',[]);
 
-TGDefineCovFuncs;
+CESLDefineCovFuncs;
 
 TGmodellocal.cvfunc=@(t1,t2,dt1t2,thetas,dy1y2,fp1fp2) kDP(t1,t2,thetas(1)) + kMatG(dt1t2,thetas(2:4)) + kDELTAG(dy1y2,thetas(5));
 TGmodellocal.traincv = @(t1,t2,dt1t2,thetas,errcv,ad,fp1fp2) TGmodellocal.cvfunc(t1,t2,dt1t2,thetas,ad,fp1fp2) + errcv;

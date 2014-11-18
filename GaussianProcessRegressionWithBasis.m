@@ -108,7 +108,7 @@ function [basisest,basisestcv,f,V,fbasis,Vbasis,ferr,Verr,logp,alfa,errorflags,i
                 invcv.Binv = Binv;
             end
         end
-        
+
         basisprec = (Binv + basistrain * invtraincv * basistrain');
         basisest = basisprec \ (basistrain * alfa + Binv * basismean);
  

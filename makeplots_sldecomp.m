@@ -1,6 +1,7 @@
-function makeplots_sldecomp(dataset,f2s,sd2s,V2s,testloc,labl,doplots,difftimestep,xlim0)
+function makeplots_sldecomp(dataset,f2s,sd2s,V2s,testloc,labl,doplots,difftimestep,xlim0,maxdistfrom)
 
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sat Oct 11 14:52:40 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Nov 12
+% 2014
 
 
 
@@ -13,6 +14,7 @@ defval('labl','');
 defval('doplots',[]);
 defval('difftimestep',100);
 defval('xlim0',[-1000 2010]);
+defval('maxdistfrom',.1)
 
 numrows=1+(difftimestep>0);
 
@@ -45,7 +47,7 @@ for i=1:size(testsites,1)
 	figure;
 	subA = find(testreg == testsites(i,1));
 	distfrom=dDist(testsites(i,2:3),[lat long]);
-	subB=find(distfrom<.1);
+	subB=find(distfrom<maxdistfrom);
 	
 	clf; clear hp;
 	
@@ -149,7 +151,7 @@ for i=1:size(testsites,1)
         
 	title(hp(1),testnames2{i})
 	longticks(hp);
-	[bh,th]=label(hp,'ul',12,[],0,1,1,1.5,1.5); 
+    try; [bh,th]=label(hp,'ul',12,[],0,1,1,1.5,1.5); end
 	
 	pdfwrite(['sldecomp_' testnames{i} labl])
 

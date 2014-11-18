@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Nov 9 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Nov 17 22:44:36 EST 2014
 
 defval('firsttime',-1000);
 
@@ -244,23 +244,60 @@ TGoldS = GPSmoothTideGauges(TGold,11,1.0,10,[],1700);
 optimizemode=1.0;
 
 psmsldir=fullfile(IFILES,'rlr_annual');
-gslfile=fullfile(IFILES,'/CSIRO_Recons_gmsl_yr_2011.csv');
 
-[TG,TG0,thetL,TGmodellocal] = GPSmoothNearbyTideGauges(PX.sitecoords,[],[],[],[],[],optimizemode,psmsldir,gslfile);
+[TG,TG0,thetL,TGmodellocal] = GPSmoothNearbyTideGauges(PX.sitecoords,[],[],[],[],[],optimizemode,psmsldir,'none');
 
 % account for additional uncertainties in GSL curve;
 
-sub=find(TG.datid==0);
-GSLnewcv = TG.Ycv(sub,sub);
+gslfile=fullfile(IFILES,'Hay2014_KFandGP_GMSL.mat');
 
-% reduced degrees of freedom (1/4 year)
-GSLnewcv = GSLnewcv * 4;
+Haydat=load(gslfile);
+Hay.Y=Haydat.KF_GMSL(:);
+Hay.dY=sqrt(diag(Haydat.KF_GMSL_var));
+Hay.Ycv=Haydat.KF_GMSL_var;
+Hay.datid=0*Hay.Y;
+Hay.time1=Haydat.tt_KF;
+Hay.time2=Hay.time1;
+Hay.meantime=Hay.meantime;
+Hay.lat=ones(size(Hay.Y))*1e6;
+Hay.long=Hay.lat;
+Hay.compactcorr=0*Hay.Y;
+Hay.limiting=0*Hay.Y;
+Hay.istg=ones(size(Hay.Y));
+Hay.siteid=0;
+Hay.sitenames={'Hay_KF_GMSL'};
+Hay.sitecoords=[1e6 1e6];
+Hay.sitelen=length(Hay.Y);
 
-% 2s trend error of 0.1 mm/y over a century due to GIA
-GSLtrenderror = 0.1/2;
-GSLnewcv = GSLnewcv + bsxfun(@times,(TG.meantime(sub)-2000),(TG.meantime(sub)'-2000)) * (GSLtrenderror)^2;
-TG.dY(sub)=sqrt(diag(GSLnewcv));
-TG.Ycv(sub,sub)=GSLnewcv;
+Hayavgwin=10;
+Haystep=10;
+HayGSL=Hay;
+HayGSL.time1=1885:Haystep:2005;
+HayGSL.time2=HayGSL.time1; HayGSL.meantime=HayGSL.time1;
+M=abs(bsxfun(@minus,HayGSL.time1',Hay.time1))<=(Hayavgwin/2);
+M=bsxfun(@rdivide,M,sum(M,2));
+HayGSL.Y=M*Hay.Y;
+HayGSL.Ycv=M*Hay.Ycv*M';
+HayGSL.dY=sqrt(diag(HayGSL.Ycv));
+HayGSL.datid=0*HayGSL.Y;
+HayGSL.lat=ones(size(HayGSL.Y))*1e6;
+HayGSL.long=Hay.lat;
+HayGSL.compactcorr=0*Hay.Y;
+HayGSL.limiting=0*Hay.Y;
+HayGSL.istg=ones(size(Hay.Y));
+
+% $$$ 
+% $$$ sub=find(TG.datid==0);
+% $$$ GSLnewcv = TG.Ycv(sub,sub);
+% $$$ 
+% $$$ % reduced degrees of freedom (1/4 year)
+% $$$ GSLnewcv = GSLnewcv * 4;
+% $$$ 
+% $$$ % 2s trend error of 0.1 mm/y over a century due to GIA
+% $$$ GSLtrenderror = 0.1/2;
+% $$$ GSLnewcv = GSLnewcv + bsxfun(@times,(TG.meantime(sub)-2000),(TG.meantime(sub)'-2000)) * (GSLtrenderror)^2;
+% $$$ TG.dY(sub)=sqrt(diag(GSLnewcv));
+% $$$ TG.Ycv(sub,sub)=GSLnewcv;
 
 
 % drop near field
@@ -271,11 +308,13 @@ TG=SubsetDataStructure(TG,sub,subS);
 
 % add in old tide gauges
 TG=MergeDataStructures(TG,TGoldS);
+TGNOGSL=TG;
+TG=MergeDataStructures(TG,HayGSL);
 
 %
 
-sub=find(TG.datid~=0); subS = find(TG.siteid~=0);
-TGNOCW=SubsetDataStructure(TG,sub,subS);
+% $$$ sub=find(TG.datid~=0); subS = find(TG.siteid~=0);
+% $$$ TGNOCW=SubsetDataStructure(TG,sub,subS);
 
 
 %%%%%%%%%%%%%%%%
@@ -306,21 +345,13 @@ GISfp=GISfp*1000;
 %%%%%%
 
 clear datasets;
-datasets{1}=MergeDataStructures(TGNOCW,PX);
-datasets{2}=PX;
-datasets{3}=MergeDataStructures(TGNOCW,PXnoEH);
-datasets{4}=MergeDataStructures(TG,PXnoEH);
-datasets{5}=MergeDataStructures(TG,PX);
-datasets{6}=MergeDataStructures(TG,PXnonf);
-datasets{7}=MergeDataStructures(TGNOCW,PXnonf);
+datasets{1}=MergeDataStructures(TG,PX);
+datasets{2}=MergeDataStructures(TGNOGSL,PX);
+datasets{3}=PX;
 
-datasets{1}.label='TG+PX';
-datasets{2}.label='PX';
-datasets{3}.label='TG+PXnoEH';
-datasets{4}.label='TG+GSL+PXnoEH';
-datasets{5}.label='TG+GSL+PX';
-datasets{6}.label='TG+GSL+PXnonf';
-datasets{7}.label='TG+PXnonf';
+datasets{1}.label='TG+GSL+PX';
+datasets{2}.label='TG+PX';
+datasets{3}.label='PX';
 
 %for jj=1:length(PXsub)
 %    datasets{end+1}=MergeDataStructures(TGNOCW,PXsub{jj});

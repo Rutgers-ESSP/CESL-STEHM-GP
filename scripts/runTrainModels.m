@@ -16,6 +16,17 @@ for ii=1:length(trainspecs)
         OptimizeHoloceneCovariance(datasets{trainsets(ii)}, ...
                                    ms,[3.4 3.0],trainfirsttime(end),trainrange(end),1e6);   
     thethist{ii}=[thethist{ii}; thist];
+
+    
+    % now final local optimization
+    ms = modelspec(trainspecs(ii));
+    ms.thet0 = thetTGG{ii}(1:end-1);
+    startcompact = thetTGG{ii}(end);
+    [thetTGG{ii},trainsubsubset{ii},logp(ii),thist]= ...
+        OptimizeHoloceneCovariance(datasets{trainsets(ii)}, ...
+                                   ms,[3.0],trainfirsttime(end),trainrange(end),1e6,startcompact);   
+    thethist{ii}=[thethist{ii}; thist];
+
     
     fid=fopen('thetTGG.tsv','w');
     fprintf(fid,'set\ttraining data\tmodel\tlogp\tN\n');
