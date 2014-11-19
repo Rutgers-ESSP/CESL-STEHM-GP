@@ -274,7 +274,7 @@ Haystep=10;
 HayGSL=Hay;
 HayGSL.time1=[1885:Haystep:2005]';
 HayGSL.time2=HayGSL.time1; HayGSL.meantime=HayGSL.time1;
-M=abs(bsxfun(@minus,Hay.time1',Hay.time1))<=(Hayavgwin/2);
+M=abs(bsxfun(@minus,HayGSL.time1,Hay.time1))<=(Hayavgwin/2);
 M=bsxfun(@rdivide,M,sum(M,2));
 HayGSL.Y=M*Hay.Y;
 HayGSL.Ycv=M*Hay.Ycv*M';
