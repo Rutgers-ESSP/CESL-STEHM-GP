@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Nov 06 14:52:43 EST 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Tue Nov 18 18:44:53 EST 2014
 
 firstyears=[0    0   400 800  1200 1600 1800 1900];
 lastyears= [1800 400 800 1200 1600 1800 1900 2000];
@@ -49,7 +49,7 @@ for kk=1:size(testsites,1)
     fprintf(fid,'\t%0.2f',testsitedef.GIA(kk));
     fprintf(fid,'\t%0.2f',[fslopelin(kk) 2*sdslopelin(kk)]);
     for pp=1:length(firstyears)
-        fprintf(fid,'\t%0.2f',[fsloperef(kk,pp) 2*sdsloperef(kk,pp)]);
+        fprintf(fid,'\t%0.2f',[fslopereg(kk,pp) 2*sdslopereg(kk,pp)]);
     end
     for pp=1:length(diffplus)
         fprintf(fid,'\t%0.2f',[fsloperegdiff(kk,pp) 2*sdsloperegdiff(kk,pp)]);

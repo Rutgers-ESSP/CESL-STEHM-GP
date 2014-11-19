@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Nov 16 19:36:32 EST 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Tue Nov 18 18:52:08 EST 2014
 
 firstyears0 = [0];
 lastyears0 = [1800];
@@ -55,11 +55,6 @@ fpclusters={
 fpclusterlabels={'GIS','AIS','AIS+uni','NH','SH','SH+uni'};
 fpclusters{end+1}=fplabel;
 fpclusterlabels{end+1} = 'all';
-Mcluster=zeros(length(fpclusters),length(basisest));
-for rrr=1:length(fpclusters)
-    Mcluster(rrr,find(ismember(fplabel,fpclusters{rrr})))=1;
-end
-
 
 clear basisest basisestsd basisclustest basisclustestcv basisclustestsd GSLest GSLestsd;
 for qqq=1:length(firstyears1)
@@ -74,6 +69,11 @@ for qqq=1:length(firstyears1)
     basissub=1:size(wfpbasis,2);
     [basisest(:,qqq),basisestcv,~,~,~,~,~,~,~,~,~,~,winvcv] = GaussianProcessRegressionWithBasis([],wfslopediff,[],wtestcv+wVslopediff,wtestcv,wtestcv,wfpbasis(:,basissub)',wfpbasis(:,basissub)',zeros(length(basissub),1),diag(fpprior(basissub))*max(minpriorsd,wfslopediff(subGSL)).^2);
 
+    Mcluster=zeros(length(fpclusters),length(basisest));
+    for rrr=1:length(fpclusters)
+        Mcluster(rrr,find(ismember(fplabel,fpclusters{rrr})))=1;
+    end
+    
     basisestsd(:,qqq)=sqrt(diag(basisestcv));
     basisclustest(:,qqq)=Mcluster*basisest(:,qqq);
     basisclustestcv=Mcluster*basisestcv*Mcluster';
