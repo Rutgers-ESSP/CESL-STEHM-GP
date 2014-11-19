@@ -1,11 +1,11 @@
 % Master script for Common Era proxy + tide gauge sea-level analysis
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Nov 09 09:50:00 EST 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Tue Nov 18 19:05:35 EST 2014
 
 % to do items:
 % 1) MCMC
 
-dosldecomp = 1;
+dosldecomp = 0;
 
 pd=pwd;
 %addpath('~/Dropbox/Code/TGAnalysis/MFILES');
@@ -15,7 +15,7 @@ IFILES=[pd '/IFILES'];
 addpath(pd)
 savefile='~/tmp/CESL';
 
-WORKDIR='141117';
+WORKDIR='141118';
 if ~exist(WORKDIR,'dir')
     mkdir(WORKDIR);
 end
@@ -26,14 +26,13 @@ GIAfiles=([pd '/../GIA/RSL4/rsl*.out.gz']);
 %
 firsttime=-1000;
 
-runSetupHoloceneCovariance;
 runImportHoloceneDataSets;
+runSetupHoloceneCovariance;
 
 save(savefile,'datasets','modelspec');
 
-% we will run: GLMW (5), LMW (2), GLW (4), GMW (9), LW (7), GW (8), MW (10)
-
-trainspecs = [5 2 4 9 7 8 10];
+%trainspecs = 1:8;
+trainspecs=[1 2];
 trainsets = [1*ones(size(trainspecs))];
 trainspecs = [trainspecs trainspecs];
 trainfirsttime = -1000;
@@ -132,7 +131,7 @@ testt = [-1000:20:2000 2010];
 
 % select regression parameters
 
-regressparams=1:length(thetTGG);
+regressparams=[ 1 2];
 regresssets=ones(size(regressparams));
 clear regresslabels;
 for i=1:length(regresssets)
@@ -165,31 +164,31 @@ for iii=1:length(regresssets)
     subtimes=find(testt>=min(union(wdataset.time1,wdataset.time2)));
     
     collinear=wmodelspec.subamplinear(1);
-    [f2s{ii,jj},sd2s{ii,jj},V2s{ii,jj},testlocs{ii,jj},logp(ii,jj),passderivs,invcv]=RegressHoloceneDataSets(wdataset,testsitedef,wmodelspec,thetTGG{jj},trainsub,noiseMasks,testt(subtimes),refyear,collinear);
+    [f2s{iii},sd2s{iii},V2s{iii},testlocs{iii},logp(iii),passderivs,invcv]=RegressHoloceneDataSets(wdataset,testsitedef,wmodelspec,thetTGG{jj},trainsub,noiseMasks,testt(subtimes),refyear,collinear);
 
     labl=labls{iii}; disp(labl);
     
    runTableTGandProxyData;
     
-    if dosldecomp; makeplots_sldecomp(wdataset,f2s{ii,jj},sd2s{ii,jj},V2s{ii,jj},testlocs{ii,jj},labl,[1 2],0); end
+    if dosldecomp; makeplots_sldecomp(wdataset,f2s{iii},sd2s{iii},V2s{iii},testlocs{iii},labl,[1 2],0); end
     
-    testreg=testlocs{ii,jj}.reg;
-    testsites=testlocs{ii,jj}.sites;
-    testX=testlocs{ii,jj}.X;
-    testnames2=testlocs{ii,jj}.names2;
+    testreg=testlocs{iii}.reg;
+    testsites=testlocs{iii}.sites;
+    testX=testlocs{iii}.X;
+    testnames2=testlocs{iii}.names2;
     
     %%%%
     
-    runMapField;
     runTableRates;
     runOutputGSL;
     runFingerprintAnalysis;
     % runGIARateComparison;
+    runPlotOtherGSLCurves;
+    runMapField;
     
-    if iii=1
+    if iii==1
         %runSensitivityTests;
         runSiteSensitivityTests;
-        runPlotOtherGSLCurves;
     end
     
 

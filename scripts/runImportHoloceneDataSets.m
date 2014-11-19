@@ -258,7 +258,7 @@ Hay.Ycv=Haydat.KF_GMSL_var;
 Hay.datid=0*Hay.Y;
 Hay.time1=Haydat.tt_KF;
 Hay.time2=Hay.time1;
-Hay.meantime=Hay.meantime;
+Hay.meantime=Hay.time1;
 Hay.lat=ones(size(Hay.Y))*1e6;
 Hay.long=Hay.lat;
 Hay.compactcorr=0*Hay.Y;
@@ -272,19 +272,19 @@ Hay.sitelen=length(Hay.Y);
 Hayavgwin=10;
 Haystep=10;
 HayGSL=Hay;
-HayGSL.time1=1885:Haystep:2005;
+HayGSL.time1=[1885:Haystep:2005]';
 HayGSL.time2=HayGSL.time1; HayGSL.meantime=HayGSL.time1;
-M=abs(bsxfun(@minus,HayGSL.time1',Hay.time1))<=(Hayavgwin/2);
+M=abs(bsxfun(@minus,Hay.time1',Hay.time1))<=(Hayavgwin/2);
 M=bsxfun(@rdivide,M,sum(M,2));
 HayGSL.Y=M*Hay.Y;
 HayGSL.Ycv=M*Hay.Ycv*M';
 HayGSL.dY=sqrt(diag(HayGSL.Ycv));
 HayGSL.datid=0*HayGSL.Y;
 HayGSL.lat=ones(size(HayGSL.Y))*1e6;
-HayGSL.long=Hay.lat;
-HayGSL.compactcorr=0*Hay.Y;
-HayGSL.limiting=0*Hay.Y;
-HayGSL.istg=ones(size(Hay.Y));
+HayGSL.long=HayGSL.lat;
+HayGSL.compactcorr=0*HayGSL.Y;
+HayGSL.limiting=0*HayGSL.Y;
+HayGSL.istg=ones(size(HayGSL.Y));
 
 % $$$ 
 % $$$ sub=find(TG.datid==0);
@@ -341,6 +341,32 @@ sub=find(GISfplong>180); GISfplong(sub)=GISfplong(sub)-360;
 GISfplong=[GISfplong(end)-360 ; GISfplong];
 GISfp=[GISfp(:,end) GISfp];
 GISfp=GISfp*1000;
+%%%%%%%
+
+
+dat=importdata(fullfile(IFILES,'Grinsted2009_MobergA1B.txt'));
+Grinsted2009_Moberg.year=dat.data(:,1);
+Grinsted2009_Moberg.quantiles=[5 16 50 84 95];
+Grinsted2009_Moberg.y=dat.data(:,2:end)*1000;
+
+sub=find(mod(Grinsted2009_Moberg.year,20)==0);
+sub=intersect(sub,find(Grinsted2009_Moberg.year<=2010));
+Grinsted.Y=Grinsted2009_Moberg.y(sub,3);
+Grinsted.dY=(Grinsted2009_Moberg.y(sub,5)-Grinsted2009_Moberg.y(sub,1))/norminv(.95)/2;
+Grinsted.Ycv=(diag(Grinsted.dY)).^2;
+Grinsted.datid=0*Grinsted.Y;
+Grinsted.time1=Grinsted2009_Moberg.year(sub);
+Grinsted.time2=Grinsted.time1;
+Grinsted.meantime=Grinsted.time1;
+Grinsted.lat=ones(size(Grinsted.Y))*1e6;
+Grinsted.long=Grinsted.lat;
+Grinsted.compactcorr=0*Grinsted.Y;
+Grinsted.limiting=0*Grinsted.Y;
+Grinsted.istg=ones(size(Grinsted.Y));
+Grinsted.siteid=0;
+Grinsted.sitenames={'Grinsted_Moberg'};
+Grinsted.sitecoords=[1e6 1e6];
+Grinsted.sitelen=length(Grinsted.Y);
 
 %%%%%%
 

@@ -37,8 +37,8 @@ ms=wmodelspec;
 ms.thet0=thetTGG{jj}(1:end-1);
 startcompact = thetTGG{jj}(end);
 
-fid1=fopen('sens_theta.tsv','w');
-fid2=fopen('sens_GSLrates.tsv','w');
+fid1=fopen(['sens_theta' labl '.tsv'],'w');
+fid2=fopen(['sens_GSLrates' labl '.tsv'],'w');
 
 for qqq=1:size(sitesetsub,1)
     for rrr=1:size(sitesetsub,2)

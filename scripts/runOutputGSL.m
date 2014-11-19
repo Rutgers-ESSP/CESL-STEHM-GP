@@ -103,7 +103,7 @@
             if length(subyrs)>0
                 fprintf(fid,'\n\nLast year faster');
                 fprintf(fid,'Central year');
-                fprintf(fid,'\t%0.2f',wquants);
+                fprintf(fid,'\t%0.3f',wquants);
                 fprintf(fid,'\n');
                 
                 clear lastyrlarger;

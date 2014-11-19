@@ -11,16 +11,16 @@ Grinsted2009_Moberg.year=dat.data(:,1);
 Grinsted2009_Moberg.quantiles=[5 16 50 84 95];
 Grinsted2009_Moberg.y=dat.data(:,2:end)*1000;
 
-clf;
-refyear=2000;
-dodat=Grinsted2009_Moberg;
-sub=find(dodat.year==2000);
-doy = bsxfun(@minus,dodat.y,dodat.y(sub,:));
-plot(dodat.year,doy(:,3),'k','linew',2); hold on
-plot(dodat.year,doy(:,2),'k--'); hold on
-plot(dodat.year,doy(:,4),'k--'); hold on
-xlim([0 2010]);
-pdfwrite('Grinsted2009_Moberg');
+% $$$ clf;
+% $$$ refyear=2000;
+% $$$ dodat=Grinsted2009_Moberg;
+% $$$ sub=find(dodat.year==2000);
+% $$$ doy = bsxfun(@minus,dodat.y,dodat.y(sub,:));
+% $$$ plot(dodat.year,doy(:,3),'k','linew',2); hold on
+% $$$ plot(dodat.year,doy(:,2),'k--'); hold on
+% $$$ plot(dodat.year,doy(:,4),'k--'); hold on
+% $$$ xlim([0 2010]);
+% $$$ pdfwrite('Grinsted2009_Moberg');
 
 % extract the detrended North Carolina sea-level curve
 
@@ -67,8 +67,8 @@ for dodetrend=[1]
     
     labl2=[labl labl3];  
 
-    delete(hp(2));
-        pdfwrite(['NC_pseudoGSL' labl2]);
+    %    delete(hp(2));
+    %   pdfwrite(['NC_pseudoGSL' labl2]);
         
         NC_pseudoGSL=wf(datsub);
         NC_pseudoGSLsd=wsd(datsub);
@@ -110,4 +110,4 @@ plot(GSL_yrs,GSL-GSLsd,'k--','linew',2); hold on;
 
 legend(hp,'Grinsted (Moberg)','North Carolina-derived','GSL','Location','Northwest');
 ylabel('Detrended sea level (mm, \pm 1\sigma)'); ylim([-450 200]);
-pdfwrite('GSLcompare');
+pdfwrite(['GSLcompare' labl]);
