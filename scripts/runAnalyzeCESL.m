@@ -32,9 +32,8 @@ runSetupHoloceneCovariance;
 save(savefile,'datasets','modelspec');
 
 %trainspecs = 1:8;
-trainspecs=[1 2];
+trainspecs=1:length(trainspecs);
 trainsets = [1*ones(size(trainspecs))];
-trainspecs = [trainspecs trainspecs];
 trainfirsttime = -1000;
 
 trainlabels={};
@@ -44,6 +43,13 @@ end
 
 runTrainModels;
 % runCrossValidateModels;
+
+% add weakly informative prior
+trainspecs=[trainspecs 1];
+trainsets=[trainsets 1];
+trainlabels={trainlabels{:},['wip_' modelspec(trainspecs(end)).label]};
+thetTGG{end+1}=[500 300 1.5 8 200 150 15 20 100 0.1];
+logp(end+1)=NaN;
 
 save thetTGG thetTGG trainsubsubset
 save(savefile);
@@ -67,6 +73,9 @@ for ii=1:length(wdataset.sitenames)
 end
 for ii=1:length(wdataset.sitenames)
     sub=find(distfrom(ii,:)<5);
+    if wdataset.sitecoords(ii,1)>360
+        sub=ii;
+    end
     oldestnear(ii) = min(oldest(sub));
 end
 
@@ -78,6 +87,10 @@ testsitedef.firstage=min(oldest);
 testsitedef.oldest=min(oldest);
 testsitedef.youngest=2014;
 
+testsitedefGSL=testsitedef;
+
+runImportOtherGSLCurves;
+
 dosub=find(wdataset.siteid>0);
 for ii=dosub(:)'
     sub=find(wdataset.datid==wdataset.siteid(ii));
@@ -87,39 +100,39 @@ for ii=dosub(:)'
         
         sublett=setdiff(1:length(wdataset.sitenames{ii}),strfind(wdataset.sitenames{ii},' '));
         testsitedef.names={testsitedef.names{:}, wdataset.sitenames{ii}(sublett)};
-        testsitedef.firstage = [testsitedef.firstage oldestnear(ii)];
+        testsitedef.firstage = [testsitedef.firstage min(0,oldestnear(ii))];
         testsitedef.oldest = [testsitedef.oldest oldest(ii)];
         testsitedef.youngest = [testsitedef.youngest youngest(ii)];
     end
 end
-
-GISfpt.lat=GISfplat;
-GISfpt.long=GISfplong;
-GISfpt.fp=GISfp;
+% $$$ 
+% $$$ GISfpt.lat=GISfplat;
+% $$$ GISfpt.long=GISfplong;
+% $$$ GISfpt.fp=GISfp;
 
 ICE5G.lat=ICE5Glat;
 ICE5G.long=ICE5Glon;
 ICE5G.gia=ICE5Ggia;
 
 for ii=1:length(testsitedef.sites(:,1))
-    testsitedef.GISfp = interp2(GISfpt.long,GISfpt.lat,GISfpt.fp,testsitedef.sites(:,3),testsitedef.sites(:,2),'linear');
-    testsitedef.GISfp(find(testsitedef.sites(:,2)>100))=1;
+% $$$     testsitedef.GISfp = interp2(GISfpt.long,GISfpt.lat,GISfpt.fp,testsitedef.sites(:,3),testsitedef.sites(:,2),'linear');
+% $$$     testsitedef.GISfp(find(testsitedef.sites(:,2)>100))=1;
 
     testsitedef.GIA = interp2(ICE5G.lat,ICE5G.long,ICE5G.gia,testsitedef.sites(:,2),testsitedef.sites(:,3),'linear');
     testsitedef.GIA(find(testsitedef.sites(:,2)>100))=0;
 
 end
-GISfpt.lat=GISfplat;
-GISfpt.long=GISfplong;
-GISfpt.fp=GISfp;
+% $$$ GISfpt.lat=GISfplat;
+% $$$ GISfpt.long=GISfplong;
+% $$$ GISfpt.fp=GISfp;
 
 ICE5G.lat=ICE5Glat;
 ICE5G.long=ICE5Glon;
 ICE5G.gia=ICE5Ggia;
 
 for ii=1:length(testsitedef.sites(:,1))
-    testsitedef.GISfp = interp2(GISfpt.long,GISfpt.lat,GISfpt.fp,testsitedef.sites(:,3),testsitedef.sites(:,2),'linear');
-    testsitedef.GISfp(find(testsitedef.sites(:,2)>100))=1;
+% $$$     testsitedef.GISfp = interp2(GISfpt.long,GISfpt.lat,GISfpt.fp,testsitedef.sites(:,3),testsitedef.sites(:,2),'linear');
+% $$$     testsitedef.GISfp(find(testsitedef.sites(:,2)>100))=1;
 
     testsitedef.GIA = interp2(ICE5G.lat,ICE5G.long,ICE5G.gia,testsitedef.sites(:,2),testsitedef.sites(:,3),'linear');
     testsitedef.GIA(find(testsitedef.sites(:,2)>100))=0;
@@ -131,7 +144,7 @@ testt = [-1000:20:2000 2010];
 
 % select regression parameters
 
-regressparams=[ 1 2];
+regressparams=1:length(trainspecs);
 regresssets=ones(size(regressparams));
 clear regresslabels;
 for i=1:length(regresssets)
@@ -146,12 +159,14 @@ for iii=1:length(regresssets)
     wmodelspec = modelspec(trainspecs(jj));
     
 
-    noiseMasks = ones(4,length(thetTGG{trainspecs(jj)}));
+    noiseMasks = ones(5,length(thetTGG{trainspecs(jj)}));
     noiseMasks(1,[ wmodelspec.subampnoise]  )=0; %without linear
     noiseMasks(2,[wmodelspec.subamplinear wmodelspec.subampoffset wmodelspec.subampnoise]  )=0; %without linear
     noiseMasks(3,[setdiff(wmodelspec.subamp,wmodelspec.subamplinear)])=0; %only linear
     noiseMasks(4,[setdiff(wmodelspec.subamp,wmodelspec.subampregmat)])=0; %only regional Matern
-    noiseMasklabels={'denoised','nonlin','linear','regmat'};
+    noiseMasks(5,[setdiff(wmodelspec.subamp,[wmodelspec.subampregmat wmodelspec.subamplinear])])=0; %only regional
+    noiseMasklabels={'denoised','nonlin','linear','regmat','regional'};
+    nmReg=5;
 
     wdataset=datasets{ii};
 
@@ -184,11 +199,11 @@ for iii=1:length(regresssets)
     runFingerprintAnalysis;
     % runGIARateComparison;
     runPlotOtherGSLCurves;
-    runMapField;
     
     if iii==1
         %runSensitivityTests;
         runSiteSensitivityTests;
+        runMapField;
     end
     
 
@@ -199,4 +214,5 @@ for iii=1:length(regresssets)
 
 end
 
+runLatexTables;
 %runOutputForcingProxies;

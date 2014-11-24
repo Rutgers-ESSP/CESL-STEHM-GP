@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Tue Nov 18 18:52:08 EST 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Wed Nov 19 09:01:28 EST 2014
 
 firstyears0 = [0];
 lastyears0 = [1800];
@@ -9,12 +9,17 @@ minpriorsd = 0.2; % mm/y
 
 
 % load fingerprint patterns
-pd=pwd;
-[fp,fpname,lo,la] = readFingerprint(fullfile(IFILES,'FPRINT'));
-cd(pd);
-lo(end+1)=360;
-fp(:,end+1,:)=fp(:,1,:);
-fp=fp*1000;
+if ~exist('fpSTORED','var')
+    pd=pwd;
+    [fp,fpname,lo,la] = readFingerprint(fullfile(IFILES,'FPRINT'));
+    cd(pd);
+    lo(end+1)=360;
+    fp(:,end+1,:)=fp(:,1,:);
+    fp=fp*1000;
+    fpSTORED=fp;
+else
+    fp=fpSTORED;
+end
 
 fpwtdat=importdata(fullfile(IFILES,'FPRINT/fingerprint_region_map.csv'));
 clear fpprior wfpbasis fplabel;
@@ -51,8 +56,9 @@ fpclusters={
     {'GIS','Iceland','Baffin','Ellesmere','Svalbard','Alaska','Western_Can_US','NOVAYA_ZEMLYA','HMA_1'},
     {'WAIS','EAIS','Low_Lat_Andes','Patagonia','New_Zealand'},
     {'WAIS','EAIS','Low_Lat_Andes','Patagonia','New_Zealand','uniform'}
+    {'Iceland','Baffin','Ellesmere','Svalbard','Alaska','Western_Can_US','NOVAYA_ZEMLYA','HMA_1','Low_Lat_Andes','Patagonia','New_Zealand'},
            };
-fpclusterlabels={'GIS','AIS','AIS+uni','NH','SH','SH+uni'};
+fpclusterlabels={'GIS','AIS','AIS+uni','NH','SH','SH+uni','GICexGISAIS'};
 fpclusters{end+1}=fplabel;
 fpclusterlabels{end+1} = 'all';
 
@@ -62,8 +68,8 @@ for qqq=1:length(firstyears1)
     firstyears=[firstyears0 firstyears1(qqq)];
     lastyears=[lastyears0 lastyears1(qqq)];
 
-    wf=f2s{ii,jj}(:,1);
-    wV=V2s{ii,jj}(:,:,1);
+    wf=f2s{iii}(:,1);
+    wV=V2s{iii}(:,:,1);
     [wfslope,wsdslope,wVslope,wfy,wly,wdosite,wfslopediff,wsdslopediff,wVslopediff,wdiffsite,wdiffplus,wdiffless]=SLRateCompareCrosssite(wf,wV,testsites,testreg,testX,firstyears,lastyears);
 
     basissub=1:size(wfpbasis,2);

@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Nov 06 14:54:30 EST 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri Nov 21 16:54:55 EST 2014
 
 
     refyear=2000;
@@ -35,42 +35,55 @@
             sitesub=[sitesub q(1)];
         end
     end
+    datsub=find(ismember(testreg,testsites(sitesub,1)));
     colrs={'k'};
 
     selmask=1;
 
-    wf=Mref*f2s{ii,jj}(:,selmask);
-    wV=Mref*V2s{ii,jj}(:,:,selmask)*Mref';
+    wf=Mref(datsub,datsub)*f2s{iii}(datsub,selmask);
+    wV=Mref(datsub,datsub)*V2s{iii}(datsub,datsub,selmask)*Mref(datsub,datsub)';
     wsd=sqrt(diag(wV));
 
-    wf1900=Mref2*f2s{ii,jj}(:,selmask);
-    wV1900=Mref2*V2s{ii,jj}(:,:,selmask)*Mref2';
+    wf1900=Mref2(datsub,datsub)*f2s{iii}(datsub,selmask);
+    wV1900=Mref2(datsub,datsub)*V2s{iii}(datsub,datsub,selmask)*Mref2(datsub,datsub)';
     wsd1900=sqrt(diag(wV1900));
 
     
     for dodetrend=[0 1]
         labl3='';
+ 
         if dodetrend
-            [wf,wV,wsd]=DetrendSLReconstruction(wf,wV,testsites,testreg,testX(:,3),[0],1800,refyear);
+            [wf,wV,wsd]=DetrendSLReconstruction(wf,wV,testsites(sitesub),testreg(datsub),testX(datsub,3),[0],1800,refyear);
             labl3='_detrended';
         end
         
     
-        datsub=find(ismember(testreg,testsites(sitesub,1)));
+        clear plotdat;
+        plotdat{1}.y = wf;
+        plotdat{1}.dy = sqrt(diag(wV));
+        plotdat{1}.x = testX(datsub,3); 
+        rgb=[0 0 0];
+        
+        clf;
+        subplot(2,1,1);
+        [hl,hk]=PlotWithShadedErrors(plotdat,rgb,[],[],[],[-500 2010]);
+        labl2=[labls{iii} labl3];
+        if dodetrend
+            ylabel('Detrended GSL (mm, \pm 1\sigma)'); 
+        else
+            ylabel('GSL (mm, \pm 1\sigma)');
+        end
+        
+
+        pdfwrite(['GSL' labl2]);
 
         for timesteps=[100 400 60 40 20]
-
-            clf;
-            [hp,hl,hl2,dGSL,dGSLsd,dGSLV,outtable,difftimes,diffreg]=PlotPSLOverlay(testX(datsub,3),testreg(datsub),testsites(sitesub,1),wf(datsub),wV(datsub,datsub),colrs,testsitedef.firstage(sitesub),testt(end),0,timesteps,{'GSL'});
+ [hp,hl,hl2,dGSL,dGSLsd,dGSLV,outtable,difftimes,diffreg]=PlotPSLOverlay(testX(datsub,3),testreg(datsub),testsites(sitesub,1),wf,wV,colrs,testsitedef.firstage(sitesub),testt(end),0,timesteps,{'GSL'});
             set(hp,'xlim',[-500 2010]);
-            
-            labl2=[labl labl3];  
-
             delete(hp(2));
-            if timesteps==100
-                pdfwrite(['GSL_' num2str(timesteps) 'y' labl2]);
-            end
             
+            clf;
+                              
 
 
             fid=fopen(['GSL_' num2str(timesteps) 'y' labl2 '.tsv'],'w');
@@ -145,9 +158,9 @@
     end
 
     
-    [~,~,~,~,~,~,outtable1900]=PlotPSLOverlay(testX(datsub,3),testreg(datsub),testsites(sitesub,1),wf1900(datsub),wV1900(datsub,datsub),colrs,testsitedef.firstage(sitesub),testt(end),0,100,{'GSL'});
+    [~,~,~,~,~,~,outtable1900]=PlotPSLOverlay(testX(datsub,3),testreg(datsub),testsites(sitesub,1),wf1900,wV1900,colrs,testsitedef.firstage(sitesub),testt(end),0,100,{'GSL'});
     
-    labl2=labl;
+    labl2=labls{iii};
     fid=fopen(['GSL_' num2str(timesteps) 'y' labl2 '_ref1900.tsv'],'w');
     fprintf(fid,outtable1900);
     fclose(fid);

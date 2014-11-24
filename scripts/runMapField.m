@@ -1,7 +1,9 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri Nov 14 22:18:23 EST 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri Nov 21 13:59:31 EST 2014
 
 nulldataset=SubsetDataStructure(wdataset,1,1);
 nulldataset.meantime=2000; nulldataset.dt=0; nulldataset.dY=200e3; nulldataset.limiting=0;
+
+trainsub = find((wdataset.limiting==0));
 
 %    firstyears=[0   -500 1000 1500 1800 1900];
 %lastyears=[1800 1000 1500 1800 1900 2000];
@@ -19,9 +21,13 @@ sub=find(abs(ulat)<90); ulat=ulat(sub); ulat=ulat(:)'; ulong=ulong(:)';
 Flat=union(Flat,ulat);
 Flong=union(mod(Flong,360),mod(ulong,360));
 
-[fslopeF,sdslopeF,~,~,~,~,~,~,passderivs,invcv] = RegressRateField(wdataset,wmodelspec,thetTGG{jj},noiseMasks(1,:),Flat,Flong,firstyears,lastyears,trainsub,ICE5G,passderivs,invcv);    
-[fslopeavg,sdslopeavg,fslopeavgdiff,sdslopeavgdiff,diffplus,diffless]=SLRateCompare(f2s{ii,jj}(:,1),V2s{ii,jj}(:,:,1),testsites,testreg,testX(:,3),firstyears,lastyears);
+GSLsitesub=find(testsites==0);
+GSLdatsub=find(testreg==0);
+
+[fslopeF,sdslopeF,~,~,~,~,~,~,passderivs,invcv] = RegressRateField(wdataset,wmodelspec,thetTGG{jj},noiseMasks(1,:),Flat,Flong,firstyears,lastyears,trainsub,ICE5G);    
+[fslopeGSL,sdslopeGSL]=SLRateCompare(f2s{iii}(GSLdatsub,1),V2s{iii}(GSLdatsub,GSLdatsub,1),testsites(GSLsitesub),testreg(GSLdatsub),testX(GSLdatsub,3),firstyears,lastyears);
 [priorslope,sdpriorslope] = RegressRateField(nulldataset,wmodelspec,thetTGG{jj},noiseMasks(1,:),-80,0,firstyears,lastyears);    
+
 
 clf;
 ax = worldmap('World');
@@ -35,11 +41,12 @@ Flong1=min(Flong):max(Flong);
 
 [FLONG,FLAT]=meshgrid(Flong,Flat);
 [FLONG1,FLAT1]=meshgrid(Flong1,Flat1);
-mapped = griddata(FLONG(:),FLAT(:),fslopeF,Flong1,Flat1(:),'linear');
+mapped = griddata(FLONG(:),FLAT(:),fslopeF,Flong1,Flat1(:),'linear')+fslopeGSL;
 sdmapped = griddata(FLONG(:),FLAT(:),sdslopeF,Flong1,Flat1(:),'linear');
 
 u=sdmapped/sdpriorslope;
-threshold=max(.35,quantile(u(:),.05));
+%threshold=max(.35,quantile(u(:),.05));
+threshold=sqrt(.8);
 subbad=find((sdmapped/sdpriorslope)>threshold);
 mapped(subbad)=NaN;
 
@@ -47,7 +54,7 @@ hs1=scatterm(FLAT1(:),FLONG1(:),10,mapped(:),'filled','marker','s');
 %hs2=plotm(FLAT1(subbad),FLONG1(subbad),'o','color',[1 1 1],'markersize',4,'markerfacecolor','w','markeredgecolor','w')
 
 hold on;
-geoshow(ax, land, 'FaceColor', 'none');
+geoshow(ax, land, 'FaceColor',  [0.85 0.85 0.85]);
 
 ud=unique(wdataset.datid(find((wdataset.time2>=firstyears(qqq)).*(wdataset.time1<=lastyears(qqq)))));
 sub1=find(ismember(wdataset.siteid,ud));
@@ -59,7 +66,7 @@ hcb=colorbar;
 box on;
 %   caxis([0 1.5]);
 caxis([-1 3]);
-title({[num2str(firstyears(qqq)) '-' num2str(lastyears(qqq)) ' (mm/y)'],['GSL: ' sprintf('%0.2f \\pm %0.2f mm/y',[fslopeavg(1) 2*sdslopeavg(1)])  ' --- threshold \sigma = ' sprintf('%0.2f',threshold*sdpriorslope) ' mm/y' ]});
+title({[num2str(firstyears(qqq)) '-' num2str(lastyears(qqq)) ' (mm/y)'],['GSL: ' sprintf('%0.2f \\pm %0.2f mm/y',[fslopeGSL 2*sdslopeGSL])  ' --- threshold \sigma = ' sprintf('%0.2f',threshold) '\sigma_0' ]});
 pdfwrite(['fieldmap_' labl '_' num2str(firstyears(qqq)) '_' num2str(lastyears(qqq))]);
 
 %%%%
@@ -70,11 +77,13 @@ for qqq=1:length(firstyears2)
 
     firstyears=[0 firstyears2(qqq)];
     lastyears = [1800 lastyears2(qqq)];
+    disp(sprintf('%0.0f--%0.0f',[firstyears2(qqq) lastyears2(qqq)]));
     
-    [fslopeF,sdslopeF,~,~,fslopediffF,sdslopediffF,diffplusF,difflessF,passderivs,invcv] = RegressRateField(wdataset,wmodelspec,thetTGG{jj},noiseMasks(1,:),Flat,Flong,firstyears,lastyears,trainsub,ICE5G,passderivs,invcv);    
-    [fslopeavg,sdslopeavg,fslopeavgdiff,sdslopeavgdiff,diffplus,diffless]=SLRateCompare(f2s{ii,jj}(:,1),V2s{ii,jj}(:,:,1),testsites,testreg,testX(:,3),firstyears,lastyears);
-    [~,~,~,~,priorslope,sdpriorslope] = RegressRateField(nulldataset,wmodelspec,thetTGG{jj},noiseMasks(1,:),-80,0,firstyears,lastyears);    
-    
+    [~,~,~,~,fslopediffF,sdslopediffF,diffplusF,difflessF,passderivs,invcv] = RegressRateField(wdataset,wmodelspec,thetTGG{jj},noiseMasks(nmReg,:),Flat,Flong,firstyears,lastyears,trainsub,ICE5G,passderivs,invcv);    
+    [~,~,fslopeGSL,sdslopeGSL]=SLRateCompare(f2s{iii}(GSLdatsub,1),V2s{iii}(GSLdatsub,GSLdatsub,1),testsites(GSLsitesub),testreg(GSLdatsub),testX(GSLdatsub,3),firstyears,lastyears);
+    [~,~,~,~,priorslope,sdpriorslope] = RegressRateField(nulldataset,wmodelspec,thetTGG{jj},noiseMasks(nmReg,:),-80,0,firstyears,lastyears); 
+    fslopediffF=fslopediffF+fslopeGSL;
+
     
     clf;
     ax = worldmap('World');
@@ -88,18 +97,19 @@ for qqq=1:length(firstyears2)
     
     [FLONG,FLAT]=meshgrid(Flong,Flat);
     [FLONG1,FLAT1]=meshgrid(Flong1,Flat1);
-    mapped = griddata(FLONG(:),FLAT(:),fslopediffF,Flong1,Flat1(:),'linear');
+    mapped = griddata(FLONG(:),FLAT(:),fslopediffF,Flong1,Flat1(:),'linear');%+fslopeGSL;
     sdmapped = griddata(FLONG(:),FLAT(:),sdslopediffF,Flong1,Flat1(:),'linear');
     
     u=sdmapped/sdpriorslope;
-    threshold=max(.35,quantile(u(:),.05));
-    subbad=find((sdmapped/sdpriorslope)>threshold);
+    %    threshold=max(.35,quantile(u(:),.05));
+    threshold=sqrt(.8);
+    subbad=find(u>threshold);
     mapped(subbad)=NaN;
     
     hs1=scatterm(FLAT1(:),FLONG1(:),10,mapped(:),'filled','marker','s');
     %hs2=plotm(FLAT1(subbad),FLONG1(subbad),'o','color',[1 1 1],'markersize',4,'markerfacecolor','w','markeredgecolor','w')
     hold on;
-    geoshow(ax, land, 'FaceColor', 'none');
+    geoshow(ax, land, 'FaceColor',  [0.85 0.85 0.85]);
 
     ud=unique(wdataset.datid(find((wdataset.time2>=firstyears2(qqq)).*(wdataset.time1<=lastyears2(qqq)))));
     sub1=find(ismember(wdataset.siteid,ud));
@@ -110,9 +120,10 @@ for qqq=1:length(firstyears2)
 
     box on;
     %   caxis([0 1.5]);
-    q=caxis;
-    title({[num2str(firstyears2(qqq)) '-' num2str(lastyears2(qqq)) ' relative to 0-1800 (mm/y)'],['GSL: ' sprintf('%0.2f \\pm %0.2f mm/y',[fslopeavgdiff(1) 2*sdslopeavgdiff(1)]) ' --- threshold \sigma = ' sprintf('%0.2f',threshold*sdpriorslope) ' mm/y' ]});
-    caxis([min(0,q(1)) q(2)]);
+    q1=min(fslopediffF(:)-fslopeGSL);
+    q2=max(fslopediffF(:)-fslopeGSL);
+    caxis(fslopeGSL+[-1 1]*max(abs(q1),abs(q2)));
+    title({[num2str(firstyears2(qqq)) '-' num2str(lastyears2(qqq)) ' relative to 0-1800 (mm/y)'],['GSL: ' sprintf('%0.2f \\pm %0.2f mm/y',[fslopeGSL(1) 2*sdslopeGSL(1)]) ' --- threshold \sigma = ' sprintf('%0.2f',threshold) '\sigma_0' ]});
     
     pdfwrite(['fieldmap_rel01800_' labl '_' num2str(firstyears2(qqq)) '_' num2str(lastyears2(qqq))]);
 end

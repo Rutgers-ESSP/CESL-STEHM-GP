@@ -37,8 +37,8 @@
                 sitesub=[sitesub q(1)];
             end
         end
-        [fsl,Vsl]=SLRateMultisite(f2s{ii,jj}(:,1),V2s{ii,jj}(:,:,1),testsites(sitesub,:),testreg,testX(:,3),1000,1800);
-        [fslA,sdslA,fslAd,sdslAd]=SLRateCompare(f2s{ii,jj}(:,1),V2s{ii,jj}(:,:,1),testsites(sitesub,:),testreg,testX(:,3),[0 900],[900 1800])
+        [fsl,Vsl]=SLRateMultisite(f2s{iii}(:,1),V2s{iii}(:,:,1),testsites(sitesub,:),testreg,testX(:,3),1000,1800);
+        [fslA,sdslA,fslAd,sdslAd]=SLRateCompare(f2s{iii}(:,1),V2s{iii}(:,:,1),testsites(sitesub,:),testreg,testX(:,3),[0 900],[900 1800])
 
         Mdiff=zeros(length(sitesub)-1,length(sitesub)); Mdiff(:,1)=-1; Mdiff(:,2:end)=eye(length(sitesub)-1);
         
@@ -90,7 +90,7 @@
         %%
         
         for dodetrend=[0 1]
-            wf=f2s{ii,jj}(:,1); wV=V2s{ii,jj}(:,:,1);
+            wf=f2s{iii}(:,1); wV=V2s{iii}(:,:,1);
             colrs={'r','b','m','g'};
 
             sitesub2=[];

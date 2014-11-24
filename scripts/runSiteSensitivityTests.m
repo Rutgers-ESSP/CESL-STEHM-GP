@@ -1,13 +1,11 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Nov 16 16:51:00 EST 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Tue Nov 18 22:31:08 EST 2014
 
 %% do data sensitivity tests
-
-reoptimize=1;
 
 firstyears=[0    0   400 800  1200 1600 1800 1900];
 lastyears= [1800 400 800 1200 1600 1800 1900 2000];
 
-wdat = datasets{5};
+wdat = datasets{ii};
 
 sitesets0 = {'All','NWAtlantic','NEAtlantic','NAtlantic'};
 latbounds = [ -90 90 ; 0 90 ; 0 90 ; 0 90];
@@ -40,80 +38,97 @@ startcompact = thetTGG{jj}(end);
 fid1=fopen(['sens_theta' labl '.tsv'],'w');
 fid2=fopen(['sens_GSLrates' labl '.tsv'],'w');
 
-for qqq=1:size(sitesetsub,1)
-    for rrr=1:size(sitesetsub,2)
-        
-        disp(sitesets{qqq,rrr});
-        
-        datsub = find(ismember(wdat.datid,sitesetsub{qqq,rrr}));
-        sitesub = find(ismember(wdat.siteid,sitesetsub{qqq,rrr}));
-        wd=SubsetDataStructure(wdat,datsub,sitesub);
-        
-        dothet=thetTGG{jj};
-        
-        if length(datsub)>0
-            if reoptimize
-                [dothet]=OptimizeHoloceneCovariance(wd,ms,[3.0],trainfirsttime(end),trainrange(end),1e6,startcompact);  
-            end
-        else
-            datsub=find(wdat.datid==0); datsub=datsub(end);
-            sitesub=find(wdat.siteid==0);
+
+for reoptimize=[0 1]
+
+    for qqq=1:size(sitesetsub,1)
+        for rrr=1:size(sitesetsub,2)
+            
+            disp(sitesets{qqq,rrr});
+            
+            datsub = find(ismember(wdat.datid,sitesetsub{qqq,rrr}));
+            sitesub = find(ismember(wdat.siteid,sitesetsub{qqq,rrr}));
             wd=SubsetDataStructure(wdat,datsub,sitesub);
-            wd.dY = 100000;
-            wd.Ycv = wd.dY^2;
-        end
-        
-        
-        clear wdef;
-        wdef.sites=[0 1e6 1e6];
-        wdef.names={'GSL'};
-        wdef.names2={'GSL'};
-        wdef.firstage=0;
-        wdef.oldest=0;
-        wdef.youngest=2014;
-        trainsub=find(wd.limiting==0);
-        wtestt=0:100:2000;
-        [wf,wsd,wV,wloc]=RegressHoloceneDataSets(wd,wdef,ms,dothet,trainsub,noiseMasks(1,:),wtestt,refyear,collinear);        
+            
+            dothet=thetTGG{jj};
+            
+            if length(datsub)>0
+                if reoptimize
+                    [dothet]=OptimizeHoloceneCovariance(wd,ms,[3.0],trainfirsttime(end),trainrange(end),1e6,startcompact);  
+                end
+            else
+                datsub=find(wdat.datid==0); datsub=datsub(end);
+                sitesub=find(wdat.siteid==0);
+                wd=SubsetDataStructure(wdat,datsub,sitesub);
+                wd.dY = 100000;
+                wd.Ycv = wd.dY^2;
+                wd.meantime=100000;
+                wd.time1=wd.meantime; wd.time2=wd.meantime;
+            end
+            
+            
+            clear wdef;
+            wdef.sites=[0 1e6 1e6];
+            wdef.names={'GSL'};
+            wdef.names2={'GSL'};
+            wdef.firstage=0;
+            wdef.oldest=0;
+            wdef.youngest=2014;
+            trainsub=find(wd.limiting==0);
+            wtestt=0:100:2000;
+            [wf,wsd,wV,wloc]=RegressHoloceneDataSets(wd,wdef,ms,dothet,trainsub,noiseMasks(1,:),wtestt,refyear,collinear);        
 
-        [wfslope,wsdslope,wfslopediff,wsdslopediff,wdiffplus,wdiffless]=SLRateCompare(wf,wV,wloc.sites,wloc.reg,wloc.X(:,3),firstyears,lastyears);
-        
-        
-        if (qqq==1) && (rrr==1)
+            [wfslope,wsdslope,wfslopediff,wsdslopediff,wdiffplus,wdiffless]=SLRateCompare(wf,wV,wloc.sites,wloc.reg,wloc.X(:,3),firstyears,lastyears);
+            
+            
+            if (qqq==1) && (rrr==1)
 
-            fprintf(fid1,'Trainset');
-            fprintf(fid2,'Trainset');
+                fprintf(fid1,'Trainset');
+                fprintf(fid2,'Trainset');
 
+                for pp=1:length(firstyears)
+                    fprintf(fid2,'\tRate (avg, %0.0f-%0.0f)\t2s',[firstyears(pp) lastyears(pp)]);
+                end
+                for pp=1:length(wdiffplus)
+                    fprintf(fid2,['\tRate Diff. (avg, %0.0f-%0.0f minus ' ...
+                                  '%0.0f-%0.0f)\t2s'],[firstyears(wdiffplus(pp)) ...
+                                        lastyears(wdiffplus(pp)) firstyears(wdiffless(pp)) lastyears(wdiffless(pp))]);
+                end
+                fprintf(fid2,'\n');
+            end
+            
+            
+            fprintf(fid1,sitesets{qqq,rrr});
+            fprintf(fid2,sitesets{qqq,rrr});
+            if reoptimize
+                fprintf(fid1,'*');
+                fprintf(fid2,'*');
+            end
+            
             for pp=1:length(firstyears)
-                fprintf(fid2,'\tRate (avg, %0.0f-%0.0f)\t2s',[firstyears(pp) lastyears(pp)]);
+                fprintf(fid2,'\t%0.2f',[wfslope(1,pp) 2*wsdslope(1,pp)]);
             end
             for pp=1:length(wdiffplus)
-                fprintf(fid2,['\tRate Diff. (avg, %0.0f-%0.0f minus ' ...
-                              '%0.0f-%0.0f)\t2s'],[firstyears(wdiffplus(pp)) ...
-                                    lastyears(wdiffplus(pp)) firstyears(wdiffless(pp)) lastyears(wdiffless(pp))]);
+                fprintf(fid2,'\t%0.2f',[wfslopediff(1,pp) 2*wsdslopediff(1,pp)]);
             end
+            
+            fprintf(fid1,'\t%0.2f',dothet);
+            
+            fprintf(fid1,'\n');
             fprintf(fid2,'\n');
+            
+            sitesensfslope{iii,qqq,rrr,reoptimize+1}=wfslope(1,:);
+            sitesenssdslope{iii,qqq,rrr,reoptimize+1}=wsdslope(1,:);
+            sitesensfslopediff{iii,qqq,rrr,reoptimize+1}=wfslopediff(1,:);
+            sitesenssdslopediff{iii,qqq,rrr,reoptimize+1}=wsdslopediff(1,:);
+            sitesensthet{iii,qqq,rrr,reoptimize+1}=dothet;
+            
         end
-        
-        
-        fprintf(fid1,sitesets{qqq,rrr});
-        fprintf(fid2,sitesets{qqq,rrr});
-        
-
-        
-        for pp=1:length(firstyears)
-            fprintf(fid2,'\t%0.2f',[wfslope(1,pp) 2*wsdslope(1,pp)]);
-        end
-        for pp=1:length(wdiffplus)
-            fprintf(fid2,'\t%0.2f',[wfslopediff(1,pp) 2*wsdslopediff(1,pp)]);
-        end
-        
-        fprintf(fid1,'\t%0.2f',dothet);
-        
-        fprintf(fid1,'\n');
-        fprintf(fid2,'\n');
-        
     end
 end
 
-fclose(fid1);
-fclose(fid2);
+    fclose(fid1);
+    fclose(fid2);
+    
+    sitesensfirstyears=firstyears;
+    sitesenslastyears=lastyears;
