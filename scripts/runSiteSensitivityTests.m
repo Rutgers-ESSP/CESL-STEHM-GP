@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Tue Nov 18 22:31:08 EST 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Nov 30 17:50:05 EST 2014
 
 %% do data sensitivity tests
 
@@ -18,6 +18,7 @@ for qqq=1:size(longbounds,1)
     sitesetsub0{qqq}=wdat.siteid(sub);
 end
 
+flattenersub=find((wdat.datid==0).*(wdat.dY>1e3));
 clear sitesets sitesetsub;
 for qqq=1:length(sitesets0)
     sitesets{qqq,1} = ['+' sitesets0{qqq} '+GSL'];
@@ -29,6 +30,7 @@ for qqq=1:length(sitesets0)
     sitesetsub{qqq,1} = union(0,sitesetsub{qqq,2});
     sitesetsub{qqq,4} = setdiff(sitelist,sitesetsub0{qqq});
     sitesetsub{qqq,3} = union(0,sitesetsub{qqq,4});
+    
 end
 
 ms=wmodelspec;
@@ -48,22 +50,31 @@ for reoptimize=[0 1]
             
             datsub = find(ismember(wdat.datid,sitesetsub{qqq,rrr}));
             sitesub = find(ismember(wdat.siteid,sitesetsub{qqq,rrr}));
+            
+            if length(flattenersub)>0
+                datsub=union(datsub,flattenersub);
+                sitesub=union(sitesub,find(wdat.siteid==0));
+            end
+            
             wd=SubsetDataStructure(wdat,datsub,sitesub);
             
             dothet=thetTGG{jj};
             
-            if length(datsub)>0
+            if length(datsub)>length(flattenersub)
                 if reoptimize
                     [dothet]=OptimizeHoloceneCovariance(wd,ms,[3.0],trainfirsttime(end),trainrange(end),1e6,startcompact);  
                 end
             else
-                datsub=find(wdat.datid==0); datsub=datsub(end);
-                sitesub=find(wdat.siteid==0);
-                wd=SubsetDataStructure(wdat,datsub,sitesub);
-                wd.dY = 100000;
-                wd.Ycv = wd.dY^2;
-                wd.meantime=100000;
-                wd.time1=wd.meantime; wd.time2=wd.meantime;
+                if length(flattenersub)==0
+                    datsub=find(wdat.datid==0); datsub=datsub(end);
+                    sitesub=find(wdat.siteid==0);
+                    wd=SubsetDataStructure(wdat,datsub,sitesub);
+                    wd.dY = 100000;
+                    wd.Ycv = wd.dY^2;
+                    wd.meantime=100000;
+                    wd.time1=wd.meantime; wd.time2=wd.meantime;
+                end
+                
             end
             
             

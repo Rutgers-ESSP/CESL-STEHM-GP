@@ -286,6 +286,29 @@ HayGSL.compactcorr=0*HayGSL.Y;
 HayGSL.limiting=0*HayGSL.Y;
 HayGSL.istg=ones(size(HayGSL.Y));
 
+
+% add in GSL flattener
+
+clear GSLflattener;
+GSLflattener.Y=[0 0]';
+GSLflattener.Ycv = ones(length(GSLflattener.Y))*(1e4^2);
+GSLflattener.Ycv(1,1)=GSLflattener.Ycv(1,1)+1;
+GSLflattener.time1=[0 1800]'+.01;
+
+GSLflattener.dY=sqrt(diag(GSLflattener.Ycv));
+GSLflattener.datid=0*GSLflattener.Y;
+GSLflattener.time2=GSLflattener.time1;
+GSLflattener.meantime=GSLflattener.time1;
+GSLflattener.lat=ones(size(GSLflattener.Y))*1e6;
+GSLflattener.long=GSLflattener.lat;
+GSLflattener.compactcorr=0*GSLflattener.Y;
+GSLflattener.limiting=0*GSLflattener.Y;
+GSLflattener.istg=ones(size(GSLflattener.Y));
+GSLflattener.siteid=0;
+GSLflattener.sitenames={'GSLflattener'};
+GSLflattener.sitecoords=[1e6 1e6];
+GSLflattener.sitelen=length(GSLflattener.Y);
+
 % $$$ 
 % $$$ sub=find(TG.datid==0);
 % $$$ GSLnewcv = TG.Ycv(sub,sub);
@@ -343,6 +366,11 @@ GISfp=[GISfp(:,end) GISfp];
 GISfp=GISfp*1000;
 %%%%%%%
 
+dat=importdata(fullfile(IFILES,'Grinsted2009_JonesA1B.txt'));
+Grinsted2009_Jones.year=dat.data(:,1);
+Grinsted2009_Jones.quantiles=[5 16 50 84 95];
+Grinsted2009_Jones.y=dat.data(:,2:end)*1000;
+
 
 dat=importdata(fullfile(IFILES,'Grinsted2009_MobergA1B.txt'));
 Grinsted2009_Moberg.year=dat.data(:,1);
@@ -371,13 +399,15 @@ Grinsted.sitelen=length(Grinsted.Y);
 %%%%%%
 
 clear datasets;
-datasets{1}=MergeDataStructures(TG,PX);
-datasets{2}=MergeDataStructures(TGNOGSL,PX);
-datasets{3}=PX;
+datasets{1}=MergeDataStructures(MergeDataStructures(TG,PX),GSLflattener);
+datasets{2}=MergeDataStructures(TG,PX);
+datasets{3}=MergeDataStructures(TGNOGSL,PX);
+datasets{4}=PX;
 
-datasets{1}.label='TG+GSL+PX';
-datasets{2}.label='TG+PX';
-datasets{3}.label='PX';
+datasets{1}.label='TG+GSL+PX+flat';
+datasets{2}.label='TG+GSL+PX';
+datasets{3}.label='TG+PX';
+datasets{4}.label='PX';
 
 %for jj=1:length(PXsub)
 %    datasets{end+1}=MergeDataStructures(TGNOCW,PXsub{jj});
@@ -466,3 +496,9 @@ RothJoos.TSIerr = impt.data(:,3);
 impt=importdata(fullfile(IFILES,'haug2001_cariaco_ti.txt'));
 haug.yr = 1950-impt.data(:,1);
 haug.Ti = impt.data(:,2);
+
+
+dat=importdata(fullfile(IFILES,'CSIRO_Recons_gmsl_yr_2011.csv'));
+CW2011.year=dat.data(:,1);
+CW2011.y=dat.data(:,2);
+CW2011.dy=dat.data(:,3);

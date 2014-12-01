@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Nov 06 15:00:27 EST 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Nov 30 17:15:33 EST 2014
 
     u=unique(wdataset.datid);
     clear fp sdp;
@@ -7,6 +7,7 @@
     for pp=1:length(u)
         subp=find(wdataset.datid==u(pp));
         subq=find(wdataset.siteid==u(pp));
+        subq=subq(1);
         if length(subp)>0
             testtsp{pp}=wdataset.meantime(subp);
             testsitedefp.sites(pp,:)=[wdataset.siteid(subq) ...
@@ -46,4 +47,4 @@
         fprintf(fid,'%0.2f\t',fp(i));
         fprintf(fid,'%0.2f\n',sdp(i));
     end
-    fclose(fid) 
+    fclose(fid);

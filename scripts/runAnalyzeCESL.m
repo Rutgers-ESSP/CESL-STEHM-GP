@@ -1,9 +1,5 @@
-% Master script for Common Era proxy + tide gauge sea-level analysis
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Dec 01 08:42:48 EST 2014
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Tue Nov 18 19:05:35 EST 2014
-
-% to do items:
-% 1) MCMC
 
 dosldecomp = 0;
 
@@ -15,7 +11,7 @@ IFILES=[pd '/IFILES'];
 addpath(pd)
 savefile='~/tmp/CESL';
 
-WORKDIR='141118';
+WORKDIR='141201';
 if ~exist(WORKDIR,'dir')
     mkdir(WORKDIR);
 end
@@ -28,12 +24,13 @@ firsttime=-1000;
 
 runImportHoloceneDataSets;
 runSetupHoloceneCovariance;
+runImportOtherGSLCurves;
 
 save(savefile,'datasets','modelspec');
 
 %trainspecs = 1:8;
-trainspecs=1:length(trainspecs);
-trainsets = [1*ones(size(trainspecs))];
+trainspecs=[1 2 3 4 5];
+trainsets = [1 1 1 1 1];
 trainfirsttime = -1000;
 
 trainlabels={};
@@ -46,9 +43,9 @@ runTrainModels;
 
 % add weakly informative prior
 trainspecs=[trainspecs 1];
-trainsets=[trainsets 1];
+trainsets=[trainsets NaN];
 trainlabels={trainlabels{:},['wip_' modelspec(trainspecs(end)).label]};
-thetTGG{end+1}=[500 300 1.5 8 200 150 15 20 100 0.1];
+thetTGG{end+1}=[200 300 1.3 8 200 120 15 20 40 0.1];
 logp(end+1)=NaN;
 
 save thetTGG thetTGG trainsubsubset
@@ -89,8 +86,6 @@ testsitedef.youngest=2014;
 
 testsitedefGSL=testsitedef;
 
-runImportOtherGSLCurves;
-
 dosub=find(wdataset.siteid>0);
 for ii=dosub(:)'
     sub=find(wdataset.datid==wdataset.siteid(ii));
@@ -122,25 +117,7 @@ for ii=1:length(testsitedef.sites(:,1))
     testsitedef.GIA(find(testsitedef.sites(:,2)>100))=0;
 
 end
-% $$$ GISfpt.lat=GISfplat;
-% $$$ GISfpt.long=GISfplong;
-% $$$ GISfpt.fp=GISfp;
 
-ICE5G.lat=ICE5Glat;
-ICE5G.long=ICE5Glon;
-ICE5G.gia=ICE5Ggia;
-
-for ii=1:length(testsitedef.sites(:,1))
-% $$$     testsitedef.GISfp = interp2(GISfpt.long,GISfpt.lat,GISfpt.fp,testsitedef.sites(:,3),testsitedef.sites(:,2),'linear');
-% $$$     testsitedef.GISfp(find(testsitedef.sites(:,2)>100))=1;
-
-    testsitedef.GIA = interp2(ICE5G.lat,ICE5G.long,ICE5G.gia,testsitedef.sites(:,2),testsitedef.sites(:,3),'linear');
-    testsitedef.GIA(find(testsitedef.sites(:,2)>100))=0;
-
-end
-
-
-testt = [-1000:20:2000 2010];
 
 % select regression parameters
 
@@ -199,18 +176,46 @@ for iii=1:length(regresssets)
     runFingerprintAnalysis;
     % runGIARateComparison;
     runPlotOtherGSLCurves;
-    
-    if iii==1
-        %runSensitivityTests;
-        runSiteSensitivityTests;
-        runMapField;
-    end
-    
 
     %%%%
  
    save(savefile,'datasets','modelspec','f2s','sd2s','V2s', ...
          'testlocs','logp','testsitedef','trainspecs','thetTGG','GISfpt','ICE5G','noiseMasks','testt','refyear');
+
+end
+
+for iii=1
+    ii=regresssets(iii);
+    jj=regressparams(iii);
+    wmodelspec = modelspec(trainspecs(jj));
+    
+
+    noiseMasks = ones(5,length(thetTGG{trainspecs(jj)}));
+    noiseMasks(1,[ wmodelspec.subampnoise]  )=0; %without linear
+    noiseMasks(2,[wmodelspec.subamplinear wmodelspec.subampoffset wmodelspec.subampnoise]  )=0; %without linear
+    noiseMasks(3,[setdiff(wmodelspec.subamp,wmodelspec.subamplinear)])=0; %only linear
+    noiseMasks(4,[setdiff(wmodelspec.subamp,wmodelspec.subampregmat)])=0; %only regional Matern
+    noiseMasks(5,[setdiff(wmodelspec.subamp,[wmodelspec.subampregmat wmodelspec.subamplinear])])=0; %only regional
+    noiseMasklabels={'denoised','nonlin','linear','regmat','regional'};
+    nmReg=5;
+
+    wdataset=datasets{ii};
+
+    labls{iii}=['_' regresslabels{iii}];
+    disp(labls{iii});
+
+    trainsub = find((wdataset.limiting==0)); % only index points
+    wdataset.dY = sqrt(datasets{ii}.dY.^2 + (thetTGG{jj}(end)*wdataset.compactcorr).^2);
+    wdataset.Ycv = datasets{ii}.Ycv + diag(thetTGG{jj}(end)*wdataset.compactcorr).^2;
+    subtimes=find(testt>=min(union(wdataset.time1,wdataset.time2)));
+    
+    collinear=wmodelspec.subamplinear(1);
+    [f2s{iii},sd2s{iii},V2s{iii},testlocs{iii},logp(iii),passderivs,invcv]=RegressHoloceneDataSets(wdataset,testsitedef,wmodelspec,thetTGG{jj},trainsub,noiseMasks,testt(subtimes),refyear,collinear);
+
+    labl=labls{iii}; disp(labl);
+    
+    runMapField;
+    runSiteSensitivityTests;
 
 end
 

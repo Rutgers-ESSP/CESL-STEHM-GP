@@ -1,7 +1,7 @@
 % Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Wed Nov 19 21:28:55 EST 2014
 
-firstyears=[0    0   400 800  1200 1600 1200 1800 1900];
-lastyears= [1800 400 800 1200 1600 1800 1800 1900 2000];
+firstyears=[-1000 0    0   400 800  1200 1600 1200 1800 1900];
+lastyears= [0 1800 400 800 1200 1600 1800 1800 1900 2000];
 
 [fslopeavg,sdslopeavg,fslopeavgdiff,sdslopeavgdiff,diffplus,diffless]=SLRateCompare(f2s{iii}(:,1),V2s{iii}(:,:,1),testsites,testreg,testX(:,3),firstyears,lastyears);
 [fslopereg,sdslopereg,fsloperegdiff,sdsloperegdiff,diffplus,diffless]=SLRateCompare(f2s{iii}(:,4),V2s{iii}(:,:,4),testsites,testreg,testX(:,3),firstyears,lastyears);
