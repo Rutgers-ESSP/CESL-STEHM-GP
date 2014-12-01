@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Dec 01 08:35:09 EST 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Dec 01 08:58:34 EST 2014
 
 % 1. GLMW
 % 2. GLMW-Grinsted - GLMW with global hyperparameters set to maximize likelihood of Grinsted curve
@@ -42,7 +42,7 @@ ddcvfunc.f0 = 0;
 
 %%%%%
 
-iii=1;
+ii=1;
 
 % 1. Global Matern + Regional Linear + Regional Matern + GIS +  White Noise (GLMIW)
 
@@ -122,7 +122,7 @@ ms.subfixed=[];
 ms.sublength=[];
 [thetGrin]= OptimizeHoloceneCovariance(Grinsted,ms,[2.4 2.0],[],[],.01);
 
-modelspec(ii) = modelspec(ii);
+modelspec(ii) = modelspec(1);
 modelspec(ii).label='GLMW-GrinstedG';
 %modelspec(ii).thet0(turnoff)=0;
 modelspec(ii).subfixed=union(modelspec(ii).subfixed,freeze);
@@ -136,6 +136,7 @@ modelspec(ii).thet0(modelspec(ii).subHPglobal)=thetGrin(1:2);
 
 ii=ii+1;
 
+wdataset=datasets{1};
 sitesub=find(strcmpi('North Carolina-Sand Point',wdataset.sitenames));
 sitesub=union(sitesub,find(strcmpi('North Carolina-Tump Point',wdataset.sitenames)));
 datsub=find(ismember(wdataset.datid,wdataset.siteid(sitesub)));

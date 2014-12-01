@@ -5,6 +5,7 @@ defval('firsttime',-1000);
 thinyrs=10;
 minlen=50;
 minperstudy=2;
+refyear=2010;
 
 %%%%%%%%%%
 datid=[]; time1=[]; time2=[]; mediantime=[]; limiting=[]; Y=[]; dY = []; compactcorr = [];
