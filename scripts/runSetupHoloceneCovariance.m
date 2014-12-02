@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Dec 01 08:58:34 EST 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Dec 01 22:50:17 EST 2014
 
 % 1. GLMW
 % 2. GLMW-Grinsted - GLMW with global hyperparameters set to maximize likelihood of Grinsted curve
@@ -25,6 +25,7 @@ cvfunc.M = @(dt1t2,ad,thetas) kMat3(dt1t2,thetas(1:2)) .* kMat1(ad,[1 thetas(3)]
 cvfunc.I = @(dt1t2,ad,thetas,fp1fp2) kMat3(dt1t2,thetas(1:2)) .* fp1fp2;
 cvfunc.W = @(dt1t2,ad,thetas) kDELTA(dt1t2,thetas(1)) .* kDELTAG(ad,1);
 cvfunc.f0 = @(ad,thetas) kDELTAG(ad,thetas(1));
+cvfunc.g0 = @(ad,thetas) (ad>360).*thetas(1)^2;
 
 dcvfunc.G = @(t1,t2,dt1t2,thetas) kMat3d(t1,t2,dt1t2,thetas(1:2));
 dcvfunc.L = @(t1,t2,ad,thetas) kDPd(t1,t2,thetas(1)) .* kMat1(ad,[1 thetas(2)]) .* (ad<360);
@@ -48,7 +49,7 @@ ii=1;
 
 modelspec(ii).label = 'GLMW';
 
-modelspec(ii).cvfunc =  @(t1,t2,dt1t2,thetas,ad,fp1fp2) cvfunc.G(dt1t2,thetas(1:2)) + cvfunc.L(t1,t2,ad,thetas(3:4)) + cvfunc.M(dt1t2,ad,thetas(5:7)) + cvfunc.W(dt1t2,ad,thetas(8)) + cvfunc.f0(ad,thetas(9));
+modelspec(ii).cvfunc =  @(t1,t2,dt1t2,thetas,ad,fp1fp2) cvfunc.G(dt1t2,thetas(1:2)) + cvfunc.L(t1,t2,ad,thetas(3:4)) + cvfunc.M(dt1t2,ad,thetas(5:7)) + cvfunc.W(dt1t2,ad,thetas(8)) + cvfunc.f0(ad,thetas(9)) + cvfunc.g0(ad,thetas(10));
 
 modelspec(ii).dcvfunc =  @(t1,t2,dt1t2,thetas,ad,fp1fp2) dcvfunc.G(t1,t2,dt1t2,thetas(1:2)) + dcvfunc.L(t1,t2,ad,thetas(3:4)) + dcvfunc.M(t1,t2,dt1t2,ad,thetas(5:7));
 
@@ -71,6 +72,7 @@ tluTGG = [
 10 1e-2 1e4 % white noise
     
 100 1e-2 1e4 % local offset
+10 0 1e4 % global offset
 
 ];
 
@@ -81,16 +83,16 @@ modelspec(ii).ub = tluTGG(:,3)';
 modelspec(ii).subfixed=[];
 modelspec(ii).sublength=[4 7];
 
-modelspec(ii).subamp = [1 3 5 8 9];
+modelspec(ii).subamp = [1 3 5 8 9 10];
 modelspec(ii).subamplinear = [3];
 modelspec(ii).subampglobal = [1];
-modelspec(ii).subampoffset = [9];
+modelspec(ii).subampoffset = [9 10];
 modelspec(ii).subampregmat = [5];
 modelspec(ii).subampnoise = [8];
 
 modelspec(ii).subHPlinear = [3 4];
 modelspec(ii).subHPglobal = [1 2];
-modelspec(ii).subHPoffset = [9];
+modelspec(ii).subHPoffset = [9 10];
 modelspec(ii).subHPregmat = [5 6 7];
 modelspec(ii).subHPnoise = [8];
 modelspec(ii).subHPtsregmat = [6];
@@ -160,6 +162,7 @@ ms.ub = tluTGG(:,3)';
 ms.subfixed=[];
 ms.sublength=[4];
 thetNC=OptimizeHoloceneCovariance(SubsetDataStructure(wdataset,datsub,sitesub),ms,[ 3.4 3.0],-1000,2000,.01);
+modelspecNC=ms;
 
 modelspec(ii) = modelspec(1);
 
@@ -177,17 +180,18 @@ modelspec(ii).thet0(modelspec(ii).subHPglobal)=thetNC(1:2);
 % Single timescale prior
 
 ii=ii+1;
+modelspec(ii) = modelspec(1);
+
 turnoff= [modelspec(ii).subHPtsregmat ];
 freeze= [modelspec(ii).subHPtsregmat ];
 
 ms = modelspec(1); % use GW
 
-modelspec(ii) = modelspec(1);
 modelspec(ii).label='GLMW-1ts';
 modelspec(ii).thet0(turnoff)=0;
 modelspec(ii).subfixed=union(modelspec(ii).subfixed,freeze);
 
-modelspec(ii).cvfunc =  @(t1,t2,dt1t2,thetas,ad,fp1fp2) cvfunc.G(dt1t2,thetas(1:2)) + cvfunc.L(t1,t2,ad,thetas(3:4)) + cvfunc.M(dt1t2,ad,thetas([5 2 7])) + cvfunc.W(dt1t2,ad,thetas(8)) + cvfunc.f0(ad,thetas(9));
+modelspec(ii).cvfunc =  @(t1,t2,dt1t2,thetas,ad,fp1fp2) cvfunc.G(dt1t2,thetas(1:2)) + cvfunc.L(t1,t2,ad,thetas(3:4)) + cvfunc.M(dt1t2,ad,thetas([5 2 7])) + cvfunc.W(dt1t2,ad,thetas(8)) + cvfunc.f0(ad,thetas(9)) + cvfunc.g0(ad,thetas(10));
 
 modelspec(ii).dcvfunc =  @(t1,t2,dt1t2,thetas,ad,fp1fp2) dcvfunc.G(t1,t2,dt1t2,thetas(1:2)) + dcvfunc.L(t1,t2,ad,thetas(3:4)) + dcvfunc.M(t1,t2,dt1t2,ad,thetas([5 2 7]));
 
@@ -201,12 +205,13 @@ modelspec(ii).traincv = @(t1,t2,dt1t2,thetas,errcv,ad,fp1fp2) modelspec(ii).cvfu
 % Single timescale and amplitude prior
 
 ii=ii+1;
+modelspec(ii) = modelspec(1);
+
 turnoff= [modelspec(ii).subampregmat modelspec(ii).subHPtsregmat ];
 freeze= [modelspec(ii).subampregmat modelspec(ii).subHPtsregmat ];
 
 ms = modelspec(1); % use GW
 
-modelspec(ii) = modelspec(1);
 modelspec(ii).label='GLMW-1amp1ts';
 modelspec(ii).thet0(turnoff)=0;
 modelspec(ii).subfixed=union(modelspec(ii).subfixed,freeze);
@@ -225,10 +230,11 @@ modelspec(ii).traincv = @(t1,t2,dt1t2,thetas,errcv,ad,fp1fp2) modelspec(ii).cvfu
 % 3. Global Matern + Regional Linear + White Noise (GLW)
 
 ii=ii+1;
+modelspec(ii) = modelspec(1);
+
 turnoff= [modelspec(ii).subampregmat ];
 freeze= [modelspec(ii).subHPregmat ];
 
-modelspec(ii) = modelspec(1);
 modelspec(ii).label='GLW';
 modelspec(ii).thet0(turnoff)=0;
 modelspec(ii).subfixed=union(modelspec(ii).subfixed,freeze);
@@ -237,10 +243,11 @@ modelspec(ii).subfixed=union(modelspec(ii).subfixed,freeze);
 % 4. GMW
 
 ii=ii+1;
+modelspec(ii) = modelspec(1);
+
 turnoff= [modelspec(ii).subamplinear ];
 freeze= [modelspec(ii).subHPlinear ];
 
-modelspec(ii) = modelspec(1);
 modelspec(ii).label='GMW';
 modelspec(ii).thet0(turnoff)=0;
 modelspec(ii).subfixed=union(modelspec(ii).subfixed,freeze);
@@ -248,10 +255,11 @@ modelspec(ii).subfixed=union(modelspec(ii).subfixed,freeze);
 % 5. GW
 
 ii=ii+1;
+modelspec(ii) = modelspec(1);
+
 turnoff= [modelspec(ii).subampregmat modelspec(ii).subamplinear ];
 freeze= [modelspec(ii).subHPregmat modelspec(ii).subHPlinear ];
 
-modelspec(ii) = modelspec(1);
 modelspec(ii).label='GW';
 modelspec(ii).thet0(turnoff)=0;
 modelspec(ii).subfixed=union(modelspec(ii).subfixed,freeze);
@@ -261,10 +269,11 @@ modelspec(ii).subfixed=union(modelspec(ii).subfixed,freeze);
 % 6. Regional Linear + Regional Matern + White Noise (LMW)
 
 ii=ii+1;
+modelspec(ii) = modelspec(1);
+
 turnoff= [modelspec(ii).subampglobal ];
 freeze= [modelspec(ii).subHPglobal ];
 
-modelspec(ii) = modelspec(1);
 modelspec(ii).label='LMW';
 modelspec(ii).thet0(turnoff)=0;
 modelspec(ii).subfixed=union(modelspec(ii).subfixed,freeze);
@@ -276,10 +285,11 @@ modelspec(ii).subfixed=union(modelspec(ii).subfixed,freeze);
 % 7. Regional Linear + White Noise (LW)
 
 ii=ii+1;
+modelspec(ii) = modelspec(1);
+
 turnoff= [modelspec(ii).subampglobal modelspec(ii).subampregmat ];
 freeze= [modelspec(ii).subHPglobal modelspec(ii).subHPregmat ];
 
-modelspec(ii) = modelspec(1);
 modelspec(ii).label='LW';
 modelspec(ii).thet0(turnoff)=0;
 modelspec(ii).subfixed=union(modelspec(ii).subfixed,freeze);
@@ -287,10 +297,11 @@ modelspec(ii).subfixed=union(modelspec(ii).subfixed,freeze);
 % 7. MW
 
 ii=ii+1;
+modelspec(ii) = modelspec(1);
+
 turnoff= [modelspec(ii).subampglobal modelspec(ii).subamplinear ];
 freeze= [modelspec(ii).subHPglobal modelspec(ii).subHPlinear ];
 
-modelspec(ii) = modelspec(1);
 modelspec(ii).label='MW';
 modelspec(ii).thet0(turnoff)=0;
 modelspec(ii).subfixed=union(modelspec(ii).subfixed,freeze);

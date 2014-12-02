@@ -1,7 +1,8 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Nov 30 17:07:28 EST 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Dec 01 21:53:08 EST 2014
 
 % extract the detrended North Carolina sea-level curve
 
+ms=modelspecNC;
 sitesub=find(strcmpi('North Carolina-Sand Point',wdataset.sitenames));
 sitesub=union(sitesub,find(strcmpi('North Carolina-Tump Point',wdataset.sitenames)));
 datsub=find(ismember(wdataset.datid,wdataset.siteid(sitesub)));

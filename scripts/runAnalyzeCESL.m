@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Dec 01 08:42:48 EST 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Dec 01 21:39:59 EST 2014
 %
 
 dosldecomp = 0;
@@ -42,11 +42,11 @@ runTrainModels;
 % runCrossValidateModels;
 
 % add weakly informative prior
-trainspecs=[trainspecs 1];
-trainsets=[trainsets NaN];
-trainlabels={trainlabels{:},['wip_' modelspec(trainspecs(end)).label]};
-thetTGG{end+1}=[200 300 1.3 8 200 120 15 20 40 0.1];
-logp(end+1)=NaN;
+% $$$ trainspecs=[trainspecs 1];
+% $$$ trainsets=[trainsets NaN];
+% $$$ trainlabels={trainlabels{:},['wip_' modelspec(trainspecs(end)).label]};
+% $$$ thetTGG{end+1}=[200 300 1.3 8 200 120 15 20 40 0.1];
+% $$$ logp(end+1)=NaN;
 
 save thetTGG thetTGG trainsubsubset
 save(savefile);
@@ -118,11 +118,14 @@ for ii=1:length(testsitedef.sites(:,1))
 
 end
 
+testt = [-1000:20:2000 2010];
 
 % select regression parameters
 
 regressparams=1:length(trainspecs);
 regresssets=ones(size(regressparams));
+regressparams=[regressparams regressparams];
+regresssets=[regresssets 2*regresssets];
 clear regresslabels;
 for i=1:length(regresssets)
     regresslabels{i} = [datasets{regresssets(i)}.label '_' trainlabels{regressparams(i)}];
@@ -180,9 +183,13 @@ for iii=1:length(regresssets)
     %%%%
  
    save(savefile,'datasets','modelspec','f2s','sd2s','V2s', ...
-         'testlocs','logp','testsitedef','trainspecs','thetTGG','GISfpt','ICE5G','noiseMasks','testt','refyear');
+         'testlocs','logp','testsitedef','trainspecs','thetTGG','ICE5G','noiseMasks','testt','refyear');
 
 end
+
+
+runLatexTables;
+%runOutputForcingProxies;
 
 for iii=1
     ii=regresssets(iii);
@@ -218,6 +225,3 @@ for iii=1
     runSiteSensitivityTests;
 
 end
-
-runLatexTables;
-%runOutputForcingProxies;
