@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Nov 30 20:56:30 EST 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Tue Dec 02 14:28:47 EST 2014
 
 
 refyear=2000;
@@ -49,7 +49,7 @@ wV1900=Mref2(datsub,datsub)*V2s{iii}(datsub,datsub,selmask)*Mref2(datsub,datsub)
 wsd1900=sqrt(diag(wV1900));
 
 
-for dodetrend=[0 1]
+for dodetrend=[0]
     labl3='';
     
     if dodetrend

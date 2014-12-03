@@ -1,9 +1,12 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri Nov 21 15:13:27 EST 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Tue Dec 02 14:46:45 EST 2014
 
 % first do a table with rates for each of the models
 
-firstyears=[0    0   400 800  1200 1600 1800 1900];
-lastyears= [1800 400 800 1200 1600 1800 1900 2000];
+regresssetorder = [1 4 2 3];
+
+firstyears=[0   400 800  1200 1200 1600 1800 1860 1900];
+lastyears= [400 800 1200 1800 1600 1800 1900 1900 2000];
+datsub=find(testreg==0); sitesub=find(testsites==0);
 
 fid=fopen('bymodel_GSLrates.tex','w');
 fprintf(fid,'Model');
@@ -12,48 +15,66 @@ wfly=[firstyears ; lastyears];
 fprintf(fid,' & %0.0f--%0.0f',wfly);
 fprintf(fid,' \\\\ \n');
 
-for iii=1:length(regresssets)
-    datsub=find(testreg==0); sitesub=find(testsites==0);
+for iii=regresssetorder
     [fslopeavg,sdslopeavg,fslopeavgdiff,sdslopeavgdiff,diffplus,diffless]=SLRateCompare(f2s{iii}(datsub,1),V2s{iii}(datsub,datsub,1),testsites(sitesub),testreg(datsub),testX(datsub,3),firstyears,lastyears);
 
     fprintf(fid,trainlabels{regressparams(iii)});
-    fprintf(fid,' & $%0.2f \\pm %0.2f$',[fslopeavg(1) 2*sdslopeavg(1)]);
-    P=normcdf([fslopeavg(1)./sdslopeavg(1)]);
-    if abs(P-.5)>=.49
-        fprintf(fid,'***');
-    elseif abs(P-.5)>=.45
-        fprintf(fid,'**');
-    elseif abs(P-.5)>=.4
-        fprintf(fid,'*');
-    elseif abs(P-.5)>=.133
-        fprintf(fid,'$^\\dagger$');
-    end
-    
-    sub=find(diffless==1);
-    for qqq=sub(:)'
-        fprintf(fid,' & $%0.1f \\pm %0.1f$',[fslopeavgdiff(qqq) ; 2*sdslopeavgdiff(qqq)]);
-        P=normcdf([fslopeavgdiff(qqq)./sdslopeavgdiff(qqq)]);
+    for qqq=1:length(fslopeavg)
+        fprintf(fid,' & $%0.2f \\pm %0.2f$',[fslopeavg(qqq) 2*sdslopeavg(qqq)]);
+        P=normcdf([fslopeavg(qqq)./sdslopeavg(qqq)]);
         if abs(P-.5)>=.49
             fprintf(fid,'***');
         elseif abs(P-.5)>=.45
             fprintf(fid,'**');
         elseif abs(P-.5)>=.4
             fprintf(fid,'*');
-        elseif abs(P-.5)>=.167
+        elseif abs(P-.5)>=.133
             fprintf(fid,'$^\\dagger$');
         end
     end
     
+    
+% $$$     sub=find(diffless==1);
+% $$$     for qqq=sub(:)'
+% $$$         fprintf(fid,' & $%0.1f \\pm %0.1f$',[fslopeavgdiff(qqq) ; 2*sdslopeavgdiff(qqq)]);
+% $$$         P=normcdf([fslopeavgdiff(qqq)./sdslopeavgdiff(qqq)]);
+% $$$         if abs(P-.5)>=.49
+% $$$             fprintf(fid,'***');
+% $$$         elseif abs(P-.5)>=.45
+% $$$             fprintf(fid,'**');
+% $$$         elseif abs(P-.5)>=.4
+% $$$             fprintf(fid,'*');
+% $$$         elseif abs(P-.5)>=.167
+% $$$             fprintf(fid,'$^\\dagger$');
+% $$$         end
+% $$$     end
+    
     fprintf(fid,' \\\\ \n');
 end
-fprintf(fid,'All rates except 0--1800 CE are detrended with respect to 0--1800 CE.');
+%fprintf(fid,'All rates except 0--1800 CE are detrended with respect to 0--1800 CE.');
+
+fprintf(fid,'\n\n\n');
+for iii=regresssetorder
+    fprintf(fid,['& ' trainlabels{regressparams(iii)}]);
+end
+for qqq=1:length(firstyears)
+    fprintf(fid,'\\\\ \n %0.0f--%0.0f',wfly(:,qqq));
+    for iii=regresssetorder
+        [fslopeavg,sdslopeavg]=SLRateCompare(f2s{iii}(datsub,1),V2s{iii}(datsub,datsub,1),testsites(sitesub),testreg(datsub),testX(datsub,3),firstyears(qqq),lastyears(qqq));
+        P=normcdf([fslopeavg./sdslopeavg]);
+        fprintf(fid,' & $%0.2f \\pm %0.2f$ (%0.2f)',[fslopeavg 2*sdslopeavg P]);
+
+    end
+end
+
+
 
 fclose(fid);
 
 % now do a table with the hyperparameters
 fid=fopen('bymodel_theta.tex','w');
 
-fprintf(fid,'Model & log L & $\\sigma_g$ & $\\tau_g$ & $\\sigma_l$ & $\\lambda_l$ & $\\sigma_m$ & $\\tau_m$ & $\\lambda_m$ & $\\sigma_w$ & $\\sigma_0$ & $\\sigma_c$ \\\\ \n');
+fprintf(fid,'Model & log L & $\\sigma_g$ & $\\tau_g$ & $\\sigma_l$ & $\\lambda_l$ & $\\sigma_m$ & $\\tau_m$ & $\\lambda_m$ & $\\sigma_w$ & $\\sigma_0$ & $\\sigma_{g0}$ & $\\sigma_c$ \\\\ \n');
 for qqq=1:length(trainspecs)
     fprintf(fid,trainlabels{qqq});
     fprintf(fid,' & %0.0f',logp(qqq));
@@ -98,7 +119,7 @@ for kk=1:size(testsites,1)
     fprintf(fid,' & %0.0f',testsitedef.oldest(kk));
     fprintf(fid,'--%0.0f',testsitedef.youngest(kk));
     qqq=1;
-linra
+
     if ~isnan(fslopeavg(kk,qqq))
         fprintf(fid,' & $%0.2f \\pm %0.2f$',[fslopeavg(kk,qqq) 2*sdslopeavg(kk,qqq)]);
         P=normcdf([fslopeavg(kk,qqq)./sdslopeavg(kk,qqq)]);
@@ -141,78 +162,55 @@ fprintf(fid,'All rates except 0--1800 CE are detrended with respect to 0--1800 C
 
 fclose(fid);
 
+% list of tide gauges
 
-% now do a table with site sensitivities
+fid=fopen('tidegauges.tex','w');
+fprintf(fid,'Name & Latitude & Longitude & Ages & PSMSL ID');
 
-iii=1;
-firstyears=sitesensfirstyears;
-lastyears=sitesenslastyears;
-
-fid=fopen('sitesens_GSL.tex','w');
-fid2=fopen('sitesens_theta.tex','w');
-
-fprintf(fid,'Subset');
-
-wfly=[firstyears ; lastyears];
-fprintf(fid,' & %0.0f--%0.0f',wfly);
-fprintf(fid,' \\\\ \n');
-
-fprintf(fid2,'Subset & $\\sigma_g$ & $\\tau_g$ & $\\sigma_l$ & $\\lambda_l$ & $\\sigma_m$ & $\\tau_m$ & $\\lambda_m$ & $\\sigma_w$ & $\\sigma_0$ & $\\sigma_c$ \\\\ \n');
-
-for reoptimize=0:1
-    for qqq=1:size(sitesets,1)
-        for rrr=1:size(sitesets,2)
-            fprintf(fid1,sitesets{qqq,rrr});
-            fprintf(fid2,sitesets{qqq,rrr});
-            if reoptimize
-                fprintf(fid,'*');
-                fprintf(fid2,'*');
-            end
-
-            wfslope=sitesensfslope{iii,qqq,rrr,reoptimize+1};
-            wsdslope=sitesenssdslope{iii,qqq,rrr,reoptimize+1};
-            wfslopediff=sitesensfslopediff{iii,qqq,rrr,reoptimize+1};
-            wsdslopediff=sitesenssdslopediff{iii,qqq,rrr,reoptimize+1};
-            
-            fprintf(fid,' & $%0.2f \\pm %0.2f$',[wfslope(1) 2*wsdslope(1)]);
-            P=normcdf([wfslope(1)./wsdslope(1)]);
-            if abs(P-.5)>=.49
-                fprintf(fid,'***');
-            elseif abs(P-.5)>=.45
-                fprintf(fid,'**');
-            elseif abs(P-.5)>=.4
-                fprintf(fid,'*');
-            elseif abs(P-.5)>=.133
-                fprintf(fid,'$^\\dagger$');
-            end
-            
-            sub=find(diffless==1);
-            for uuu=sub(:)'
-                fprintf(fid,' & $%0.1f \\pm %0.1f$',[wfslopediff(uuu) ; 2*wsdslopediff(uuu)]);
-                P=normcdf([wfslopediff(uuu)./wsdslopediff(uuu)]);
-                if abs(P-.5)>=.49
-                    fprintf(fid,'***');
-                elseif abs(P-.5)>=.45
-                    fprintf(fid,'**');
-                elseif abs(P-.5)>=.4
-                    fprintf(fid,'*');
-                elseif abs(P-.5)>=.133
-                    fprintf(fid,'$^\\dagger$');
-                end
-            end
-            
-            fprintf(fid,' \\\\ \n');
-            
-            dothet=sitesensthet{iii,qqq,rrr,reoptimize+1};
-            
-            fprintf(fid2,' & %0.1f',dothet(1:end-1));
-            fprintf(fid2,' & %0.2f',dothet(end));
-            fprintf(fid2,' \\\\ \n');     
-
-        end
-    end
+for kk=1:length(TGold.siteid)
+    sub=find(TGold.datid==TGold.siteid(kk));
+    fprintf(fid,'\\\\ \n');
+    fprintf(fid,TGold.sitenames{kk});
+    fprintf(fid,' & %0.2f',[TGold.sitecoords(kk,:)]);
+    fprintf(fid,' & %0.0f',[min(TGold.meantime(sub)) max(TGold.meantime(sub))]);
+    fprintf(fid,' & %0.0f',TGold.siteid(kk));
 end
 
-fprintf(fid,'All rates except 0--1800 CE are detrended with respect to 0--1800 CE.');
+[u,ui]=sort(TG.siteid);
+for kk=ui(:)'
+    sub=find(TG0.datid==TG.siteid(kk));
+    if length(sub)>0
+        fprintf(fid,'\\\\ \n');
+        fprintf(fid,TG.sitenames{kk});
+        fprintf(fid,' & %0.2f',[TG.sitecoords(kk,:)]);
+        fprintf(fid,' & %0.0f',[min(TG0.meantime(sub)) max(TG0.meantime(sub))]);
+        fprintf(fid,' & %0.0f',TG.siteid(kk));
+    end
+    
+end
 fclose(fid);
-fclose(fid2);
+
+% now proxy sites
+[u,ui]=unique(datPX.textdata(:,3));
+[u2,u2i]=unique(datPX.textdata(:,1));
+u3i=union(ui,u2i);
+
+
+fid=fopen('proxystudies.tex','w');
+fprintf(fid,'Location & Mean Latitude & Mean Longitude & Median Age Range (CE) & N & Reference');
+
+for kk=1:length(u3i)
+    wname = datPX.textdata(u3i(kk),1); wcite = datPX.textdata(u3i(kk),3);
+
+    sub=find(strcmpi(wcite,datPX.textdata(:,3)));
+    sub=intersect(sub,find(strcmpi(wname,datPX.textdata(:,1))));
+    wmediantime=datPX.data(sub,6);
+
+    fprintf(fid,'\\\\ \n');
+    fprintf(fid,wname{:});
+    fprintf(fid,' & %0.1f',mean(datPX.data(sub,[1 2]),1));
+    fprintf(fid,' & %0.0f to %0.0f',[min(wmediantime) max(wmediantime)]);
+    fprintf(fid,' & %0.0f',length(sub));
+    fprintf(fid,[' & ' wcite{:}]);
+end
+fclose(fid);

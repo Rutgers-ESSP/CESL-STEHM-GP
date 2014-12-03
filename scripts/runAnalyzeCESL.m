@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Dec 01 21:39:59 EST 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Tue Dec 02 09:23:29 EST 2014
 %
 
 dosldecomp = 0;
@@ -11,7 +11,7 @@ IFILES=[pd '/IFILES'];
 addpath(pd)
 savefile='~/tmp/CESL';
 
-WORKDIR='141201';
+WORKDIR='141202';
 if ~exist(WORKDIR,'dir')
     mkdir(WORKDIR);
 end
@@ -26,9 +26,6 @@ runImportHoloceneDataSets;
 runSetupHoloceneCovariance;
 runImportOtherGSLCurves;
 
-save(savefile,'datasets','modelspec');
-
-%trainspecs = 1:8;
 trainspecs=[1 2 3 4 5];
 trainsets = [1 1 1 1 1];
 trainfirsttime = -1000;
@@ -124,8 +121,6 @@ testt = [-1000:20:2000 2010];
 
 regressparams=1:length(trainspecs);
 regresssets=ones(size(regressparams));
-regressparams=[regressparams regressparams];
-regresssets=[regresssets 2*regresssets];
 clear regresslabels;
 for i=1:length(regresssets)
     regresslabels{i} = [datasets{regresssets(i)}.label '_' trainlabels{regressparams(i)}];
@@ -139,19 +134,14 @@ for iii=1:length(regresssets)
     wmodelspec = modelspec(trainspecs(jj));
     
 
-    noiseMasks = ones(5,length(thetTGG{trainspecs(jj)}));
-    noiseMasks(1,[ wmodelspec.subampnoise]  )=0; %without linear
-    noiseMasks(2,[wmodelspec.subamplinear wmodelspec.subampoffset wmodelspec.subampnoise]  )=0; %without linear
-    noiseMasks(3,[setdiff(wmodelspec.subamp,wmodelspec.subamplinear)])=0; %only linear
-    noiseMasks(4,[setdiff(wmodelspec.subamp,wmodelspec.subampregmat)])=0; %only regional Matern
-    noiseMasks(5,[setdiff(wmodelspec.subamp,[wmodelspec.subampregmat wmodelspec.subamplinear])])=0; %only regional
-    noiseMasklabels={'denoised','nonlin','linear','regmat','regional'};
-    nmReg=5;
+    noiseMasks = ones(1,length(thetTGG{trainspecs(jj)}));
+    noiseMasks(1,[ wmodelspec.subampnoise]  )=0; %without noise
+    noiseMasklabels={'denoised'};
 
     wdataset=datasets{ii};
 
     labls{iii}=['_' regresslabels{iii}];
-    disp(labls{iii});
+    labl=labls{iii}; disp(labl);
 
     trainsub = find((wdataset.limiting==0)); % only index points
     wdataset.dY = sqrt(datasets{ii}.dY.^2 + (thetTGG{jj}(end)*wdataset.compactcorr).^2);
@@ -161,7 +151,12 @@ for iii=1:length(regresssets)
     collinear=wmodelspec.subamplinear(1);
     [f2s{iii},sd2s{iii},V2s{iii},testlocs{iii},logp(iii),passderivs,invcv]=RegressHoloceneDataSets(wdataset,testsitedef,wmodelspec,thetTGG{jj},trainsub,noiseMasks,testt(subtimes),refyear,collinear);
 
-    labl=labls{iii}; disp(labl);
+    noiseMasksLin = ones(2,length(thetTGG{trainspecs(jj)}));
+    noiseMasksLin(1,[setdiff(wmodelspec.subamp,union(wmodelspec.subamplinear,wmodelspec.subampoffset))])=0; %only linear
+    noiseMasksLin(2,[setdiff(wmodelspec.subamp,wmodelspec.subampoffset)])=0; %only offset
+    noiseMaskLinlabels={'linear','offset'};
+    [f2slin{iii},sd2slin{iii},V2slin{iii},testlocslin{iii}]=RegressHoloceneDataSets(wdataset,testsitedef,wmodelspec,thetTGG{jj},trainsub,noiseMasksLin,[0 1800],refyear,collinear,passderivs,invcv);
+
     
    runTableTGandProxyData;
     
@@ -225,3 +220,4 @@ for iii=1
     runSiteSensitivityTests;
 
 end
+runLatexTablesSiteSens;

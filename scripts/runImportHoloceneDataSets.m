@@ -293,7 +293,7 @@ HayGSL.istg=ones(size(HayGSL.Y));
 clear GSLflattener;
 GSLflattener.Y=[0 0]';
 GSLflattener.Ycv = ones(length(GSLflattener.Y))*(1e4^2);
-GSLflattener.Ycv(1,1)=GSLflattener.Ycv(1,1)+1;
+GSLflattener.Ycv(1,1)=GSLflattener.Ycv(1,1)+(.0025*1800)^2;
 GSLflattener.time1=[0 1800]'+.01;
 
 GSLflattener.dY=sqrt(diag(GSLflattener.Ycv));

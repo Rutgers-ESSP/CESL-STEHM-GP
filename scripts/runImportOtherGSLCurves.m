@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Dec 01 21:53:08 EST 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Tue Dec 02 09:37:23 EST 2014
 
 % extract the detrended North Carolina sea-level curve
 
@@ -11,9 +11,14 @@ nmms=ones(size(thetNC)); nmms(3)=0;
 
 testtNC = [-1000:20:2000 2010];
 
-wtestsitedef=testsitedefGSL;
+wtestsitedef.names={'NC_GSL'};
+wtestsitedef.names2={'NC_GSL'};
+wtestsitedef.firstage=-1000;
+wtestsitedef.oldest=-1000;
+wtestsitedef.youngest=2014;
+
 wtestsitedef.sites(:,2:3)=mean(wdataset.sitecoords(sitesub,:),1);
-[NC_pseudoGSL,NC_pseudoGSLsd,NC_pseudoGSLV,NClocs]=RegressHoloceneDataSets(wdataset,testsitedefGSL,ms,thetNC,datsub,nmms,testtNC,refyear,3);
+[NC_pseudoGSL,NC_pseudoGSLsd,NC_pseudoGSLV,NClocs]=RegressHoloceneDataSets(wdataset,wtestsitedef,ms,thetNC,datsub,nmms,testtNC,refyear,3);
 NC_yrs=NClocs.X(:,3);
 
 [NC_pseudoGSL,NC_pseudoGSLV,NC_pseudoGSLsd]=DetrendSLReconstruction(NC_pseudoGSL,NC_pseudoGSLV+ eye(size(NC_pseudoGSLV))*50^2,NClocs.sites,NClocs.reg,NC_yrs,0,1800,2000);
