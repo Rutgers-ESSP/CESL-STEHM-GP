@@ -400,13 +400,13 @@ Grinsted.sitelen=length(Grinsted.Y);
 %%%%%%
 
 clear datasets;
-datasets{1}=MergeDataStructures(MergeDataStructures(TG,PX),GSLflattener);
-datasets{2}=MergeDataStructures(TG,PX);
+datasets{1}=MergeDataStructures(TG,PX);
+datasets{2}=MergeDataStructures(MergeDataStructures(TG,PX),GSLflattener);
 datasets{3}=MergeDataStructures(TGNOGSL,PX);
 datasets{4}=PX;
 
-datasets{1}.label='TG+GSL+PX+flat';
-datasets{2}.label='TG+GSL+PX';
+datasets{1}.label='TG+GSL+PX';
+datasets{2}.label='TG+GSL+PX+flat';
 datasets{3}.label='TG+PX';
 datasets{4}.label='PX';
 

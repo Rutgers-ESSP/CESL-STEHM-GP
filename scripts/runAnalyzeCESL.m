@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Tue Dec 02 09:23:29 EST 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Wed Dec 03 09:56:39 EST 2014
 %
 
 dosldecomp = 0;
@@ -11,7 +11,7 @@ IFILES=[pd '/IFILES'];
 addpath(pd)
 savefile='~/tmp/CESL';
 
-WORKDIR='141202';
+WORKDIR='141203';
 if ~exist(WORKDIR,'dir')
     mkdir(WORKDIR);
 end

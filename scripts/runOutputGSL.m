@@ -49,7 +49,7 @@ wV1900=Mref2(datsub,datsub)*V2s{iii}(datsub,datsub,selmask)*Mref2(datsub,datsub)
 wsd1900=sqrt(diag(wV1900));
 
 
-for dodetrend=[0]
+for dodetrend=[0 1]
     labl3='';
     
     if dodetrend
