@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Wed Dec 03 09:56:39 EST 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Dec 04 09:22:49 EST 2014
 %
 
 dosldecomp = 0;
@@ -11,7 +11,7 @@ IFILES=[pd '/IFILES'];
 addpath(pd)
 savefile='~/tmp/CESL';
 
-WORKDIR='141203';
+WORKDIR='141204';
 if ~exist(WORKDIR,'dir')
     mkdir(WORKDIR);
 end
@@ -119,8 +119,8 @@ testt = [-1000:20:2000 2010];
 
 % select regression parameters
 
-regressparams=1:length(trainspecs);
-regresssets=ones(size(regressparams));
+regressparams=[1 4 5 2 3 1 4 5 2 3];
+regresssets=[1 1 1 1 1 2 2 2 2 2];
 clear regresslabels;
 for i=1:length(regresssets)
     regresslabels{i} = [datasets{regresssets(i)}.label '_' trainlabels{regressparams(i)}];

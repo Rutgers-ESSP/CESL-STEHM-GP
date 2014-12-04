@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Nov 17 22:44:36 EST 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Dec 04 09:22:57 EST 2014
 
 defval('firsttime',-1000);
 
@@ -291,10 +291,12 @@ HayGSL.istg=ones(size(HayGSL.Y));
 % add in GSL flattener
 
 clear GSLflattener;
-GSLflattener.Y=[0 0]';
-GSLflattener.Ycv = ones(length(GSLflattener.Y))*(1e4^2);
-GSLflattener.Ycv(1,1)=GSLflattener.Ycv(1,1)+(.0025*1800)^2;
-GSLflattener.time1=[0 1800]'+.01;
+GSLflattener.sigma=1e4;
+GSLflattener.time1=.01+[-100:50:100 1600:50:1800]';
+GSLflattener.Y=0*GSLflattener.time1;
+GSLflattener.Ycv = ones(length(GSLflattener.Y))*(GSLflattener.sigma^2);
+GSLflattener.Ycv(1:5,1:5) = GSLflattener.Ycv(1:5,1:5)+(.0025*1700)^2+eye(5)*GSLflattener.sigma^2-GSLflattener.sigma^2/5;
+GSLflattener.Ycv(6:10,6:10) = GSLflattener.Ycv(6:10,6:10)+eye(5)*GSLflattener.sigma^2-GSLflattener.sigma^2/5;
 
 GSLflattener.dY=sqrt(diag(GSLflattener.Ycv));
 GSLflattener.datid=0*GSLflattener.Y;
@@ -400,13 +402,13 @@ Grinsted.sitelen=length(Grinsted.Y);
 %%%%%%
 
 clear datasets;
-datasets{1}=MergeDataStructures(TG,PX);
-datasets{2}=MergeDataStructures(MergeDataStructures(TG,PX),GSLflattener);
+datasets{2}=MergeDataStructures(TG,PX);
+datasets{1}=MergeDataStructures(MergeDataStructures(TG,PX),GSLflattener);
 datasets{3}=MergeDataStructures(TGNOGSL,PX);
 datasets{4}=PX;
 
-datasets{1}.label='TG+GSL+PX';
-datasets{2}.label='TG+GSL+PX+flat';
+datasets{2}.label='TG+GSL+PX';
+datasets{1}.label='TG+GSL+PX+flat';
 datasets{3}.label='TG+PX';
 datasets{4}.label='PX';
 

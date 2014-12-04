@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Tue Dec 02 08:25:31 EST 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Dec 04 09:23:19 EST 2014
 
 % 1. GLMW
 % 2. GLMW-Grinsted - GLMW with global hyperparameters set to maximize likelihood of Grinsted curve
@@ -124,7 +124,7 @@ ms.sublength=[];
 [thetGrin]= OptimizeHoloceneCovariance(Grinsted,ms,[2.4 2.0],[],[],.01);
 
 modelspec(ii) = modelspec(1);
-modelspec(ii).label='GLMW-GrinstedG';
+modelspec(ii).label='GLMW-Gr';
 %modelspec(ii).thet0(turnoff)=0;
 modelspec(ii).subfixed=union(modelspec(ii).subfixed,freeze);
 
@@ -168,7 +168,7 @@ modelspec(ii) = modelspec(1);
 turnoff= [ ];
 freeze= [modelspec(1).subHPglobal ];
 
-modelspec(ii).label='GLMW-NCG';
+modelspec(ii).label='GLMW-NC';
 modelspec(ii).subfixed=union(modelspec(ii).subfixed,freeze);
 
 modelspec(ii).thet0(modelspec(ii).subHPglobal)=thetNC(1:2);
