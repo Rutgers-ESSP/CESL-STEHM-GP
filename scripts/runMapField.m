@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Nov 30 22:12:33 EST 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Dec 07 19:57:49 MST 2014
 
 nulldataset=SubsetDataStructure(wdataset,1,1);
 nulldataset.meantime=2000; nulldataset.dt=0; nulldataset.dY=200e3; nulldataset.limiting=0;
@@ -9,7 +9,7 @@ trainsub = find((wdataset.limiting==0));
 %lastyears=[1800 1000 1500 1800 1900 2000];
 qqq=1;
 firstyears=[0  ];
-lastyears=[1800];
+lastyears=[1700];
 Flat=-85:10:85;
 Flong=0:20:360;
 sub=find(testsites(:,2)<=360);
@@ -84,7 +84,7 @@ lastyears2= [ 400 800 1200 1600 1800 1900 2000];
 for qqq=1:length(firstyears2)
 
     firstyears=[0 firstyears2(qqq)];
-    lastyears = [1800 lastyears2(qqq)];
+    lastyears = [1700 lastyears2(qqq)];
     disp(sprintf('%0.0f--%0.0f',[firstyears2(qqq) lastyears2(qqq)]));
     
     [~,~,~,~,fslopediffF,sdslopediffF,diffplusF,difflessF,passderivs,invcv] = RegressRateField(wdataset,wmodelspec,thetTGG{jj},noiseMasks(1,:),Flat,Flong,firstyears,lastyears,trainsub,ICE5G,passderivs,invcv);    
@@ -149,8 +149,8 @@ for qqq=1:length(firstyears2)
     q1=min(fslopediffF(:)-fslopeGSL);
     q2=max(fslopediffF(:)-fslopeGSL);
     caxis(fslopeGSL+[-1 1]*max(abs(q1),abs(q2)));
-    title({[num2str(firstyears2(qqq)) '-' num2str(lastyears2(qqq)) ' relative to 0-1800 (mm/y)'],['GSL: ' sprintf('%0.2f \\pm %0.2f mm/y',[fslopeGSL(1) 2*sdslopeGSL(1)]) ' --- threshold \sigma = ' sprintf('%0.2f',threshold) '\sigma_0' ]});
+    title({[num2str(firstyears2(qqq)) '-' num2str(lastyears2(qqq)) ' relative to 0-1700 (mm/y)'],['GSL: ' sprintf('%0.2f \\pm %0.2f mm/y',[fslopeGSL(1) 2*sdslopeGSL(1)]) ' --- threshold \sigma = ' sprintf('%0.2f',threshold) '\sigma_0' ]});
     
-    pdfwrite(['fieldmap_rel01800_' labl '_' num2str(firstyears2(qqq)) '_' num2str(lastyears2(qqq))]);
+    pdfwrite(['fieldmap_rel01700_' labl '_' num2str(firstyears2(qqq)) '_' num2str(lastyears2(qqq))]);
 end
 colormap(jet);

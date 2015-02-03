@@ -1,8 +1,8 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Dec 04 09:23:05 EST 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri Dec 05 07:53:06 EST 2014
 
 % first do a table with rates for each of the models
 
-regresssetorder = [1 4 5 2 3];
+regresssetorder = 1:5;
 
 firstyears=[0 0   400 800  1200 1200 1600 1800 1860 1900];
 lastyears= [1700 400 800 1200 1800 1600 1800 1900 1900 2000];
@@ -54,6 +54,7 @@ end
 %fprintf(fid,'All rates except 0--1700 CE are detrended with respect to 0--1700 CE.');
 
 fprintf(fid,'\n\n\n');
+
 for iii=regresssetorder
     fprintf(fid,['& ' trainlabels{regressparams(iii)}]);
 end
@@ -61,13 +62,44 @@ for qqq=1:length(firstyears)
     fprintf(fid,'\\\\ \n %0.0f--%0.0f',wfly(:,qqq));
     for iii=regresssetorder
         [fslopeavg,sdslopeavg]=SLRateCompare(f2s{iii}(datsub,1),V2s{iii}(datsub,datsub,1),testsites(sitesub),testreg(datsub),testX(datsub,3),firstyears(qqq),lastyears(qqq));
-        
         P=normcdf([fslopeavg./sdslopeavg]);
+        if qqq>1
+            [~,~,fslopeavgdiff,sdslopeavgdiff]=SLRateCompare(f2s{iii}(datsub,1),V2s{iii}(datsub,datsub,1),testsites(sitesub),testreg(datsub),testX(datsub,3),firstyears([1 qqq]),lastyears([1 qqq]));
+            P=normcdf([fslopeavgdiff./sdslopeavgdiff]);        
+        end
+        
         fprintf(fid,' & $%0.2f \\pm %0.2f$ (%0.2f)',[fslopeavg 2*sdslopeavg P]);
 
     end
 end
+fprintf(fid,'\nAll probabilities except 0--1700 CE are with respect to differences from 0--1700 CE.');
+
+
+%%% no flattener
+fprintf(fid,'\n\n\n No flattener \n\n');
+
+regresssetorder2 = 6:10;
+for iii=regresssetorder2
+    fprintf(fid,['& ' trainlabels{regressparams(iii)}]);
+end
+for qqq=1:length(firstyears)
+    fprintf(fid,'\\\\ \n %0.0f--%0.0f',wfly(:,qqq));
+    for iii=regresssetorder2
+        [fslopeavg,sdslopeavg]=SLRateCompare(f2s{iii}(datsub,1),V2s{iii}(datsub,datsub,1),testsites(sitesub),testreg(datsub),testX(datsub,3),firstyears(qqq),lastyears(qqq));       
+        P=normcdf([fslopeavg./sdslopeavg]);
+        if qqq>1
+            [~,~,fslopeavgdiff,sdslopeavgdiff]=SLRateCompare(f2s{iii}(datsub,1),V2s{iii}(datsub,datsub,1),testsites(sitesub),testreg(datsub),testX(datsub,3),firstyears([1 qqq]),lastyears([1 qqq]));
+            P=normcdf([fslopeavgdiff./sdslopeavgdiff]);        
+        end
+        
+        fprintf(fid,' & $%0.2f \\pm %0.2f$ (%0.2f)',[fslopeavg 2*sdslopeavg P]);
+
+    end
+end
+fprintf(fid,'\nAll probabilities except 0--1700 CE are with respect to differences from 0--1700 CE.');
+
 %fprintf(fid,'All rates except 0--1700 CE are detrended with respect to 0--1700 CE.');
+
 
 
 
@@ -91,7 +123,7 @@ fclose(fid);
 iii=1;
 
 firstyears=[0    0   400 800  1200 1600 1800 1900];
-lastyears= [1800 400 800 1200 1600 1800 1900 2000];
+lastyears= [1700 400 800 1200 1600 1800 1900 2000];
 
 testreg=testlocs{iii}.reg;
 testsites=testlocs{iii}.sites;

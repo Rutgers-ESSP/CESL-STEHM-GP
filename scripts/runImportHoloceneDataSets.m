@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Dec 04 09:22:57 EST 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Feb 02 19:09:46 EST 2015
 
 defval('firsttime',-1000);
 
@@ -12,7 +12,7 @@ datid=[]; time1=[]; time2=[]; mediantime=[]; limiting=[]; Y=[]; dY = []; compact
 istg = []; lat=[]; long=[];
 siteid=[]; sitenames={}; sitecoords=[];
 
-datPX = importdata(fullfile(IFILES,'RSL_Nov2014b.csv'));
+datPX = importdata(fullfile(IFILES,'RSL_Jan2015.csv'));
 datPX.textdata=datPX.textdata(2:end,:);
 
 % catch entries without age errors
@@ -72,38 +72,38 @@ end
 %%%%%%%%%%%%%%%%
 
 % Engelhart & Horton database
-
-datHolo=importdata(fullfile(IFILES,'Engelhart_Horton_2012_v4.csv'));
-HoloRegions=[1:16];
-for curreg=1:length(HoloRegions)
-    sub=find((datHolo.data(:,1)==HoloRegions(curreg)).*(datHolo.data(:,2)==0));
-
-    count=[1:length(sub)]';
-    wdatid = ones(length(sub),1)*(1e6+HoloRegions(curreg)*1e3);
-    wtime1=1950-datHolo.data(sub,8) + count/1e5;
-    wtime2=1950-datHolo.data(sub,9) + count/1e5;
-    wlimiting=datHolo.data(sub,2);
-    wY=datHolo.data(sub,10)*1000;
-    wdY=datHolo.data(sub,11)*1000;
-    wlat=datHolo.data(sub,3);
-    wlong=-datHolo.data(sub,4);
-    wcompactcorr = wY;
-    
-    datid = [datid ; wdatid];
-    time1 = [time1 ; wtime1];
-    time2 = [time2 ; wtime2];
-    limiting = [limiting ; wlimiting];
-    Y = [Y ; wY];
-    dY = [dY ; wdY];
-    compactcorr = [compactcorr ; wcompactcorr];
-    istg = [istg ; 0 * wY];
-    lat = [lat ; wlat];
-    long = [long ; wlong];
-
-    sitecoords=[sitecoords; mean(wlat) mean(wlong)];
-    sitenames={sitenames{:}, ['EH12_' num2str(HoloRegions(curreg))]};
-    siteid=[siteid ; [1e6+curreg*1e3]'];
-end
+% $$$ 
+% $$$ datHolo=importdata(fullfile(IFILES,'Engelhart_Horton_2012_v4.csv'));
+% $$$ HoloRegions=[1:16];
+% $$$ for curreg=1:length(HoloRegions)
+% $$$     sub=find((datHolo.data(:,1)==HoloRegions(curreg)).*(datHolo.data(:,2)==0));
+% $$$ 
+% $$$     count=[1:length(sub)]';
+% $$$     wdatid = ones(length(sub),1)*(1e6+HoloRegions(curreg)*1e3);
+% $$$     wtime1=1950-datHolo.data(sub,8) + count/1e5;
+% $$$     wtime2=1950-datHolo.data(sub,9) + count/1e5;
+% $$$     wlimiting=datHolo.data(sub,2);
+% $$$     wY=datHolo.data(sub,10)*1000;
+% $$$     wdY=datHolo.data(sub,11)*1000;
+% $$$     wlat=datHolo.data(sub,3);
+% $$$     wlong=-datHolo.data(sub,4);
+% $$$     wcompactcorr = wY;
+% $$$     
+% $$$     datid = [datid ; wdatid];
+% $$$     time1 = [time1 ; wtime1];
+% $$$     time2 = [time2 ; wtime2];
+% $$$     limiting = [limiting ; wlimiting];
+% $$$     Y = [Y ; wY];
+% $$$     dY = [dY ; wdY];
+% $$$     compactcorr = [compactcorr ; wcompactcorr];
+% $$$     istg = [istg ; 0 * wY];
+% $$$     lat = [lat ; wlat];
+% $$$     long = [long ; wlong];
+% $$$ 
+% $$$     sitecoords=[sitecoords; mean(wlat) mean(wlong)];
+% $$$     sitenames={sitenames{:}, ['EH12_' num2str(HoloRegions(curreg))]};
+% $$$     siteid=[siteid ; [1e6+curreg*1e3]'];
+% $$$ end
 
 %%%%
 
@@ -125,59 +125,12 @@ PX.sitecoords = sitecoords;
 
 PX0=PX;
 
-% drop too old, and too near field
+% drop too old
 sub=find(PX.time1>=firsttime);
-sub=intersect(sub,find(abs(PX.lat)<=80));
-subS=find(abs(PX.sitecoords(:,1))<=80);
+sub=intersect(sub,find(abs(PX.lat)<=90));
+subS=find(abs(PX.sitecoords(:,1))<=90);
 
 PX=SubsetDataStructure(PX,sub,subS);
-
-sub = find(PX.datid<1e6);
-subS = find(PX.siteid<1e6);
-PXnoEH = SubsetDataStructure(PX,sub,subS);
-
-% drop Greenland and Iceland
-
-subexcl = union(strmatch('Greenland',PX.sitenames),strmatch('Iceland',PX.sitenames));
-sub = find(~ismember(PX.datid,PX.siteid(subexcl)));
-subS = find(~ismember(PX.siteid,PX.siteid(subexcl)));
-PXnonf = SubsetDataStructure(PX,sub,subS);
-
-% $$$ incls = {{'North Carolina','New Jersey','Florida'},{'Florida','New Jersey','North Carolina','Nova Scotia'},{'Florida','New Jersey','North Carolina','Nova Scotia','New Zealand','Cook Islands'},{'Florida','New Jersey','North Carolina','Nova Scotia','New Zealand','Cook Islands','Massachusetts','Maine','Louisiana'}};
-% $$$ 
-% $$$ for ii=1:length(incls);
-% $$$     incl=incls{ii};
-% $$$     subincl=[]; subinclS=[];
-% $$$     for jj=1:length(incl)
-% $$$         doincl=find(strncmp(incl{jj},PX.sitenames, ...
-% $$$                             length(incl{jj})));
-% $$$         subinclS=union(subinclS,doincl);
-% $$$         for kk=1:length(doincl)
-% $$$             subincl=union(subincl,find(PX.datid==PX.siteid(doincl(kk))));
-% $$$         end
-% $$$     end
-% $$$     sub=subincl; subS=subinclS;
-% $$$     PXsub{ii}=SubsetDataStructure(PX,sub,subS);
-% $$$ end
-
-% now create a slimmed version for training
-% $$$ excl={'France','Tasmania','Spain','New Zealand','Italy','Israel',['Isle ' ...
-% $$$                     'of Wight'],'Iceland','Greenland'};
-% $$$ 
-% $$$ subexcl=[]; subexclS=[];
-% $$$ 
-% $$$ for ii=1:length(excl)
-% $$$     doexcl=find(strncmp(excl{ii},PX.sitenames,length(excl{ii})));
-% $$$     subexclS=union(subexclS,doexcl);
-% $$$     for jj=1:length(doexcl)
-% $$$         subexcl=union(subexcl,find(PX.datid==PX.siteid(doexcl(jj))));
-% $$$     end
-% $$$ end
-% $$$ sub=setdiff(1:length(PX.datid),subexcl);
-% $$$ subS=setdiff(1:length(PX.siteid),subexclS);
-% $$$ 
-% $$$ PXslim=SubsetDataStructure(PX,sub,subS);
-
 
 %%%%%%%
 %old tide gauges
@@ -312,35 +265,10 @@ GSLflattener.sitenames={'GSLflattener'};
 GSLflattener.sitecoords=[1e6 1e6];
 GSLflattener.sitelen=length(GSLflattener.Y);
 
-% $$$ 
-% $$$ sub=find(TG.datid==0);
-% $$$ GSLnewcv = TG.Ycv(sub,sub);
-% $$$ 
-% $$$ % reduced degrees of freedom (1/4 year)
-% $$$ GSLnewcv = GSLnewcv * 4;
-% $$$ 
-% $$$ % 2s trend error of 0.1 mm/y over a century due to GIA
-% $$$ GSLtrenderror = 0.1/2;
-% $$$ GSLnewcv = GSLnewcv + bsxfun(@times,(TG.meantime(sub)-2000),(TG.meantime(sub)'-2000)) * (GSLtrenderror)^2;
-% $$$ TG.dY(sub)=sqrt(diag(GSLnewcv));
-% $$$ TG.Ycv(sub,sub)=GSLnewcv;
-
-
-% drop near field
-sub=union(find(abs(TG.lat)<=53),find(TG.lat>100));
-subS=union(find(abs(TG.sitecoords(:,1))<=53),find(TG.sitecoords(:,1)>100));
-
-TG=SubsetDataStructure(TG,sub,subS);
-
 % add in old tide gauges
 TG=MergeDataStructures(TG,TGoldS);
 TGNOGSL=TG;
 TG=MergeDataStructures(TG,HayGSL);
-
-%
-
-% $$$ sub=find(TG.datid~=0); subS = find(TG.siteid~=0);
-% $$$ TGNOCW=SubsetDataStructure(TG,sub,subS);
 
 
 %%%%%%%%%%%%%%%%
@@ -411,11 +339,6 @@ datasets{2}.label='TG+GSL+PX';
 datasets{1}.label='TG+GSL+PX+flat';
 datasets{3}.label='TG+PX';
 datasets{4}.label='PX';
-
-%for jj=1:length(PXsub)
-%    datasets{end+1}=MergeDataStructures(TGNOCW,PXsub{jj});
-%    datasets{end}.label=['TG+PXsub' num2str(jj)];
-%end
 
 
 for ii=1:length(datasets)

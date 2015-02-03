@@ -107,11 +107,11 @@ set(hp(3:4),'ylim',get(hp(1),'ylim')); set(hp(3:4),'xdir','reverse','xlim',1950-
 xticks=get(hp(1),'xtick');
 set(hp(3:4),'xtick',1950-xticks(end:-1:1));
 
-set(hp(3:4),'ytickl',{}); xlabel(hp(3),'Year BP'); xlabel(hp(4),'Year BP');
+set(hp(3:4),'yticklabel',{}); xlabel(hp(3),'Year BP'); xlabel(hp(4),'Year BP');
 longticks(hp,2);
 
 if difftimestep>0
-	set(hp([1 4]),'xtickl',{}); xlabel(hp(1),''); xlabel(hp(4),'');
+	set(hp([1 4]),'xticklabel',{}); xlabel(hp(1),''); xlabel(hp(4),'');
 	movev(hp([2 4]),.09);
 else
 	delete(hp([2 4]));

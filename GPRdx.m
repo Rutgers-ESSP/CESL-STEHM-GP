@@ -1,7 +1,7 @@
-function [dK,df,d2f,yoffset,f0] = GPRdx(x0,y0,dx0,dy0,cvfunc0,Nderivs,spacex,varargin)
+function [dK,df,d2f,yoffset,f0,dV] = GPRdx(x0,y0,dx0,dy0,cvfunc0,Nderivs,spacex,varargin)
 
-% [dK,df,d2f,yoffset,f0] = GPRdx(x0,y0,dx0,dy0,cvfunc,[Nderivs],[spacex])
-% [dK,df,d2f,yoffset,f0] = GPRdx(x0,y0,dx0,dy0,modelspec)
+% [dK,df,d2f,yoffset,f0,dV] = GPRdx(x0,y0,dx0,dy0,cvfunc,[Nderivs],[spacex])
+% [dK,df,d2f,yoffset,f0,dV] = GPRdx(x0,y0,dx0,dy0,modelspec)
 % 
 % Calculates increment of training covariance matrix for noisy GP regression.
 %
@@ -12,9 +12,10 @@ function [dK,df,d2f,yoffset,f0] = GPRdx(x0,y0,dx0,dy0,cvfunc0,Nderivs,spacex,var
 %     d2f: second derivatives
 %     yoffset: offset of y due to d2f
 %     f0: noise-free mean projection at x0 
+%     dV: uncertainty on derivatives (if calculated analytically)
 %
 %    
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Oct 27 12:04:58 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Dec 11 11:50:48 EST 2014
 
 %%%%%
 

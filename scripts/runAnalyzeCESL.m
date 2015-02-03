@@ -11,7 +11,7 @@ IFILES=[pd '/IFILES'];
 addpath(pd)
 savefile='~/tmp/CESL';
 
-WORKDIR='141204';
+WORKDIR='141205';
 if ~exist(WORKDIR,'dir')
     mkdir(WORKDIR);
 end
@@ -134,7 +134,7 @@ for iii=1:length(regresssets)
     wmodelspec = modelspec(trainspecs(jj));
     
 
-    noiseMasks = ones(1,length(thetTGG{trainspecs(jj)}));
+    noiseMasks = ones(1,length(thetTGG{jj}));
     noiseMasks(1,[ wmodelspec.subampnoise]  )=0; %without noise
     noiseMasklabels={'denoised'};
 
@@ -151,7 +151,7 @@ for iii=1:length(regresssets)
     collinear=wmodelspec.subamplinear(1);
     [f2s{iii},sd2s{iii},V2s{iii},testlocs{iii},logp(iii),passderivs,invcv]=RegressHoloceneDataSets(wdataset,testsitedef,wmodelspec,thetTGG{jj},trainsub,noiseMasks,testt(subtimes),refyear,collinear);
 
-    noiseMasksLin = ones(2,length(thetTGG{trainspecs(jj)}));
+    noiseMasksLin = ones(2,length(thetTGG{jj}));
     noiseMasksLin(1,[setdiff(wmodelspec.subamp,union(wmodelspec.subamplinear,wmodelspec.subampoffset))])=0; %only linear
     noiseMasksLin(2,[setdiff(wmodelspec.subamp,wmodelspec.subampoffset)])=0; %only offset
     noiseMaskLinlabels={'linear','offset'};

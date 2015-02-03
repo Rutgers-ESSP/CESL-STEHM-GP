@@ -4,7 +4,7 @@
 % 2. GLMW-Grinsted - GLMW with global hyperparameters set to maximize likelihood of Grinsted curve
 % 3. GLMW-NC
 % 4. GLMW-1ts
-% 5. GLMW-`1amp
+% 5. GLMW-1ts1amp
 % 5. GLW
 % 6. GMW
 % 7. GW

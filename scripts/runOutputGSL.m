@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Tue Dec 02 14:28:47 EST 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Wed Dec 17 06:43:02 PST 2014
 
 
 refyear=2000;
@@ -77,7 +77,7 @@ for dodetrend=[0 1]
 
     pdfwrite(['GSL' labl2]);
 
-    for timesteps=[100 400 60 40 20]
+    for timesteps=[100 400 40 20]
         [hp,hl,hl2,dGSL,dGSLsd,dGSLV,outtable,difftimes,diffreg]=PlotPSLOverlay(testX(datsub,3),testreg(datsub),testsites(sitesub,1),wf,wV,colrs,testsitedef.firstage(sitesub),testt(end),0,timesteps,{'GSL'});
         set(hp,'xlim',[-1000 2010]);
         delete(hp(2));
@@ -112,11 +112,11 @@ for dodetrend=[0 1]
         
         suboverallyrs=find(mod(difftimes,timesteps)==timesteps/2);
         subyrs=find(difftimes(suboverallyrs)>=1800);
-        wquants=[.67 .9 .95 .99 .995 .999];
+        wquants=[.67 .9 .95 .96 .97 .98 .99 .995 .999];
         if length(subyrs)>0
             fprintf(fid,'\n\nLast year faster');
             fprintf(fid,'Central year');
-            fprintf(fid,'\t%0.3f',wquants);
+            fprintf(fid,'\t%wV(datsub(ppp),datsub)0.3f',wquants);
             fprintf(fid,'\n');
             
             clear lastyrlarger;
@@ -150,11 +150,23 @@ for dodetrend=[0 1]
     fprintf(fid,'\n');
     for ppp=1:length(datsub)
         fprintf(fid,'%0.0f',testX(datsub(ppp),3));
-        fprintf(fid,'\t%0.3e',wV(datsub(ppp),datsub));
+        fprintf(fid,'\t%0.8e',wV(datsub(ppp),datsub));
         fprintf(fid,'\n');
     end
     
     fclose(fid);
+    
+    fid=fopen(['dGSL_' num2str(timesteps) 'y' labl2 ‘_cov.tsv'],'w');
+    fprintf(fid,'(mm/y)^2');
+    fprintf(fid,'\t%0.0f',difftimes);
+    fprintf(fid,'\n');
+    for ppp=1:length(difftimes)
+        fprintf(fid,'%0.0f',difftimes(ppp));
+        fprintf(fid,'\t%0.8e',dGSLV(ppp,:));
+        fprintf(fid,'\n');
+    end
+    fclose(fid);
+
 end
 
 
