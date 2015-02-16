@@ -83,6 +83,7 @@ for dodetrend=[0 1]
         delete(hp(2));
         
         clf;
+   
         
 
 
@@ -156,7 +157,7 @@ for dodetrend=[0 1]
     
     fclose(fid);
     
-    fid=fopen(['dGSL_' num2str(timesteps) 'y' labl2 ‘_cov.tsv'],'w');
+    fid=fopen(['dGSL_' num2str(timesteps) 'y' labl2 '_cov.tsv'],'w');
     fprintf(fid,'(mm/y)^2');
     fprintf(fid,'\t%0.0f',difftimes);
     fprintf(fid,'\n');

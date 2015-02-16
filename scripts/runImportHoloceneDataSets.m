@@ -1,10 +1,10 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Feb 02 19:09:46 EST 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Feb 16 15:29:03 EST 2015
 
-defval('firsttime',-1000);
+defval('firsttime',-1300);
 
 thinyrs=10;
 minlen=50;
-minperstudy=2;
+minperstudy=1;
 refyear=2010;
 
 %%%%%%%%%%
@@ -12,7 +12,7 @@ datid=[]; time1=[]; time2=[]; mediantime=[]; limiting=[]; Y=[]; dY = []; compact
 istg = []; lat=[]; long=[];
 siteid=[]; sitenames={}; sitecoords=[];
 
-datPX = importdata(fullfile(IFILES,'RSL_Jan2015.csv'));
+datPX = importdata(fullfile(IFILES,'RSL_Feb2015b.csv'));
 datPX.textdata=datPX.textdata(2:end,:);
 
 % catch entries without age errors
@@ -68,42 +68,64 @@ for ii=1:length(uStudy)
     end
 end 
 
-
 %%%%%%%%%%%%%%%%
 
-% Engelhart & Horton database
-% $$$ 
-% $$$ datHolo=importdata(fullfile(IFILES,'Engelhart_Horton_2012_v4.csv'));
-% $$$ HoloRegions=[1:16];
-% $$$ for curreg=1:length(HoloRegions)
-% $$$     sub=find((datHolo.data(:,1)==HoloRegions(curreg)).*(datHolo.data(:,2)==0));
-% $$$ 
-% $$$     count=[1:length(sub)]';
-% $$$     wdatid = ones(length(sub),1)*(1e6+HoloRegions(curreg)*1e3);
-% $$$     wtime1=1950-datHolo.data(sub,8) + count/1e5;
-% $$$     wtime2=1950-datHolo.data(sub,9) + count/1e5;
-% $$$     wlimiting=datHolo.data(sub,2);
-% $$$     wY=datHolo.data(sub,10)*1000;
-% $$$     wdY=datHolo.data(sub,11)*1000;
-% $$$     wlat=datHolo.data(sub,3);
-% $$$     wlong=-datHolo.data(sub,4);
-% $$$     wcompactcorr = wY;
-% $$$     
-% $$$     datid = [datid ; wdatid];
-% $$$     time1 = [time1 ; wtime1];
-% $$$     time2 = [time2 ; wtime2];
-% $$$     limiting = [limiting ; wlimiting];
-% $$$     Y = [Y ; wY];
-% $$$     dY = [dY ; wdY];
-% $$$     compactcorr = [compactcorr ; wcompactcorr];
-% $$$     istg = [istg ; 0 * wY];
-% $$$     lat = [lat ; wlat];
-% $$$     long = [long ; wlong];
-% $$$ 
-% $$$     sitecoords=[sitecoords; mean(wlat) mean(wlong)];
-% $$$     sitenames={sitenames{:}, ['EH12_' num2str(HoloRegions(curreg))]};
-% $$$     siteid=[siteid ; [1e6+curreg*1e3]'];
-% $$$ end
+
+datLH = importdata(fullfile(IFILES,'RSL_LateHolocene_Feb2015.csv'));
+datLH.textdata=datLH.textdata(2:end,:);
+
+% catch entries without age errors
+sub=find(isnan(datLH.data(:,8))); datLH.data(sub,8)=100;
+sub=find(isnan(datLH.data(:,7))); datLH.data(sub,7)=100;
+
+study=datLH.textdata(:,1);
+uStudy = unique(study);
+for ii=1:length(uStudy)
+    sub=find(strcmpi(uStudy{ii},study));
+    if length(sub)>=minperstudy
+        site = datLH.textdata(sub,2);
+        uSite=unique(site);
+        for jj=1:length(uSite)
+            curid = 1e6 + 1e4*ii + jj;
+            curstudysite=[uStudy{ii} '-' uSite{jj}];
+            sub2=sub(find(strcmpi(uSite{jj},site)));
+            wdatid=ones(length(sub2),1)*curid;
+            wmediantime=datLH.data(sub2,6);
+            wtime1=wmediantime-datLH.data(sub2,8)+(1:length(sub2))'/1e5;
+            wtime2=wmediantime+datLH.data(sub2,7)+(1:length(sub2))'/1e5;
+            
+            wlimiting=zeros(length(sub2),1);
+            wYmedian=datLH.data(sub2,3);
+            wY1=wYmedian-datLH.data(sub2,5);
+            wY2=wYmedian+datLH.data(sub2,4);
+            wY=(wY1+wY2)/2;
+            wdY=abs(wY2-wY1)/4;
+            wcompactcorr=zeros(length(sub2),1);;
+            wlat=datLH.data(sub2,1);
+            wlong=datLH.data(sub2,2);
+            
+            wY=wY*1000;
+            wdY=wdY*1000;
+            
+            datid = [datid ; wdatid];
+            time1 = [time1 ; wtime1];
+            time2 = [time2 ; wtime2];
+            limiting = [limiting ; wlimiting];
+            Y = [Y ; wY];
+            dY = [dY ; wdY];
+            compactcorr = [compactcorr ; wcompactcorr];
+            istg = [istg ; 0 * wY];
+            lat = [lat ; wlat];
+            long = [long ; wlong];
+            mediantime = [mediantime ; wmediantime];
+
+            siteid=[siteid ; curid];
+            sitenames={sitenames{:}, curstudysite};
+            sitecoords=[sitecoords; mean(wlat) mean(wlong)];
+        end
+
+    end
+end 
 
 %%%%
 
@@ -131,6 +153,15 @@ sub=intersect(sub,find(abs(PX.lat)<=90));
 subS=find(abs(PX.sitecoords(:,1))<=90);
 
 PX=SubsetDataStructure(PX,sub,subS);
+
+
+sub=find(PX.datid<1e6);
+subS=find(PX.siteid<1e6);
+PXnoLH=SubsetDataStructure(PX,sub,subS);
+
+sub=find(PX.datid>=1e6);
+subS=find(PX.siteid>=1e6);
+LH=SubsetDataStructure(PX,sub,subS);
 
 %%%%%%%
 %old tide gauges
@@ -330,14 +361,14 @@ Grinsted.sitelen=length(Grinsted.Y);
 %%%%%%
 
 clear datasets;
-datasets{2}=MergeDataStructures(TG,PX);
-datasets{1}=MergeDataStructures(MergeDataStructures(TG,PX),GSLflattener);
-datasets{3}=MergeDataStructures(TGNOGSL,PX);
+datasets{1}=MergeDataStructures(TG,PX);
+datasets{2}=MergeDataStructures(MergeDataStructures(TG,PX),GSLflattener);
+datasets{3}=PXnoLH;
 datasets{4}=PX;
 
-datasets{2}.label='TG+GSL+PX';
-datasets{1}.label='TG+GSL+PX+flat';
-datasets{3}.label='TG+PX';
+datasets{1}.label='TG+GSL+PX';
+datasets{2}.label='TG+GSL+PX+flat';
+datasets{3}.label='PXnoLH';
 datasets{4}.label='PX';
 
 
