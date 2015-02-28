@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Dec 07 19:57:49 MST 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri Feb 20 08:29:02 EST 2015
 
 nulldataset=SubsetDataStructure(wdataset,1,1);
 nulldataset.meantime=2000; nulldataset.dt=0; nulldataset.dY=200e3; nulldataset.limiting=0;
@@ -29,6 +29,23 @@ GSLdatsub=find(testreg==0);
 [priorslope,sdpriorslope] = RegressRateField(nulldataset,wmodelspec,thetTGG{jj},noiseMasks(1,:),-80,0,firstyears,lastyears);    
 
 
+Flat1=min(Flat):max(Flat);
+Flong1=min(Flong):max(Flong);
+
+[FLONG,FLAT]=meshgrid(Flong,Flat);
+[FLONG1,FLAT1]=meshgrid(Flong1,Flat1);
+mapped = griddata(FLONG(:),FLAT(:),fslopeF,Flong1,Flat1(:),'linear'); %+fslopeGSL;
+sdmapped = griddata(FLONG(:),FLAT(:),sdslopeF,Flong1,Flat1(:),'linear');
+
+u=sdmapped/sdpriorslope;
+%threshold=quantile(u(:),.2);
+%threshold=sqrt(.67);
+threshold=.75;
+subbad=find((sdmapped/sdpriorslope)>threshold);
+mapped(subbad)=NaN;
+
+%%
+
 clf;
 ax = worldmap('World');
 setm(ax, 'Origin',[0 -90 0],'meridianlabel','off','parallellabel','off','flinewidth',3);
@@ -36,19 +53,7 @@ land = shaperead('landareas', 'UseGeoCoords', true);
 geoshow(ax, land, 'FaceColor', [0.85 0.85 0.85]);
 hold on;
 
-Flat1=min(Flat):max(Flat);
-Flong1=min(Flong):max(Flong);
 
-[FLONG,FLAT]=meshgrid(Flong,Flat);
-[FLONG1,FLAT1]=meshgrid(Flong1,Flat1);
-mapped = griddata(FLONG(:),FLAT(:),fslopeF,Flong1,Flat1(:),'linear')+fslopeGSL;
-sdmapped = griddata(FLONG(:),FLAT(:),sdslopeF,Flong1,Flat1(:),'linear');
-
-u=sdmapped/sdpriorslope;
-%threshold=max(.35,quantile(u(:),.05));
-threshold=sqrt(.8);
-subbad=find((sdmapped/sdpriorslope)>threshold);
-mapped(subbad)=NaN;
 
 hs1=scatterm(FLAT1(:),FLONG1(:),10,mapped(:),'filled','marker','s');
 %hs2=plotm(FLAT1(subbad),FLONG1(subbad),'o','color',[1 1 1],'markersize',4,'markerfacecolor','w','markeredgecolor','w')
@@ -76,6 +81,44 @@ box on;
 caxis([-1 3]);
 title({[num2str(firstyears(qqq)) '-' num2str(lastyears(qqq)) ' (mm/y)'],['GSL: ' sprintf('%0.2f \\pm %0.2f mm/y',[fslopeGSL 2*sdslopeGSL])  ' --- threshold \sigma = ' sprintf('%0.2f',threshold) '\sigma_0' ]});
 pdfwrite(['fieldmap_' labl '_' num2str(firstyears(qqq)) '_' num2str(lastyears(qqq))]);
+
+%%% now plot standard deviation
+
+subbad2=find((sdmapped/sdpriorslope)>.5);
+sdmapped(subbad2)=NaN;
+
+clf;
+ax = worldmap('World');
+setm(ax, 'Origin',[0 -90 0],'meridianlabel','off','parallellabel','off','flinewidth',3);
+land = shaperead('landareas', 'UseGeoCoords', true);
+geoshow(ax, land, 'FaceColor', [0.85 0.85 0.85]);
+hold on;
+
+
+
+hs1=scatterm(FLAT1(:),FLONG1(:),10,sdmapped(:),'filled','marker','s');
+%hs2=plotm(FLAT1(subbad),FLONG1(subbad),'o','color',[1 1 1],'markersize',4,'markerfacecolor','w','markeredgecolor','w')
+
+hold on;
+
+sublong=find((mod(FLONG1(:),5)==0).*(mod(FLAT1(:),5)==0));
+subbad2=intersect(subbad,sublong);
+%hbad=plotm(FLAT1(subbad2),FLONG1(subbad2),'kx');
+%set(hbad,'MarkerSize',3,'MarkerEdgeColor',[.5 .5 .5],'MarkerFaceColor',[.5 .5 .5]);
+%hbad=scatterm(FLAT1(subbad2),FLONG1(subbad2),10,[.5 .5 .5],'x');
+
+ud=unique(wdataset.datid(find((wdataset.time2>=firstyears(qqq)).*(wdataset.time1<=lastyears(qqq)))));
+sub1=find(ismember(wdataset.siteid,ud));
+%hs1=scatterm(wdataset.sitecoords(sub1,1),wdataset.sitecoords(sub1,2),15,'k','filled','MarkerFaceColor','w','Marker','d','MarkerEdgeColor','k'); hold on;
+
+colormap(jet);
+axis tight;
+hcb=colorbar;
+
+box on;
+%   caxis([0 1.5]);
+title({[num2str(firstyears(qqq)) '-' num2str(lastyears(qqq)) ' (mm/y)'],['GSL: ' sprintf('%0.2f \\pm %0.2f mm/y',[fslopeGSL 2*sdslopeGSL])]});
+pdfwrite(['fieldmap_' labl '_' num2str(firstyears(qqq)) '_' num2str(lastyears(qqq)) '_sd']);
 
 %%%%
 
@@ -149,7 +192,7 @@ for qqq=1:length(firstyears2)
     q1=min(fslopediffF(:)-fslopeGSL);
     q2=max(fslopediffF(:)-fslopeGSL);
     caxis(fslopeGSL+[-1 1]*max(abs(q1),abs(q2)));
-    title({[num2str(firstyears2(qqq)) '-' num2str(lastyears2(qqq)) ' relative to 0-1700 (mm/y)'],['GSL: ' sprintf('%0.2f \\pm %0.2f mm/y',[fslopeGSL(1) 2*sdslopeGSL(1)]) ' --- threshold \sigma = ' sprintf('%0.2f',threshold) '\sigma_0' ]});
+    title({[num2str(firstyears2(qqq)) '-' num2str(lastyears2(qqq)) ' relative to 0-1700 (mm/y)'],['GSL: ' sprintf('%0.2f \\pm %0.2f mm/y',[fslopeGSL(1) 2*sdslopeGSL(1)]) ]});
     
     pdfwrite(['fieldmap_rel01700_' labl '_' num2str(firstyears2(qqq)) '_' num2str(lastyears2(qqq))]);
 end

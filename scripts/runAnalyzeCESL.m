@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Feb 16 15:29:44 EST 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Feb 19 18:41:08 EST 2015
 %
 
 dosldecomp = 0;
@@ -66,7 +66,7 @@ for ii=1:length(wdataset.sitenames)
     end
 end
 for ii=1:length(wdataset.sitenames)
-    sub=find(distfrom(ii,:)<5);
+    sub=find(distfrom(ii,:)<.5);
     if wdataset.sitecoords(ii,1)>360
         sub=ii;
     end
@@ -84,18 +84,24 @@ testsitedef.youngest=2014;
 testsitedefGSL=testsitedef;
 
 dosub=find(wdataset.siteid>0);
+avail=ones(length(wdataset.siteid),1);
 for ii=dosub(:)'
-    sub=find(wdataset.datid==wdataset.siteid(ii));
-    if length(sub)>0
-        testsitedef.sites(end+1,:)=mean([wdataset.datid(sub) wdataset.lat(sub) wdataset.long(sub)],1);
-        testsitedef.names2={testsitedef.names2{:}, wdataset.sitenames{ii}};
-        
-        sublett=setdiff(1:length(wdataset.sitenames{ii}),strfind(wdataset.sitenames{ii},' '));
-        testsitedef.names={testsitedef.names{:}, wdataset.sitenames{ii}(sublett)};
-        testsitedef.firstage = [testsitedef.firstage min(0,oldestnear(ii))];
-        testsitedef.oldest = [testsitedef.oldest oldest(ii)];
-        testsitedef.youngest = [testsitedef.youngest youngest(ii)];
+    if avail(ii)
+        sub=find((wdataset.datid==wdataset.siteid(ii)));
+        if length(sub)>0
+            testsitedef.sites(end+1,:)=mean([wdataset.datid(sub) wdataset.lat(sub) wdataset.long(sub)],1);
+            wdist = dDist(testsitedef.sites(end,2:3),wdataset.sitecoords);
+            avail=avail.*(wdist>.2); % keep sites at least .2 degrees apart
+            testsitedef.names2={testsitedef.names2{:}, wdataset.sitenames{ii}};
+            
+            sublett=setdiff(1:length(wdataset.sitenames{ii}),strfind(wdataset.sitenames{ii},' '));
+            testsitedef.names={testsitedef.names{:}, wdataset.sitenames{ii}(sublett)};
+            testsitedef.firstage = [testsitedef.firstage oldestnear(ii)];
+            testsitedef.oldest = [testsitedef.oldest oldest(ii)];
+            testsitedef.youngest = [testsitedef.youngest youngest(ii)];
+        end
     end
+    
 end
 % $$$ 
 % $$$ GISfpt.lat=GISfplat;
@@ -119,8 +125,8 @@ testt = [-1000:20:2000 2010];
 
 % select regression parameters
 
-regressparams=[1 4 5 2 3 1 4 5 2 3];
-regresssets=[1 1 1 1 1 2 2 2 2 2];
+regressparams=[1 4 5 2 3];
+regresssets=[1 1 1 1 1];
 clear regresslabels;
 for i=1:length(regresssets)
     regresslabels{i} = [datasets{regresssets(i)}.label '_' trainlabels{regressparams(i)}];
@@ -132,7 +138,6 @@ for iii=1:length(regresssets)
     ii=regresssets(iii);
     jj=regressparams(iii);
     wmodelspec = modelspec(trainspecs(jj));
-    
 
     noiseMasks = ones(1,length(thetTGG{jj}));
     noiseMasks(1,[ wmodelspec.subampnoise]  )=0; %without noise
@@ -158,7 +163,7 @@ for iii=1:length(regresssets)
     [f2slin{iii},sd2slin{iii},V2slin{iii},testlocslin{iii}]=RegressHoloceneDataSets(wdataset,testsitedef,wmodelspec,thetTGG{jj},trainsub,noiseMasksLin,[0 1800],refyear,collinear,passderivs,invcv);
 
     
-   runTableTGandProxyData;
+    runTableTGandProxyData;
     
     if dosldecomp; makeplots_sldecomp(wdataset,f2s{iii},sd2s{iii},V2s{iii},testlocs{iii},labl,[1 2],0); end
     
@@ -171,7 +176,7 @@ for iii=1:length(regresssets)
     
     runTableRates;
     runOutputGSL;
-    runFingerprintAnalysis;
+    % runFingerprintAnalysis;
     % runGIARateComparison;
     runPlotOtherGSLCurves;
 
@@ -186,38 +191,26 @@ end
 runLatexTables;
 %runOutputForcingProxies;
 
-for iii=1
+for iii=1:length(regresssets)
     ii=regresssets(iii);
     jj=regressparams(iii);
     wmodelspec = modelspec(trainspecs(jj));
-    
 
-    noiseMasks = ones(5,length(thetTGG{trainspecs(jj)}));
-    noiseMasks(1,[ wmodelspec.subampnoise]  )=0; %without linear
-    noiseMasks(2,[wmodelspec.subamplinear wmodelspec.subampoffset wmodelspec.subampnoise]  )=0; %without linear
-    noiseMasks(3,[setdiff(wmodelspec.subamp,wmodelspec.subamplinear)])=0; %only linear
-    noiseMasks(4,[setdiff(wmodelspec.subamp,wmodelspec.subampregmat)])=0; %only regional Matern
-    noiseMasks(5,[setdiff(wmodelspec.subamp,[wmodelspec.subampregmat wmodelspec.subamplinear])])=0; %only regional
-    noiseMasklabels={'denoised','nonlin','linear','regmat','regional'};
-    nmReg=5;
+    noiseMasks = ones(1,length(thetTGG{jj}));
+    noiseMasks(1,[ wmodelspec.subampnoise]  )=0; %without noise
+    noiseMasklabels={'denoised'};
 
     wdataset=datasets{ii};
 
     labls{iii}=['_' regresslabels{iii}];
-    disp(labls{iii});
-
-    trainsub = find((wdataset.limiting==0)); % only index points
-    wdataset.dY = sqrt(datasets{ii}.dY.^2 + (thetTGG{jj}(end)*wdataset.compactcorr).^2);
-    wdataset.Ycv = datasets{ii}.Ycv + diag(thetTGG{jj}(end)*wdataset.compactcorr).^2;
-    subtimes=find(testt>=min(union(wdataset.time1,wdataset.time2)));
-    
-    collinear=wmodelspec.subamplinear(1);
-    [f2s{iii},sd2s{iii},V2s{iii},testlocs{iii},logp(iii),passderivs,invcv]=RegressHoloceneDataSets(wdataset,testsitedef,wmodelspec,thetTGG{jj},trainsub,noiseMasks,testt(subtimes),refyear,collinear);
-
     labl=labls{iii}; disp(labl);
-    
+   
     runMapField;
     runSiteSensitivityTests;
 
 end
 runLatexTablesSiteSens;
+
+ii=1;
+wdataset=datasets{ii};
+runMapSites;

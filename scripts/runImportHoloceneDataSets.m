@@ -363,12 +363,12 @@ Grinsted.sitelen=length(Grinsted.Y);
 clear datasets;
 datasets{1}=MergeDataStructures(TG,PX);
 datasets{2}=MergeDataStructures(MergeDataStructures(TG,PX),GSLflattener);
-datasets{3}=PXnoLH;
+datasets{3}=MergeDataStructures(TG,PXnoLH);
 datasets{4}=PX;
 
 datasets{1}.label='TG+GSL+PX';
 datasets{2}.label='TG+GSL+PX+flat';
-datasets{3}.label='PXnoLH';
+datasets{3}.label='TG+PXnoLH';
 datasets{4}.label='PX';
 
 

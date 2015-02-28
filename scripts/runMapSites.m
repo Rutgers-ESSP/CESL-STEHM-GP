@@ -8,6 +8,7 @@ geoshow(ax, land, 'FaceColor', [0.85 0.85 0.85]);
 hold on;
 
 ud=unique(wdataset.datid(find((wdataset.time2>=0))));
+ud=ud(find(ud>0));
 sub=find(ismember(wdataset.siteid,ud));
 subtg=intersect(sub,find(ismember(wdataset.siteid,wdataset.datid(find(wdataset.istg)))));
 subpx=setdiff(sub,subtg);

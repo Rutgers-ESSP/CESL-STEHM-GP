@@ -1,15 +1,16 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Nov 30 17:50:05 EST 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Wed Feb 25 07:29:58 EST 2015
 
 %% do data sensitivity tests
 
 firstyears=[0    0   400 800  1200 1600 1800 1900];
 lastyears= [1800 400 800 1200 1600 1800 1900 2000];
+trainrange=[100 100 2000 2000];
 
 wdat = datasets{ii};
 
-sitesets0 = {'All','NWAtlantic','NEAtlantic','NAtlantic'};
-latbounds = [ -90 90 ; 0 90 ; 0 90 ; 0 90];
-longbounds = [ -180 180 ; -125 -30 ; -30 30 ; -125 30];
+sitesets0 = {'All','NWAtlantic','NEAtlantic','NAtlantic','SAmerica'};
+latbounds = [ -90 90 ; 0 90 ; 0 90 ; 0 90 ; -90 90];
+longbounds = [ -180 180 ; -125 -30 ; -30 30 ; -125 30 ; -125 0];
 sitelist = setdiff(wdat.siteid,0);
 clear sitesetsub0;
 for qqq=1:size(longbounds,1)

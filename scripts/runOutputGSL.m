@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Wed Dec 17 06:43:02 PST 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri Feb 27 16:57:28 EST 2015
 
 
 refyear=2000;
@@ -40,8 +40,11 @@ colrs={'k'};
 
 selmask=1;
 
-wf=Mref(datsub,datsub)*f2s{iii}(datsub,selmask);
-wV=Mref(datsub,datsub)*V2s{iii}(datsub,datsub,selmask)*Mref(datsub,datsub)';
+%wf=Mref(datsub,datsub)*f2s{iii}(datsub,selmask);
+%wV=Mref(datsub,datsub)*V2s{iii}(datsub,datsub,selmask)*Mref(datsub,datsub)';
+wf=f2s{iii}(datsub,selmask);
+wV=V2s{iii}(datsub,datsub,selmask);
+
 wsd=sqrt(diag(wV));
 
 wf1900=Mref2(datsub,datsub)*f2s{iii}(datsub,selmask);
@@ -116,22 +119,18 @@ for dodetrend=[0 1]
         wquants=[.67 .9 .95 .96 .97 .98 .99 .995 .999];
         if length(subyrs)>0
             fprintf(fid,'\n\nLast year faster');
-            fprintf(fid,'Central year');
-            fprintf(fid,'\t%wV(datsub(ppp),datsub)0.3f',wquants);
+            fprintf(fid,'\t%0.3f',wquants);
             fprintf(fid,'\n');
             
             clear lastyrlarger;
             for mm=1:length(subyrs)
                 curyr=difftimes(suboverallyrs(subyrs(mm)));
-                for nn=1:Nsamps
-                    sub=intersect(suboverallyrs,find(difftimes<curyr));
-                    sub2=find(samps(nn,sub)>samps(nn,suboverallyrs(subyrs(mm))));
-                    if length(sub2)>0
-                        lastyrlarger(nn,mm)=difftimes(suboverallyrs(sub2(end)));
-                    else
-                        lastyrlarger(nn,mm)=min(difftimes)-1;
-                    end
-                end
+                compsamps=samps(:,suboverallyrs(subyrs(mm)));
+                sub=intersect(suboverallyrs,find(difftimes<curyr));
+                largeryrs=bsxfun(@gt,samps(:,sub),compsamps);
+                largeryrs2=bsxfun(@times,largeryrs,difftimes(sub)') -1e6*(~largeryrs);
+                largeryrs2(find(largeryrs2<-1e5))=min(difftimes)-1;
+                lastyrlarger(:,mm)=max(largeryrs2,[],2);
                 fprintf(fid,'\n%0.0f',curyr);
                 fprintf(fid,'\t%0.0f',quantile(lastyrlarger(:,mm),wquants));
             end
@@ -156,6 +155,25 @@ for dodetrend=[0 1]
     end
     
     fclose(fid);
+
+    [wVNL,wVconst,wVrate,wt0,wsigadj]=PartitionCovarianceLNL(wV,testX(datsub,3));
+    fid=fopen(['GSL'  labl2 '_covNL.tsv'],'w');
+    fprintf(fid,'Vconst = %0.8e\n',wVconst);
+    fprintf(fid,'Vrate = %0.8e\n',wVrate);
+    fprintf(fid,'t0 = %0.8e\n',wt0);
+    fprintf(fid,'adj = %0.8e\n',wsigadj);
+    fprintf(fid,'\n\n',wVconst);
+    
+    fprintf(fid,'mm^2');
+    fprintf(fid,'\t%0.0f',testX(datsub,3));
+    fprintf(fid,'\n');
+    for ppp=1:length(datsub)
+        fprintf(fid,'%0.0f',testX(datsub(ppp),3));
+        fprintf(fid,'\t%0.8e',wVNL(datsub(ppp),datsub));
+        fprintf(fid,'\n');
+    end
+    
+    fclose(fid);
     
     fid=fopen(['dGSL_' num2str(timesteps) 'y' labl2 '_cov.tsv'],'w');
     fprintf(fid,'(mm/y)^2');
@@ -171,7 +189,7 @@ for dodetrend=[0 1]
 end
 
 
-[~,~,~,~,~,~,outtable1900]=PlotPSLOverlay(testX(datsub,3),testreg(datsub),testsites(sitesub,1),wf1900,wV1900,colrs,testsitedef.firstage(sitesub),testt(end),0,100,{'GSL'});
+[~,~,~,~,~,~,outtable1900]=PlotPSLOverlay(testX(datsub,3),testreg(datsub),testsites(sitesub,1),wf1900,wV1900,colrs,testsitedef.firstage(sitesub),testt(end),0,timesteps,{'GSL'});
 
 labl2=labls{iii};
 fid=fopen(['GSL_' num2str(timesteps) 'y' labl2 '_ref1900.tsv'],'w');
