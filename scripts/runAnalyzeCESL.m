@@ -11,7 +11,7 @@ IFILES=[pd '/IFILES'];
 addpath(pd)
 savefile='~/tmp/CESL';
 
-WORKDIR='150216';
+WORKDIR='150228';
 if ~exist(WORKDIR,'dir')
     mkdir(WORKDIR);
 end

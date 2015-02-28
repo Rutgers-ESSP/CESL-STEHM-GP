@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Dec 04 09:23:19 EST 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sat Feb 28 08:17:40 EST 2015
 
 % 1. GLMW
 % 2. GLMW-Grinsted - GLMW with global hyperparameters set to maximize likelihood of Grinsted curve
@@ -66,7 +66,7 @@ tluTGG = [
 
 100 1 1e4 % regional amplitude
 1e3 1 3e3 % time scale
-5 1 50 % geographic length scale
+5 1 20 % geographic length scale
 
 10 1e-2 1e4 % white noise
     
