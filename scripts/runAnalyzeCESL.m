@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Feb 19 18:41:08 EST 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Mar 05 11:46:10 EST 2015
 %
 
 dosldecomp = 0;
@@ -11,7 +11,7 @@ IFILES=[pd '/IFILES'];
 addpath(pd)
 savefile='~/tmp/CESL';
 
-WORKDIR='150228';
+WORKDIR='150302';
 if ~exist(WORKDIR,'dir')
     mkdir(WORKDIR);
 end
@@ -27,7 +27,7 @@ runSetupHoloceneCovariance;
 runImportOtherGSLCurves;
 
 trainspecs=[1 2 3 4 5];
-trainsets = [1 1 1 1 1];
+trainsets = [2 2 2 2 2];
 trainfirsttime = -1000;
 
 trainlabels={};
@@ -121,12 +121,12 @@ for ii=1:length(testsitedef.sites(:,1))
 
 end
 
-testt = [-1000:20:2000 2010];
+testt = [-1000:20:1800 1810:10:2010];
 
 % select regression parameters
 
 regressparams=[1 4 5 2 3];
-regresssets=[1 1 1 1 1];
+regresssets=[2 2 2 2 2];
 clear regresslabels;
 for i=1:length(regresssets)
     regresslabels{i} = [datasets{regresssets(i)}.label '_' trainlabels{regressparams(i)}];

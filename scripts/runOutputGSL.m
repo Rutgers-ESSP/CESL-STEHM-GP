@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri Feb 27 16:57:28 EST 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Tue Mar 03 08:50:49 EST 2015
 
 
 refyear=2000;
@@ -86,8 +86,22 @@ for dodetrend=[0 1]
         delete(hp(2));
         
         clf;
-   
         
+        if (~dodetrend)
+            clear plotdat;
+            plotdat{1}.y = dGSL;
+            plotdat{1}.dy = dGSLsd;
+            plotdat{1}.x = difftimes; 
+            rgb=[0 0 0];
+            
+            subplot(2,1,1);
+            [hl,hk]=PlotWithShadedErrors(plotdat,rgb,[],[],[],[-1000 2010]);
+            labl2=[labls{iii} labl3];
+            ylabel([num2str(timesteps) '-year avg. GSL rate (mm/y, \pm 1\sigma)']);
+            pdfwrite(['GSLrate_' num2str(timesteps) 'y_' labl2]);
+        end
+        
+
 
 
         fid=fopen(['GSL_' num2str(timesteps) 'y' labl2 '.tsv'],'w');
@@ -138,11 +152,9 @@ for dodetrend=[0 1]
         fclose(fid);
         
         
-    end
-    
-
+    end    
     % output GSL covariance
-    
+
 
     fid=fopen(['GSL'  labl2 '_cov.tsv'],'w');
     fprintf(fid,'mm^2');
@@ -153,7 +165,7 @@ for dodetrend=[0 1]
         fprintf(fid,'\t%0.8e',wV(datsub(ppp),datsub));
         fprintf(fid,'\n');
     end
-    
+
     fclose(fid);
 
     [wVNL,wVconst,wVrate,wt0,wsigadj]=PartitionCovarianceLNL(wV,testX(datsub,3));
@@ -163,7 +175,7 @@ for dodetrend=[0 1]
     fprintf(fid,'t0 = %0.8e\n',wt0);
     fprintf(fid,'adj = %0.8e\n',wsigadj);
     fprintf(fid,'\n\n',wVconst);
-    
+
     fprintf(fid,'mm^2');
     fprintf(fid,'\t%0.0f',testX(datsub,3));
     fprintf(fid,'\n');
@@ -172,9 +184,9 @@ for dodetrend=[0 1]
         fprintf(fid,'\t%0.8e',wVNL(datsub(ppp),datsub));
         fprintf(fid,'\n');
     end
-    
+
     fclose(fid);
-    
+
     fid=fopen(['dGSL_' num2str(timesteps) 'y' labl2 '_cov.tsv'],'w');
     fprintf(fid,'(mm/y)^2');
     fprintf(fid,'\t%0.0f',difftimes);
@@ -184,15 +196,15 @@ for dodetrend=[0 1]
         fprintf(fid,'\t%0.8e',dGSLV(ppp,:));
         fprintf(fid,'\n');
     end
-    fclose(fid);
-
+    fclose(fid);   
 end
 
 
-[~,~,~,~,~,~,outtable1900]=PlotPSLOverlay(testX(datsub,3),testreg(datsub),testsites(sitesub,1),wf1900,wV1900,colrs,testsitedef.firstage(sitesub),testt(end),0,timesteps,{'GSL'});
-
-labl2=labls{iii};
-fid=fopen(['GSL_' num2str(timesteps) 'y' labl2 '_ref1900.tsv'],'w');
-fprintf(fid,outtable1900);
-fclose(fid);
+% $$$ 
+% $$$ [~,~,~,~,~,~,outtable1900]=PlotPSLOverlay(testX(datsub,3),testreg(datsub),testsites(sitesub,1),wf1900,wV1900,colrs,testsitedef.firstage(sitesub),testt(end),0,timesteps,{'GSL'});
+% $$$ 
+% $$$ labl2=labls{iii};
+% $$$ fid=fopen(['GSL_' num2str(timesteps) 'y' labl2 '_ref1900.tsv'],'w');
+% $$$ fprintf(fid,outtable1900);
+% $$$ fclose(fid);
 

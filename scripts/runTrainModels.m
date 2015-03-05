@@ -1,12 +1,12 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Nov 06 15:05:42 EST 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Mar 01 08:29:49 EST 2015
 
-trainrange=[100 100 2000 2000];
+trainrange=[100 100 100];
 clear thetTGG thethist trainsubsubset logp;
 for ii=1:length(trainspecs)
     % first only fit ones without a compaction correction
     [thetTGG{ii},trainsubsubset{ii},logp(ii),thethist{ii}]= ...
         OptimizeHoloceneCovariance(datasets{trainsets(ii)}, ...
-                                   modelspec(trainspecs(ii)),[2.4 3.4 3.4 3.0],trainfirsttime,trainrange,.01);
+                                   modelspec(trainspecs(ii)),[2.4 3.4 3.0],trainfirsttime,trainrange,.01);
 
     % now add compaction correction factor
     ms = modelspec(trainspecs(ii));
