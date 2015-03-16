@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri Feb 20 08:29:02 EST 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Mar 09 11:26:19 EDT 2015
 
 nulldataset=SubsetDataStructure(wdataset,1,1);
 nulldataset.meantime=2000; nulldataset.dt=0; nulldataset.dY=200e3; nulldataset.limiting=0;
@@ -40,7 +40,7 @@ sdmapped = griddata(FLONG(:),FLAT(:),sdslopeF,Flong1,Flat1(:),'linear');
 u=sdmapped/sdpriorslope;
 %threshold=quantile(u(:),.2);
 %threshold=sqrt(.67);
-threshold=.75;
+threshold=sqrt(.9);
 subbad=find((sdmapped/sdpriorslope)>threshold);
 mapped(subbad)=NaN;
 
@@ -84,7 +84,7 @@ pdfwrite(['fieldmap_' labl '_' num2str(firstyears(qqq)) '_' num2str(lastyears(qq
 
 %%% now plot standard deviation
 
-subbad2=find((sdmapped/sdpriorslope)>.5);
+subbad2=subbad;
 sdmapped(subbad2)=NaN;
 
 clf;

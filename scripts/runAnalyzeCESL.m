@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Mar 05 11:46:10 EST 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Mar 09 18:16:19 EDT 2015
 %
 
 dosldecomp = 0;
@@ -84,6 +84,7 @@ testsitedef.youngest=2014;
 testsitedefGSL=testsitedef;
 
 dosub=find(wdataset.siteid>0);
+dosub=[intersect(dosub,find(wdataset.siteid>=10000)) ; intersect(dosub,find(wdataset.siteid<10000))];
 avail=ones(length(wdataset.siteid),1);
 for ii=dosub(:)'
     if avail(ii)
@@ -140,7 +141,7 @@ for iii=1:length(regresssets)
     wmodelspec = modelspec(trainspecs(jj));
 
     noiseMasks = ones(1,length(thetTGG{jj}));
-    noiseMasks(1,[ wmodelspec.subampnoise]  )=0; %without noise
+    noiseMasks(1,[ wmodelspec.subampnoise ]  )=0; %without noise
     noiseMasklabels={'denoised'};
 
     wdataset=datasets{ii};
@@ -197,7 +198,7 @@ for iii=1:length(regresssets)
     wmodelspec = modelspec(trainspecs(jj));
 
     noiseMasks = ones(1,length(thetTGG{jj}));
-    noiseMasks(1,[ wmodelspec.subampnoise]  )=0; %without noise
+    noiseMasks(1,[ wmodelspec.subampnoise ]  )=0; %without noise
     noiseMasklabels={'denoised'};
 
     wdataset=datasets{ii};
@@ -209,6 +210,7 @@ for iii=1:length(regresssets)
     runSiteSensitivityTests;
 
 end
+iii=5;
 runLatexTablesSiteSens;
 
 ii=1;

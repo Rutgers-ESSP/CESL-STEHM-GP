@@ -1,14 +1,13 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Tue Dec 02 14:48:49 EST 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Tue Mar 10 13:22:27 EDT 2015
 
 
 % now do a table with site sensitivities
 
-iii=1;
 firstyears=sitesensfirstyears;
 lastyears=sitesenslastyears;
 
-fid=fopen('sitesens_GSL.tex','w');
-fid2=fopen('sitesens_theta.tex','w');
+fid=fopen(['sitesens_GSL' labl '.tex'],'w');
+fid2=fopen(['sitesens_theta' labl '.tex'],'w');
 
 fprintf(fid,'Subset');
 
@@ -18,7 +17,7 @@ fprintf(fid,' \\\\ \n');
 
 fprintf(fid2,'Subset & $\\sigma_g$ & $\\tau_g$ & $\\sigma_l$ & $\\lambda_l$ & $\\sigma_m$ & $\\tau_m$ & $\\lambda_m$ & $\\sigma_w$ & $\\sigma_0$ & $\\sigma_{g0}$ & $\\sigma_c$ \\\\ \n');
 
-for reoptimize=0:1
+for reoptimize=0
     for qqq=1:size(sitesets,1)
         for rrr=1:size(sitesets,2)
             fprintf(fid,sitesets{qqq,rrr});

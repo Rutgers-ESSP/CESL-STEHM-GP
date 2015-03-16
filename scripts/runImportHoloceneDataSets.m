@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Feb 16 15:29:03 EST 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Mar 09 12:48:58 EDT 2015
 
 defval('firsttime',-1300);
 
@@ -87,7 +87,7 @@ for ii=1:length(uStudy)
         uSite=unique(site);
         for jj=1:length(uSite)
             curid = 1e6 + 1e4*ii + jj;
-            curstudysite=[uStudy{ii} '-' uSite{jj}];
+            curstudysite=['LR-' uStudy{ii} '-' uSite{jj}];
             sub2=sub(find(strcmpi(uSite{jj},site)));
             wdatid=ones(length(sub2),1)*curid;
             wmediantime=datLH.data(sub2,6);

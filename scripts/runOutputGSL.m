@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Tue Mar 03 08:50:49 EST 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Mar 16 09:17:29 EDT 2015
 
 
 refyear=2000;
@@ -56,29 +56,36 @@ for dodetrend=[0 1]
     labl3='';
     
     if dodetrend
-        [wf,wV,wsd]=DetrendSLReconstruction(wf,wV,testsites(sitesub),testreg(datsub),testX(datsub,3),[0],1800,refyear);
-        labl3='_detrended';
+        %        [wf,wV,wsd]=DetrendSLReconstruction(wf,wV,testsites(sitesub),testreg(datsub),testX(datsub,3),[0],1800,refyear);
+        % labl3='_detrended';
+        labl3='_nonegcov';
+        wV=wV.*(wV>0);
     end
-    
-    
-    clear plotdat;
-    plotdat{1}.y = wf;
-    plotdat{1}.dy = sqrt(diag(wV));
-    plotdat{1}.x = testX(datsub,3); 
-    rgb=[0 0 0];
-    
-    clf;
-    subplot(2,1,1);
-    [hl,hk]=PlotWithShadedErrors(plotdat,rgb,[],[],[],[-1000 2010]);
     labl2=[labls{iii} labl3];
-    if dodetrend
-        ylabel('Detrended GSL (mm, \pm 1\sigma)'); 
-    else
-        ylabel('GSL (mm, \pm 1\sigma)');
+    
+    if ~dodetrend
+        
+        
+        clear plotdat;
+        plotdat{1}.y = wf;
+        plotdat{1}.dy = sqrt(diag(wV));
+        plotdat{1}.x = testX(datsub,3); 
+        rgb=[0 0 0];
+        
+        clf;
+        subplot(2,1,1);
+        [hl,hk]=PlotWithShadedErrors(plotdat,rgb,[],[],[],[-1000 2010]);
+        if dodetrend
+            ylabel('Detrended GSL (mm, \pm 1\sigma)'); 
+        else
+            ylabel('GSL (mm, \pm 1\sigma)');
+        end
+        
+
+        pdfwrite(['GSL' labl2]);
+        
     end
     
-
-    pdfwrite(['GSL' labl2]);
 
     for timesteps=[100 400 40 20]
         [hp,hl,hl2,dGSL,dGSLsd,dGSLV,outtable,difftimes,diffreg]=PlotPSLOverlay(testX(datsub,3),testreg(datsub),testsites(sitesub,1),wf,wV,colrs,testsitedef.firstage(sitesub),testt(end),0,timesteps,{'GSL'});
@@ -96,7 +103,6 @@ for dodetrend=[0 1]
             
             subplot(2,1,1);
             [hl,hk]=PlotWithShadedErrors(plotdat,rgb,[],[],[],[-1000 2010]);
-            labl2=[labls{iii} labl3];
             ylabel([num2str(timesteps) '-year avg. GSL rate (mm/y, \pm 1\sigma)']);
             pdfwrite(['GSLrate_' num2str(timesteps) 'y_' labl2]);
         end
@@ -156,36 +162,46 @@ for dodetrend=[0 1]
     % output GSL covariance
 
 
-    fid=fopen(['GSL'  labl2 '_cov.tsv'],'w');
-    fprintf(fid,'mm^2');
-    fprintf(fid,'\t%0.0f',testX(datsub,3));
-    fprintf(fid,'\n');
-    for ppp=1:length(datsub)
-        fprintf(fid,'%0.0f',testX(datsub(ppp),3));
-        fprintf(fid,'\t%0.8e',wV(datsub(ppp),datsub));
+    if ~dodetrend
+        
+        fid=fopen(['GSL'  labl2 '_cov.tsv'],'w');
+        fprintf(fid,'mm^2');
+        fprintf(fid,'\t%0.0f',testX(datsub,3));
         fprintf(fid,'\n');
+        for ppp=1:length(datsub)
+            fprintf(fid,'%0.0f',testX(datsub(ppp),3));
+            fprintf(fid,'\t%0.8e',wV(datsub(ppp),datsub));
+            fprintf(fid,'\n');
+        end
+
+        fclose(fid);
+        
+        clf;
+        wcorr=wV./bsxfun(@times,sqrt(diag(wV)),sqrt(diag(wV))');
+        imagesc(testX(datsub,3),testX(datsub,3),wcorr(datsub,datsub));
+        colorbar;
+        pdfwrite(['GSL'  labl2 '_corr']);
+
     end
-
-    fclose(fid);
-
-    [wVNL,wVconst,wVrate,wt0,wsigadj]=PartitionCovarianceLNL(wV,testX(datsub,3));
-    fid=fopen(['GSL'  labl2 '_covNL.tsv'],'w');
-    fprintf(fid,'Vconst = %0.8e\n',wVconst);
-    fprintf(fid,'Vrate = %0.8e\n',wVrate);
-    fprintf(fid,'t0 = %0.8e\n',wt0);
-    fprintf(fid,'adj = %0.8e\n',wsigadj);
-    fprintf(fid,'\n\n',wVconst);
-
-    fprintf(fid,'mm^2');
-    fprintf(fid,'\t%0.0f',testX(datsub,3));
-    fprintf(fid,'\n');
-    for ppp=1:length(datsub)
-        fprintf(fid,'%0.0f',testX(datsub(ppp),3));
-        fprintf(fid,'\t%0.8e',wVNL(datsub(ppp),datsub));
-        fprintf(fid,'\n');
-    end
-
-    fclose(fid);
+    
+% $$$     [wVNL,wVconst,wVrate,wt0,wsigadj]=PartitionCovarianceLNL(wV,testX(datsub,3));
+% $$$     fid=fopen(['GSL'  labl2 '_covNL.tsv'],'w');
+% $$$     fprintf(fid,'Vconst = %0.8e\n',wVconst);
+% $$$     fprintf(fid,'Vrate = %0.8e\n',wVrate);
+% $$$     fprintf(fid,'t0 = %0.8e\n',wt0);
+% $$$     fprintf(fid,'adj = %0.8e\n',wsigadj);
+% $$$     fprintf(fid,'\n\n',wVconst);
+% $$$ 
+% $$$     fprintf(fid,'mm^2');
+% $$$     fprintf(fid,'\t%0.0f',testX(datsub,3));
+% $$$     fprintf(fid,'\n');
+% $$$     for ppp=1:length(datsub)
+% $$$         fprintf(fid,'%0.0f',testX(datsub(ppp),3));
+% $$$         fprintf(fid,'\t%0.8e',wVNL(datsub(ppp),datsub));
+% $$$         fprintf(fid,'\n');
+% $$$     end
+% $$$ 
+% $$$     fclose(fid);
 
     fid=fopen(['dGSL_' num2str(timesteps) 'y' labl2 '_cov.tsv'],'w');
     fprintf(fid,'(mm/y)^2');

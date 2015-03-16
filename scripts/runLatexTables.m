@@ -1,8 +1,8 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Feb 19 18:39:29 EST 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Mar 09 13:47:49 EDT 2015
 
 % first do a table with rates for each of the models
 
-regresssetorder = 1:5;
+regresssetorder = [5 4 1 2 3];
 
 firstyears=[0 0   400 800  1200 1200 1600 1800 1860 1900];
 lastyears= [1700 400 800 1200 1800 1600 1800 1900 1900 2000];
@@ -120,81 +120,62 @@ fclose(fid);
 
 % now do a table with site-specific rates
 
-iii=1;
+for iii=regresssetorder
 
-firstyears=[0    0   400 800  1200 1600 1800 1900];
-lastyears= [1700 400 800 1200 1600 1800 1900 2000];
+    firstyears=[0    0   400 800  1200 1600 1800 1900];
+    lastyears= [1700 400 800 1200 1600 1800 1900 2000];
 
-testreg=testlocs{iii}.reg;
-testsites=testlocs{iii}.sites;
-testX=testlocs{iii}.X;
-testnames2=testlocs{iii}.names2;
+    testreg=testlocs{iii}.reg;
+    testsites=testlocs{iii}.sites;
+    testX=testlocs{iii}.X;
+    testnames2=testlocs{iii}.names2;
 
-[fslopeavg,sdslopeavg,fslopeavgdiff,sdslopeavgdiff,diffplus,diffless]=SLRateCompare(f2s{iii}(:,1),V2s{iii}(:,:,1),testsites,testreg,testX(:,3),firstyears,lastyears);
+    [fslopeavg,sdslopeavg,fslopeavgdiff,sdslopeavgdiff,diffplus,diffless]=SLRateCompare(f2s{iii}(:,1),V2s{iii}(:,:,1),testsites,testreg,testX(:,3),firstyears,lastyears);
 
-fid=fopen(['linrates' labls{iii} '.tex'],'w');
-fprintf(fid,['Rates (mm/y), ' labls{iii} '\n \n']);
-fprintf(fid,'Site ');
-fprintf(fid,'& Ages');
-%fprintf(fid,' & Lat & Long & Oldest & Youngest');
-for pp=1:length(firstyears)
-    fprintf(fid,' & %0.0f--%0.0f',[firstyears(pp) lastyears(pp)]);
-end
-fprintf(fid,' \\\\ \n');
-
-for kk=1:size(testsites,1)
-    fprintf(fid,testnames2{kk});
-    %    if testsitedef.sites(kk,2)<360
-    %    fprintf(fid,' & %0.2f',testsitedef.sites(kk,2:3));
-    %else
-    %    fprintf(fid,' & & ');
-    %end
-    
-    fprintf(fid,' & %0.0f',testsitedef.oldest(kk));
-    fprintf(fid,'--%0.0f',testsitedef.youngest(kk));
-    qqq=1;
-
-    if ~isnan(fslopeavg(kk,qqq))
-        fprintf(fid,' & $%0.2f \\pm %0.2f$',[fslopeavg(kk,qqq) 2*sdslopeavg(kk,qqq)]);
-        P=normcdf([fslopeavg(kk,qqq)./sdslopeavg(kk,qqq)]);
-        if abs(P-.5)>=.49
-            fprintf(fid,'***');
-        elseif abs(P-.5)>=.45
-            fprintf(fid,'**');
-        elseif abs(P-.5)>=.4
-            fprintf(fid,'*');
-        elseif abs(P-.5)>=.167
-            fprintf(fid,'$^\\dagger$');
-        end
-    else
-        fprintf(fid,' & ');
+    fid=fopen(['linrates' labls{iii} '.tex'],'w');
+    fprintf(fid,['Rates (mm/y), ' labls{iii} '\n \n']);
+    fprintf(fid,'Site ');
+    fprintf(fid,'& Ages');
+    %fprintf(fid,' & Lat & Long & Oldest & Youngest');
+    for pp=1:length(firstyears)
+        fprintf(fid,' & %0.0f--%0.0f',[firstyears(pp) lastyears(pp)]);
     end
-    
-    
-    sub=find(diffless==1);
-    for qqq=sub(:)'
-        if ~isnan(fslopeavgdiff(kk,qqq))
-            fprintf(fid,' & $%0.1f \\pm %0.1f$',[fslopeavgdiff(kk,qqq) ; 2*sdslopeavgdiff(kk,qqq)]);
-            P=normcdf([fslopeavgdiff(kk,qqq)./sdslopeavgdiff(kk,qqq)]);
-            if abs(P-.5)>=.49
-                fprintf(fid,'***');
-            elseif abs(P-.5)>=.45
-                fprintf(fid,'**');
-            elseif abs(P-.5)>=.4
-                fprintf(fid,'*');
-            elseif abs(P-.5)>=.167
-                fprintf(fid,'$^\\dagger$');
+    fprintf(fid,' \\\\ \n');
+
+    for kk=1:size(testsites,1)
+        fprintf(fid,testnames2{kk});
+        %    if testsitedef.sites(kk,2)<360
+        %    fprintf(fid,' & %0.2f',testsitedef.sites(kk,2:3));
+        %else
+        %    fprintf(fid,' & & ');
+        %end
+        
+        fprintf(fid,' & %0.0f',testsitedef.oldest(kk));
+        fprintf(fid,'--%0.0f',testsitedef.youngest(kk));
+        for qqq=1:size(fslopeavg,2)
+
+            if ~isnan(fslopeavg(kk,qqq))
+                fprintf(fid,' & $%0.2f \\pm %0.2f$',[fslopeavg(kk,qqq) 2*sdslopeavg(kk,qqq)]);
+                P=normcdf([fslopeavg(kk,qqq)./sdslopeavg(kk,qqq)]);
+                if abs(P-.5)>=.49
+                    fprintf(fid,'***');
+                elseif abs(P-.5)>=.45
+                    fprintf(fid,'**');
+                elseif abs(P-.5)>=.4
+                    fprintf(fid,'*');
+                elseif abs(P-.5)>=.167
+                    fprintf(fid,'$^\\dagger$');
+                end
+            else
+                fprintf(fid,' & ');
             end
-        else
-            fprintf(fid,' & ');
-        end      
+        end
+        
+        fprintf(fid,'\\\\ \n');
     end
-    
-    fprintf(fid,'\\\\ \n');
-end
-fprintf(fid,'All rates except 0--1700 CE are detrended with respect to 0--1700 CE.');
 
-fclose(fid);
+    fclose(fid);
+end
 
 % list of tide gauges
 
