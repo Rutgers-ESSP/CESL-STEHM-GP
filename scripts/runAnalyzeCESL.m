@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Mar 09 18:16:19 EDT 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri May 15 17:14:11 EDT 2015
 %
 
 dosldecomp = 0;
@@ -192,7 +192,7 @@ end
 runLatexTables;
 %runOutputForcingProxies;
 
-for iii=1:length(regresssets)
+for iii=2
     ii=regresssets(iii);
     jj=regressparams(iii);
     wmodelspec = modelspec(trainspecs(jj));
@@ -202,16 +202,16 @@ for iii=1:length(regresssets)
     noiseMasklabels={'denoised'};
 
     wdataset=datasets{ii};
+    collinear=wmodelspec.subamplinear(1);
 
     labls{iii}=['_' regresslabels{iii}];
     labl=labls{iii}; disp(labl);
-   
+ 
     runMapField;
     runSiteSensitivityTests;
+    runLatexTablesSiteSens;
 
 end
-iii=5;
-runLatexTablesSiteSens;
 
 ii=1;
 wdataset=datasets{ii};

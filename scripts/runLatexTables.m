@@ -2,7 +2,7 @@
 
 % first do a table with rates for each of the models
 
-regresssetorder = [5 4 1 2 3];
+regresssetorder = [2 1 3 5 4];
 
 firstyears=[0 0   400 800  1200 1200 1600 1800 1860 1900];
 lastyears= [1700 400 800 1200 1800 1600 1800 1900 1900 2000];

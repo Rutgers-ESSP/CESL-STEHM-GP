@@ -42,7 +42,7 @@ fid1=fopen(['sens_theta' labl '.tsv'],'w');
 fid2=fopen(['sens_GSLrates' labl '.tsv'],'w');
 
 
-for reoptimize=[0 1]
+for reoptimize=[0]
 
     for qqq=1:size(sitesetsub,1)
         for rrr=1:size(sitesetsub,2)
