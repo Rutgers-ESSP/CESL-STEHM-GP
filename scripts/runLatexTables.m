@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Mar 09 13:47:49 EDT 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri May 15 17:49:53 EDT 2015
 
 % first do a table with rates for each of the models
 
@@ -21,7 +21,7 @@ for iii=regresssetorder
     fprintf(fid,trainlabels{regressparams(iii)});
     for qqq=1:length(firstyears)
         fprintf(fid,' & $%0.2f \\pm %0.2f$',[fslopeavg(qqq) 2*sdslopeavg(qqq)]);
-        P=normcdf([fslopeavg(qqq)./sdslopeavg(qqq)]);
+        P=normcdf([fslopeavgdiff(qqq)./sdslopeavgdiff(qqq)]);
         if abs(P-.5)>=.49
             fprintf(fid,'***');
         elseif abs(P-.5)>=.45
@@ -135,7 +135,7 @@ for iii=regresssetorder
     fid=fopen(['linrates' labls{iii} '.tex'],'w');
     fprintf(fid,['Rates (mm/y), ' labls{iii} '\n \n']);
     fprintf(fid,'Site ');
-    fprintf(fid,'& Ages');
+    %fprintf(fid,'& Ages');
     %fprintf(fid,' & Lat & Long & Oldest & Youngest');
     for pp=1:length(firstyears)
         fprintf(fid,' & %0.0f--%0.0f',[firstyears(pp) lastyears(pp)]);
@@ -150,13 +150,18 @@ for iii=regresssetorder
         %    fprintf(fid,' & & ');
         %end
         
-        fprintf(fid,' & %0.0f',testsitedef.oldest(kk));
-        fprintf(fid,'--%0.0f',testsitedef.youngest(kk));
+        %fprintf(fid,' & %0.0f',testsitedef.firstage(kk));
+        %fprintf(fid,'--%0.0f',testsitedef.youngest(kk));
         for qqq=1:size(fslopeavg,2)
 
             if ~isnan(fslopeavg(kk,qqq))
                 fprintf(fid,' & $%0.2f \\pm %0.2f$',[fslopeavg(kk,qqq) 2*sdslopeavg(kk,qqq)]);
-                P=normcdf([fslopeavg(kk,qqq)./sdslopeavg(kk,qqq)]);
+                if qqq>1
+                    P=normcdf([fslopeavgdiff(kk,qqq-1)./sdslopeavgdiff(kk,qqq-1)]);
+                else
+                    P=normcdf([fslopeavg(kk,qqq)./sdslopeavg(kk,qqq)]);
+                end
+                
                 if abs(P-.5)>=.49
                     fprintf(fid,'***');
                 elseif abs(P-.5)>=.45
