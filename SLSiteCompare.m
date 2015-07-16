@@ -1,14 +1,15 @@
-function [fdiff,sddiff,Vdiff,diffpairs,diffplus,diffless,difft]=SLSiteCompare(wf,wV,testsites,testreg,testts)
+function [fdiff,sddiff,Vdiff,diffpairs,diffplus,diffless,difft]=SLSiteCompare(wf,wV,testsites,testreg,testX)
 
 % Compare site-to-site differences.
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Wed Jul 15 17:41:42 EDT 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Jul 16 10:45:11 EDT 2015
 
 counter=0;
 diffplus=[];
 diffless=[];
 difft=[];
 diffpairs=[];
+testts=testX(:,3);
 for kk=1:(size(testsites,1)-1)
     for jj=(kk+1):size(testsites,1)
         counter=counter+1;
