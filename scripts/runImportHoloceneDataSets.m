@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Mar 09 12:48:58 EDT 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Aug 02 09:33:59 EDT 2015
 
 defval('firsttime',-1300);
 
@@ -12,7 +12,7 @@ datid=[]; time1=[]; time2=[]; mediantime=[]; limiting=[]; Y=[]; dY = []; compact
 istg = []; lat=[]; long=[];
 siteid=[]; sitenames={}; sitecoords=[];
 
-datPX = importdata(fullfile(IFILES,'RSL_Feb2015b.csv'));
+datPX = importdata(fullfile(IFILES,'RSL_May2015b.csv'));
 datPX.textdata=datPX.textdata(2:end,:);
 
 % catch entries without age errors
