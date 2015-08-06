@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Aug 02 09:33:50 EDT 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Aug 06 09:31:25 EDT 2015
 %
 
 dosldecomp = 0;
@@ -11,7 +11,7 @@ IFILES=[pd '/IFILES'];
 addpath(pd)
 savefile='~/tmp/CESL';
 
-WORKDIR='150802';
+WORKDIR='150806';
 if ~exist(WORKDIR,'dir')
     mkdir(WORKDIR);
 end
@@ -20,7 +20,7 @@ cd(WORKDIR);
 GIAfiles=([pd '/../GIA/RSL4/rsl*.out.gz']);
 
 %
-firsttime=-1000;
+firsttime=-2000;
 
 runImportHoloceneDataSets;
 runSetupHoloceneCovariance;
@@ -140,7 +140,7 @@ for iii=1:length(regresssets)
     jj=regressparams(iii);
     wmodelspec = modelspec(trainspecs(jj));
 
-    noiseMasks = ones(1,length(thetTGG{jj}));
+    noiseMasks = ones(1,length(thetTGG{jj}));iii
     noiseMasks(1,[ wmodelspec.subampnoise ]  )=0; %without noise
     noiseMasklabels={'denoised'};
 
@@ -210,6 +210,7 @@ for iii=2
     runMapField;
     runSiteSensitivityTests;
     runLatexTablesSiteSens;
+    runFingerprintAnalysis;
 
 end
 

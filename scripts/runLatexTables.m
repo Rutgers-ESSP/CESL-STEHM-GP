@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri May 15 17:49:53 EDT 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Wed Aug 05 13:08:55 EDT 2015
 
 % first do a table with rates for each of the models
 
@@ -211,13 +211,14 @@ end
 fclose(fid);
 
 % now proxy sites
-[u,ui]=unique(datPX.textdata(:,3));
-[u2,u2i]=unique(datPX.textdata(:,1));
-u3i=union(ui,u2i);
 
 
 fid=fopen('proxystudies.tex','w');
 fprintf(fid,'Location & Mean Latitude & Mean Longitude & Median Age Range (CE) & N & Reference');
+
+[u,ui]=unique(datPX.textdata(:,3));
+[u2,u2i]=unique(datPX.textdata(:,1));
+u3i=union(ui,u2i);
 
 for kk=1:length(u3i)
     wname = datPX.textdata(u3i(kk),1); wcite = datPX.textdata(u3i(kk),3);
@@ -233,4 +234,26 @@ for kk=1:length(u3i)
     fprintf(fid,' & %0.0f',length(sub));
     fprintf(fid,[' & ' wcite{:}]);
 end
-fclose(fid);
+
+if exist('datLH')
+    [u,ui]=unique(datLH.textdata(:,3));
+    [u2,u2i]=unique(datLH.textdata(:,1));
+    u3i=union(ui,u2i);
+
+    for kk=1:length(u3i)
+        wname = datLH.textdata(u3i(kk),1); wcite = datLH.textdata(u3i(kk),3);
+
+        sub=find(strcmpi(wcite,datLH.textdata(:,3)));
+        sub=intersect(sub,find(strcmpi(wname,datLH.textdata(:,1))));
+        wmediantime=datLH.data(sub,6);
+
+        fprintf(fid,'\\\\ \n');
+        fprintf(fid,wname{:});
+        fprintf(fid,' & %0.1f',mean(datLH.data(sub,[1 2]),1));
+        fprintf(fid,' & %0.0f to %0.0f',[min(wmediantime) max(wmediantime)]);
+        fprintf(fid,' & %0.0f',length(sub));
+        fprintf(fid,[' & ' wcite{:}]);
+    end
+end
+
+    fclose(fid);

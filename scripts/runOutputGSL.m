@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Mar 16 09:17:29 EDT 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Aug 03 20:23:52 EDT 2015
 
 
 refyear=2000;
@@ -52,15 +52,15 @@ wV1900=Mref2(datsub,datsub)*V2s{iii}(datsub,datsub,selmask)*Mref2(datsub,datsub)
 wsd1900=sqrt(diag(wV1900));
 
 
-for dodetrend=[0 1]
+for dodetrend=[0]
     labl3='';
     
-    if dodetrend
-        %        [wf,wV,wsd]=DetrendSLReconstruction(wf,wV,testsites(sitesub),testreg(datsub),testX(datsub,3),[0],1800,refyear);
-        % labl3='_detrended';
-        labl3='_nonegcov';
-        wV=wV.*(wV>0);
-    end
+% $$$     if dodetrend
+% $$$         %        [wf,wV,wsd]=DetrendSLReconstruction(wf,wV,testsites(sitesub),testreg(datsub),testX(datsub,3),[0],1800,refyear);
+% $$$         % labl3='_detrended';
+% $$$         labl3='_nonegcov';
+% $$$         wV=wV.*(wV>0);
+% $$$     end
     labl2=[labls{iii} labl3];
     
     if ~dodetrend

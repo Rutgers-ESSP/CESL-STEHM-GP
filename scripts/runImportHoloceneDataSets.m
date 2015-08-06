@@ -1,6 +1,6 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Aug 02 09:33:59 EDT 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Aug 06 09:21:34 EDT 2015
 
-defval('firsttime',-1300);
+defval('firsttime',-2000);
 
 thinyrs=10;
 minlen=50;
@@ -12,7 +12,7 @@ datid=[]; time1=[]; time2=[]; mediantime=[]; limiting=[]; Y=[]; dY = []; compact
 istg = []; lat=[]; long=[];
 siteid=[]; sitenames={}; sitecoords=[];
 
-datPX = importdata(fullfile(IFILES,'RSL_May2015b.csv'));
+datPX = importdata(fullfile(IFILES,'RSL_Aug2015.csv'));
 datPX.textdata=datPX.textdata(2:end,:);
 
 % catch entries without age errors
@@ -71,7 +71,7 @@ end
 %%%%%%%%%%%%%%%%
 
 
-datLH = importdata(fullfile(IFILES,'RSL_LateHolocene_Feb2015.csv'));
+datLH = importdata(fullfile(IFILES,'RSL_LateHolocene_Aug2015.csv'));
 datLH.textdata=datLH.textdata(2:end,:);
 
 % catch entries without age errors
