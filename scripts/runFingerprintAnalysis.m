@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Tue Aug 04 18:46:48 EDT 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Aug 09 11:36:57 EDT 2015
 
 labl=labls{iii}; disp(labl);
 
@@ -65,7 +65,7 @@ fpclusterlabels={'GIS','AIS','AIS+uni','NH','SH','SH+uni','GICexGISAIS'};
 fpclusters{end+1}=fplabel;
 fpclusterlabels{end+1} = 'all';
 
-Mcluster=zeros(length(fpclusters),size(basisest,1));
+Mcluster=zeros(length(fpclusters),length(fplabel));
 for rrr=1:length(fpclusters)
     Mcluster(rrr,find(ismember(fplabel,fpclusters{rrr})))=1;
 end
