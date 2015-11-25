@@ -1,6 +1,6 @@
 function [hp,hl,hl2,df,dsd,dV,outtable,difftimes,diffreg]=PlotPSLOverlay(years,regions,selregions,slf,slV,colrs,starttimes,endtimes,do2s,difftimestep,regionlabels)
 
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Wed May 21 01:09:42 EDT 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Oct 04 23:03:11 EDT 2015
 
 defval('regions',ones(size(years)));
 defval('selregions',unique(regions));
@@ -14,6 +14,11 @@ defval('regionlabels',[]);
 
 defval('hl',[]); defval('df',[]); defval('dV',[]);
 defval('dsd',[]); defval('hl2',[]);
+
+
+if length(starttimes)==1
+    starttimes=repmat(starttimes,1,length(selregions));
+end
 
 if length(endtimes)==1
     endtimes=repmat(endtimes,1,length(selregions));
@@ -37,7 +42,7 @@ for i=1:length(selregions)
     else
         outtable = [outtable '\n' regionlabels{i} sprintf('\nYear\tmm\t1s')];
     end
-    sub=find((years>=starttimes(i)).*(years<=endtimes(i)).*(regions==selregions(i)));
+   sub=find((years>=starttimes(i)).*(years<=endtimes(i)).*(regions==selregions(i)));
     if length(sub)>0
         hl(i)=plot(years(sub),slf(sub),[colrs{i}],'linew',2); hold on;
         plot(years(sub),slf(sub)+slsd(sub),[colrs{i} '--']);

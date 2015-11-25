@@ -1,11 +1,12 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Aug 09 11:36:57 EDT 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Wed Aug 12 23:44:13 EDT 2015
 
 labl=labls{iii}; disp(labl);
 
 firstyears0 = [0];
-lastyears0 = [1800];
-firstyears1=[ 0:200:1800 1900 ];
-lastyears1= [200:200:2000 2000];
+lastyears0 = [1700];
+firstyears1=[  0   400 800 1200 1600 1200 1800 1860 1900 0 300 700 1000 1400 0 700 0:200:1800];
+lastyears1= [400 800 1200 1600 1800 1800 1900 1900 2000 300 700 1000 1400 1800 700 1400 200:200:2000];
+
 winvcv=[];
 minpriorsd = 0.5; % mm/y
 dynamicsd = 0.5; % mm/y;
@@ -112,7 +113,6 @@ end
 fprintf(fid,'\n');
 
 fprintf(fid,'GSL');
-fprintf(fid,'\tNaN\tNaN\tNaN');
 for qqq=1:length(firstyears1)
     fprintf(fid,'\t%0.3f',[GSLest(qqq) 2*GSLestsd(qqq) normcdf(GSLest(qqq)/GSLestsd(qqq))]);
 end

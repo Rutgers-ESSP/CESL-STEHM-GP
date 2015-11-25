@@ -211,7 +211,13 @@ for iii=2
     runSiteSensitivityTests;
     runLatexTablesSiteSens;
     runFingerprintAnalysis;
-
+    
+    %peak-to-peak
+    sub=find(testreg==0);
+    samps=lhsnorm(f2s{iii}(sub,1),V2s{iii}(sub,sub,1),1000);
+    sub2=find((testt<1900).*(testt>=0));
+    mxtomn=max(samps(:,sub2),[],2)-min(samps(:,sub2),[],2);
+    quantile(mxtomn,[.05 .95])
 end
 
 ii=1;

@@ -11,7 +11,7 @@ fid2=fopen(['sitesens_theta' labl '.tex'],'w');
 
 fprintf(fid,'Subset');
 
-wfly=[firstyears(2:end) ; lastyears(2:end)];
+wfly=[firstyears(1:end) ; lastyears(1:end)];
 fprintf(fid,' & %0.0f--%0.0f',wfly);
 fprintf(fid,' \\\\ \n');
 
@@ -32,7 +32,7 @@ for reoptimize=0
             wfslopediff=sitesensfslopediff{iii,qqq,rrr,reoptimize+1};
             wsdslopediff=sitesenssdslopediff{iii,qqq,rrr,reoptimize+1};
             
-           for uuu=2:length(firstyears)
+           for uuu=1:length(firstyears)
              fprintf(fid,' & $%0.2f \\pm %0.2f$',[wfslope(uuu) 2*wsdslope(uuu)]);
             P=normcdf([wfslope(uuu)./wsdslope(uuu)]);
             if abs(P-.5)>=.49

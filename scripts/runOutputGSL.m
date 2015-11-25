@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Aug 03 20:23:52 EDT 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Aug 13 10:13:06 EDT 2015
 
 
 refyear=2000;
@@ -87,7 +87,7 @@ for dodetrend=[0]
     end
     
 
-    for timesteps=[100 400 40 20]
+    for timesteps=[100 200 400 40 20]
         [hp,hl,hl2,dGSL,dGSLsd,dGSLV,outtable,difftimes,diffreg]=PlotPSLOverlay(testX(datsub,3),testreg(datsub),testsites(sitesub,1),wf,wV,colrs,testsitedef.firstage(sitesub),testt(end),0,timesteps,{'GSL'});
         set(hp,'xlim',[-1000 2010]);
         delete(hp(2));
@@ -102,8 +102,9 @@ for dodetrend=[0]
             rgb=[0 0 0];
             
             subplot(2,1,1);
-            [hl,hk]=PlotWithShadedErrors(plotdat,rgb,[],[],[],[-1000 2010]);
-            ylabel([num2str(timesteps) '-year avg. GSL rate (mm/y, \pm 1\sigma)']);
+            plot([-1000 2010],[0 0],'k-'); hold on;
+             [hl,hk]=PlotWithShadedErrors(plotdat,rgb,[],[],[],[-1000 2010]);
+           ylabel([num2str(timesteps) '-year avg. GSL rate (mm/y, \pm 1\sigma)']);
             pdfwrite(['GSLrate_' num2str(timesteps) 'y_' labl2]);
         end
         

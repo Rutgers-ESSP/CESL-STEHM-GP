@@ -1,11 +1,11 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Wed Aug 05 13:08:55 EDT 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Aug 20 22:29:31 EDT 2015
 
 % first do a table with rates for each of the models
 
 regresssetorder = [2 1 3 5 4];
 
-firstyears=[0 0   400 800  1200 1200 1600 1800 1860 1900];
-lastyears= [1700 400 800 1200 1800 1600 1800 1900 1900 2000];
+firstyears=[-800 0    0   400 800 1200 1600 1200 1800 1860 1900 0 300 700 1000 1400 1400 1600 0 700];
+lastyears= [0 1700 400 800 1200 1600 1800 1800 1900 1900 2000 300 700 1000 1400 1800 1600 1800 700 1400];
 datsub=find(testreg==0); sitesub=find(testsites==0);
 
 fid=fopen('bymodel_GSLrates.tex','w');
@@ -122,8 +122,8 @@ fclose(fid);
 
 for iii=regresssetorder
 
-    firstyears=[0    0   400 800  1200 1600 1800 1900];
-    lastyears= [1700 400 800 1200 1600 1800 1900 2000];
+    firstyears=[0    0   700 1400  1800 1900];
+    lastyears= [1700 700 1400 1800 1900 2000];
 
     testreg=testlocs{iii}.reg;
     testsites=testlocs{iii}.sites;

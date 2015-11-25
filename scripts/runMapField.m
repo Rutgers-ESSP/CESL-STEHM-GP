@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Mar 09 11:26:19 EDT 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Wed Aug 12 23:41:02 EDT 2015
 
 nulldataset=SubsetDataStructure(wdataset,1,1);
 nulldataset.meantime=2000; nulldataset.dt=0; nulldataset.dY=200e3; nulldataset.limiting=0;
@@ -122,8 +122,9 @@ pdfwrite(['fieldmap_' labl '_' num2str(firstyears(qqq)) '_' num2str(lastyears(qq
 
 %%%%
 
-firstyears2=[ 0   400 800  1200 1600 1800 1900];
-lastyears2= [ 400 800 1200 1600 1800 1900 2000]; 
+firstyears2=[ 0   400 800  1200 1600 1800 1900 0 300 700 1000 1400 0 700];
+lastyears2= [ 400 800 1200 1600 1800 1900 2000 300 700 1000 1400 1800 700 1400];
+
 for qqq=1:length(firstyears2)
 
     firstyears=[0 firstyears2(qqq)];

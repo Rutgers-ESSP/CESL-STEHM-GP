@@ -1,9 +1,9 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri Mar 06 11:24:58 EST 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Aug 20 23:30:52 EDT 2015
 
 %% do data sensitivity tests
 
-firstyears=[0    0   400 800  1200 1600 1800 1900];
-lastyears= [1800 400 800 1200 1600 1800 1900 2000];
+firstyears=[0 700 1000 1400 1600 1800 1900];
+lastyears= [700 1000 1400 1600 1800 1900 2000];
 trainrange=[100 100 2000 2000];
 
 wdat = datasets{ii};
