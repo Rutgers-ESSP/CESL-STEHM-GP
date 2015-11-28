@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Aug 06 09:31:25 EDT 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sat Nov 28 15:34:29 EST 2015
 %
 
 dosldecomp = 0;
@@ -11,7 +11,7 @@ IFILES=[pd '/IFILES'];
 addpath(pd)
 savefile='~/tmp/CESL';
 
-WORKDIR='150806';
+WORKDIR='151128';
 if ~exist(WORKDIR,'dir')
     mkdir(WORKDIR);
 end
@@ -36,14 +36,6 @@ for ii=1:length(trainsets)
 end
 
 runTrainModels;
-% runCrossValidateModels;
-
-% add weakly informative prior
-% $$$ trainspecs=[trainspecs 1];
-% $$$ trainsets=[trainsets NaN];
-% $$$ trainlabels={trainlabels{:},['wip_' modelspec(trainspecs(end)).label]};
-% $$$ thetTGG{end+1}=[200 300 1.3 8 200 120 15 20 40 0.1];
-% $$$ logp(end+1)=NaN;
 
 save thetTGG thetTGG trainsubsubset
 save(savefile);
@@ -84,7 +76,7 @@ testsitedef.youngest=2014;
 testsitedefGSL=testsitedef;
 
 dosub=find(wdataset.siteid>0);
-dosub=[intersect(dosub,find(wdataset.siteid>=10000)) ; intersect(dosub,find(wdataset.siteid<10000))];
+%dosub=[intersect(dosub,find(wdataset.siteid>=10000)) ; intersect(dosub,find(wdataset.siteid<10000))];
 avail=ones(length(wdataset.siteid),1);
 for ii=dosub(:)'
     if avail(ii)

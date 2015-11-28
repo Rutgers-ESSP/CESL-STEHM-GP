@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Aug 06 09:21:34 EDT 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sat Nov 28 15:52:18 EST 2015
 
 defval('firsttime',-2000);
 
@@ -12,7 +12,7 @@ datid=[]; time1=[]; time2=[]; mediantime=[]; limiting=[]; Y=[]; dY = []; compact
 istg = []; lat=[]; long=[];
 siteid=[]; sitenames={}; sitecoords=[];
 
-datPX = importdata(fullfile(IFILES,'RSL_Aug2015.csv'));
+datPX = importdata(fullfile(IFILES,'RSL_All_Nov2015.csv'));
 datPX.textdata=datPX.textdata(2:end,:);
 
 % catch entries without age errors
@@ -68,65 +68,6 @@ for ii=1:length(uStudy)
     end
 end 
 
-%%%%%%%%%%%%%%%%
-
-
-datLH = importdata(fullfile(IFILES,'RSL_LateHolocene_Aug2015.csv'));
-datLH.textdata=datLH.textdata(2:end,:);
-
-% catch entries without age errors
-sub=find(isnan(datLH.data(:,8))); datLH.data(sub,8)=100;
-sub=find(isnan(datLH.data(:,7))); datLH.data(sub,7)=100;
-
-study=datLH.textdata(:,1);
-uStudy = unique(study);
-for ii=1:length(uStudy)
-    sub=find(strcmpi(uStudy{ii},study));
-    if length(sub)>=minperstudy
-        site = datLH.textdata(sub,2);
-        uSite=unique(site);
-        for jj=1:length(uSite)
-            curid = 1e6 + 1e4*ii + jj;
-            curstudysite=['LR-' uStudy{ii} '-' uSite{jj}];
-            sub2=sub(find(strcmpi(uSite{jj},site)));
-            wdatid=ones(length(sub2),1)*curid;
-            wmediantime=datLH.data(sub2,6);
-            wtime1=wmediantime-datLH.data(sub2,8)+(1:length(sub2))'/1e5;
-            wtime2=wmediantime+datLH.data(sub2,7)+(1:length(sub2))'/1e5;
-            
-            wlimiting=zeros(length(sub2),1);
-            wYmedian=datLH.data(sub2,3);
-            wY1=wYmedian-datLH.data(sub2,5);
-            wY2=wYmedian+datLH.data(sub2,4);
-            wY=(wY1+wY2)/2;
-            wdY=abs(wY2-wY1)/4;
-            wcompactcorr=zeros(length(sub2),1);;
-            wlat=datLH.data(sub2,1);
-            wlong=datLH.data(sub2,2);
-            
-            wY=wY*1000;
-            wdY=wdY*1000;
-            
-            datid = [datid ; wdatid];
-            time1 = [time1 ; wtime1];
-            time2 = [time2 ; wtime2];
-            limiting = [limiting ; wlimiting];
-            Y = [Y ; wY];
-            dY = [dY ; wdY];
-            compactcorr = [compactcorr ; wcompactcorr];
-            istg = [istg ; 0 * wY];
-            lat = [lat ; wlat];
-            long = [long ; wlong];
-            mediantime = [mediantime ; wmediantime];
-
-            siteid=[siteid ; curid];
-            sitenames={sitenames{:}, curstudysite};
-            sitecoords=[sitecoords; mean(wlat) mean(wlong)];
-        end
-
-    end
-end 
-
 %%%%
 
 PX.datid=round(datid);
@@ -153,15 +94,6 @@ sub=intersect(sub,find(abs(PX.lat)<=90));
 subS=find(abs(PX.sitecoords(:,1))<=90);
 
 PX=SubsetDataStructure(PX,sub,subS);
-
-
-sub=find(PX.datid<1e6);
-subS=find(PX.siteid<1e6);
-PXnoLH=SubsetDataStructure(PX,sub,subS);
-
-sub=find(PX.datid>=1e6);
-subS=find(PX.siteid>=1e6);
-LH=SubsetDataStructure(PX,sub,subS);
 
 %%%%%%%
 %old tide gauges
@@ -302,10 +234,6 @@ TGNOGSL=TG;
 TG=MergeDataStructures(TG,HayGSL);
 
 
-%%%%%%%%%%%%%%%%
-
-
-
 %%%%%% load GIA model
 
 giamodel.gia=ncread(fullfile(IFILES,'dsea250.1grid.ICE5Gv1.3_VM2_L90_2012.nc'),'Dsea_250');
@@ -318,21 +246,12 @@ ICE5Glon=giamodel.long;
 sub=find(ICE5Glon>180); ICE5Glon(sub)=ICE5Glon(sub)-360;
 [ICE5Glon,si]=sort(ICE5Glon); ICE5Ggia=ICE5Ggia(si,:);
 
-% fingerprint
-
-[GISfp,GISfplong,GISfplat]=readFingerprintInd('gis',IFILES);
-sub=find(GISfplong>180); GISfplong(sub)=GISfplong(sub)-360;
-[GISfplong,si]=sort(GISfplong); GISGISfp=GISfp(:,si);
-GISfplong=[GISfplong(end)-360 ; GISfplong];
-GISfp=[GISfp(:,end) GISfp];
-GISfp=GISfp*1000;
 %%%%%%%
 
 dat=importdata(fullfile(IFILES,'Grinsted2009_JonesA1B.txt'));
 Grinsted2009_Jones.year=dat.data(:,1);
 Grinsted2009_Jones.quantiles=[5 16 50 84 95];
 Grinsted2009_Jones.y=dat.data(:,2:end)*1000;
-
 
 dat=importdata(fullfile(IFILES,'Grinsted2009_MobergA1B.txt'));
 Grinsted2009_Moberg.year=dat.data(:,1);
@@ -363,13 +282,11 @@ Grinsted.sitelen=length(Grinsted.Y);
 clear datasets;
 datasets{1}=MergeDataStructures(TG,PX);
 datasets{2}=MergeDataStructures(MergeDataStructures(TG,PX),GSLflattener);
-datasets{3}=MergeDataStructures(TG,PXnoLH);
-datasets{4}=PX;
+datasets{3}=PX;
 
 datasets{1}.label='TG+GSL+PX';
 datasets{2}.label='TG+GSL+PX+flat';
-datasets{3}.label='TG+PXnoLH';
-datasets{4}.label='PX';
+datasets{3}.label='PX';
 
 
 for ii=1:length(datasets)
@@ -379,12 +296,6 @@ for ii=1:length(datasets)
     datasets{ii}.dt = abs(t1-t2)/4;
     datasets{ii}.compactcorr=sparse(datasets{ii}.compactcorr);
 
-
-    datasets{ii}.obsGISfp = interp2(GISfplong,GISfplat,GISfp,datasets{ii}.long,datasets{ii}.lat,'linear');
-    datasets{ii}.obsGISfp(find(datasets{ii}.lat>100))=1;
-    datasets{ii}.siteGISfp = interp2(GISfplong,GISfplat,GISfp,datasets{ii}.sitecoords(:,2),datasets{ii}.sitecoords(:,1),'linear');
-    datasets{ii}.siteGISfp(find(datasets{ii}.sitecoords(:,1)>100))=1;
-    
     % subtract GIA model
     datasets{ii}.siteGIA = interp2(ICE5Glat,ICE5Glon,ICE5Ggia, ...
                                 datasets{ii}.sitecoords(:,1),datasets{ii}.sitecoords(:,2));
