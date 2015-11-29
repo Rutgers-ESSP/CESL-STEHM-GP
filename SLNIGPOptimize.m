@@ -1,8 +1,24 @@
 function [thet,logp,hessin,hessin2]=SLNIGPOptimize(x0,y0,dx0,dy0,traincvaug,cvfunc,thet0,lb,ub,globl,spacex,basisX)
 
-% cvfunc must be a function of (x0,theta)
+% [thet,logp,hessin,hessin2]=SLNIGPOptimize(x0,y0,dx0,dy0,traincvaug,cvfunc,thet0,lb,ub,globl,[spacex])
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sat Nov 01 10:28:16 EDT 2014
+% Optimize a noisy-input GP model.
+%
+% x0, y0 and errors dx0, dy0 specify the data.
+% cvfunc is the covariance function
+% traincvaug is a function that augments cvfunc when including data errors
+% thet0 is the initial hyperparameters
+% lb and ub are upper and lower bounds
+% globl specifies optimization mode
+% spacex is an optional set of spatial coordinates passed to GPRdx
+%
+% For globl, options are 0 (fmincon - local only), 1 (global search), 2 (genetic
+% algorithm), and 3 (simulated annealing). Sequential optimization methods
+% can be specified as a vector.
+%
+% cvfunc must be a function of (x1,x2,thet,r1,r2))
+%
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sat Nov 28 18:21:04 EST 2015
 
     defval('globl',0)
 
@@ -44,7 +60,7 @@ function [thet,logp,hessin,hessin2]=SLNIGPOptimize(x0,y0,dx0,dy0,traincvaug,cvfu
         rng(10,'twister') % for reproducibility
         fitoptions=saoptimset('Display','iter','MaxFunEval',8000,'TolFun',2e-2,'TemperatureFcn',@temperaturefast,'TimeLimit',12000,'StallIterLimit',1000);
         [optm1.coeffs,optm1.fval] = simulannealbnd(@(x) -logprobNI(x0,y0,dx0,dy0,traincvaug,cvfunc,exp(x),spacex),log(thet0),log(lb),log(ub),fitoptions); 
-    else
+    elsecvfunc
         disp('Noisy Input GP Optimization - FMinCon');
 	if nargout>1
             [optm1.coeffs,optm1.fval,optm1.exitflag,optm1.output,optm1.lambda,optm1.grad,hessin] = fmincon(@(x) -logprobNI(x0,y0,dx0,dy0,traincvaug,cvfunc,exp(x),spacex),log(thet0),[],[],[],[],log(lb),log(ub),[],fitoptions);
@@ -89,7 +105,7 @@ function logp=logprob(y0,traincv,x,basisX)
 
     if length(basisX)>0
 
-        [~,~,logp]= GaussianProcessRegression2([],y0,[],traincv(x),[],[],basisX,basisX);
+        [~,~,logp]= GaussianProcessRegressionWithBasis([],y0,[],traincv(x),[],[],basisX,basisX);
     else
 	errorflags=0;
 	

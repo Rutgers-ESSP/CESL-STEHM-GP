@@ -1,4 +1,23 @@
-% Last updated by  Bob Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Jul 28 09:56:00 MDT 2013
+% This script defines some common covariance functions.
+%
+% kMat1 - Matern 1/2
+% kMat3 - Matern 3/2
+% kMat5 - Matern 5/2
+% kSE - squared exponential
+% kDP - dot product
+% kCONST - constant
+% kSIN - square exponential of sine function
+% kMODSIN - product of kSIN and kSE
+% kFREQ - cosine function
+% kRQ - rational quadratic
+% kMatG - Matern generic
+% kDELTAG - delta function on a sphere
+% kGEOG - Matern 5/2 on a sphere
+% kGEOGG - Matern generic on a sphere
+% 
+% It also defines first and second derivatives kMat3d, kMat3dd and kDPd, kDPdd
+%
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sat Nov 28 16:09:12 EST 2015
 
 % we will have a vector of observations
 % and a vector of their uncertainty

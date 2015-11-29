@@ -1,5 +1,57 @@
 function [thetTGG,trainsub,logp,thethist]=OptimizeHoloceneCovariance(dataset,modelspec,optimizesteps,mintime,maxageerror,maxcompactcorrallowed,startcompact,maxcompactcorrfactor)
 
+% [thetTGG,trainsub,logp,thethist]=OptimizeHoloceneCovariance(dataset,
+%        modelspec,[optimizesteps],[mintime],[maxageerror],[maxcompactcorrallowed],
+%        [startcompact],[maxcompactcorrfactor])
+%
+% Given a sea-level dataset specified by data set and a model specified by modelspec,
+% find maximum-likelihood hyperparameters.
+%
+% Data points with ages less than mintime are excluded from the optimization.
+%
+% The following parameters can be specified as either scalars or vectors
+% equal in size to optimizesteps:
+%
+%    Data points with time1-time2 greater than maxageerror are excluded.
+%    Data points with compactcorr greater than maccompactcorrallowed are excluded.
+% 
+% startcompact specifies the initial value of the compaction factor, which
+% is multipled by compactcorr to get an additional error term for compactable
+% index points.
+%
+% maxcompactcorrfactor specifies the maximum allowable value of the
+% compaction factor (default = 1)
+%
+% optimizesteps (a vector) specifies the types of optimization.
+%
+%    If floor(optimizesteps) = 1, only tide gauge data are used.
+%        1.0 - local optimization
+%        1.1 - local optimization followed by global search
+%        1.3 - genetic algorithm
+%        1.4 - simulated annealing
+%
+%    If floor(optimizesteps) = 2, ignore geochronological uncertainty.
+%        2.0 - local optimization
+%        2.1 - conditional local optimization (do global search if no previous
+%              step was global)
+%        2.2 - local optimization followed by global search
+%        2.3 - genetic algorithm
+%        2.4 - simulated annealing
+%
+%        If you add .01 to optimizesteps, it will augment the covariance
+%        to account for geochronological uncertainty given the
+%        hyperparameters optimized to that point, and optimize
+%        without incorporating the effects of changes on the hyperparemters
+%        on the derivatives.
+%
+%    If floor(optimizesteps) = 3, include geochronological uncertainty.
+%        3.0 - local optimization
+%        3.1 - conditional local optimization (do global search if no previous
+%              step was global)
+%        3.2 - local optimization followed by global search
+%        3.3 - genetic algorithm
+%        3.4 - simulated annealing
+%
 % Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Dec 29 09:45:39 EST 2014
 
 defval('optimizesteps',[1.1 2.11]);

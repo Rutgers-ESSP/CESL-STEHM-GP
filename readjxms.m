@@ -1,6 +1,9 @@
 function [hmap,lo,la,age,Plm,hmapref]=readjxms(fnames,minage,maxage,ageref,degres,L3,Plm)
 % [hmap,lo,la,age,Plm,hmapref]=READJXMS(fnames,minage,maxage,ageref,degres,L3)
 % 
+% Reads in spherical harmonics files from Jerry
+% Mitrovica and converts it to a full spatial map.
+%
 % INPUT:
 %
 % fnames        String with path of files (wildcards allowed)

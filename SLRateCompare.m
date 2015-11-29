@@ -1,5 +1,40 @@
 function [fslopeavg,sdslopeavg,fslopeavgdiff,sdslopeavgdiff,diffplus,diffless]=SLRateCompare(wf,wV,testsites,testreg,testts,firstyears,lastyears)
 
+% [fslopeavg,sdslopeavg,fslopeavgdiff,sdslopeavgdiff,diffplus,diffless]=SLRateCompare(wf,wV,testsites,testreg,testts,firstyears,lastyears)
+%
+% Calculate sea-level rates and differences in rates within sites, over the time intervals
+% defined by firstyears and lastyears.
+%
+% INPUTS:
+%
+%     wf - column vector of sea-level heights
+%     wV - a corresponding covariance matrix
+%     testsites - a matrix of site information, with the first column being site id
+%     testreg - column vector listing the siteid for each element of wf
+%     testts - column vector of ages for each element of wf
+%     firstyears - row vector of interval starts
+%     lastyears - row vector of interval ends
+%
+% OUTPUTS:
+%
+%     fslopeavg - matrix of rates, with rows corresponding to sites
+%                 and columns to intervals
+%     sdslopeavg - corresponding matrix of standard deviations
+%     fslopeavgdiff - matrix of interperiod rate differences, with
+%                     rows corresponding to sites
+%     sdslopeavgdiff - corresponding standard deviations
+%     diffplus - the interval being added to calculate differences
+%     diffless - the intervla being substracted to calculate differences
+%
+% EXAMPLE:
+%
+% firstyears=[0 700 1400];
+% lastyears= [700 1400 1800];
+%
+% [fslopeavg,sdslopeavg,fslopeavgdiff,sdslopeavgdiff,diffplus,diffless]= ...
+%      SLRateCompare(f2s{1}(:,1),V2s{1}(:,:,1),testsites,testreg, ...
+%      testX(:,3),firstyears,lastyears);
+%
 % Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Wed Nov 05 22:41:45 EST 2014
 
 defval('firstyears',[0 1000]);

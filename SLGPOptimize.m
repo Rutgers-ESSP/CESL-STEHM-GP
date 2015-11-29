@@ -1,6 +1,16 @@
 function [thet,logp,hessin,hessin2]=SLGPOptimize(y0,traincv,thet0,lb,ub,globl,basisX)
 
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Oct 27 13:17:08 EDT 2014
+% [thet,logp,hessin,hessin2]=SLGPOptimize(y0,traincv,thet0,lb,ub,[globl])
+%
+% Optimize a GP model with covariance function for noisy data given by
+% traincv, initial hyperparemters specified by thet0, lower and upper bounds
+% specified by lb and ub, and global optimization mode specified by globl.
+%
+% For globl, options are 0 (fmincon - local only), 1 (global search), 2 (genetic
+% algorithm), and 3 (simulated annealing). Sequential optimization methods
+% can be specified as a vector.
+%
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sat Nov 28 18:16:54 EST 2015
 
     defval('globl',0)
 
@@ -62,7 +72,7 @@ function logp=logprob(y0,traincv,x,basisX)
 
     if length(basisX)>0
 
-        [~,~,logp]= GaussianProcessRegression2([],y0,[],traincv(x),[],[],basisX,basisX);
+        [~,~,logp]= GaussianProcessRegressionWithBasis([],y0,[],traincv(x),[],[],basisX,basisX);
     else
 	errorflags=0;
 	

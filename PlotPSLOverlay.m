@@ -1,5 +1,9 @@
 function [hp,hl,hl2,df,dsd,dV,outtable,difftimes,diffreg]=PlotPSLOverlay(years,regions,selregions,slf,slV,colrs,starttimes,endtimes,do2s,difftimestep,regionlabels)
 
+% [hp,hl,hl2,df,dsd,dV,outtable,difftimes,diffreg]=PlotPSLOverlay(years,
+%         regions,selregions,slf,slV,colrs,starttimes,endtimes,do2s,
+%         difftimestep,regionlabels)
+% 
 % Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Oct 04 23:03:11 EDT 2015
 
 defval('regions',ones(size(years)));

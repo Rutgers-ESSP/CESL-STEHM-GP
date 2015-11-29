@@ -1,9 +1,30 @@
 function [TGdata2,TGdata,thetL,TGmodellocal] = GPSmoothNearbyTideGauges(targcoords,addlsites,thetL0,winlength,thinlength,minlength,optimizemode,psmsldir,gslfile,maxdist)
 
+% [TGdata2,TGdata,thetL,TGmodellocal] = GPSmoothNearbyTideGauges(targcoords,
+%             [addlsites],[thetL0],[winlength],[thinlength],[minlength],[optimizemode],
+%             psmsldir,gslfile,[maxdist])
+%
 % Find tide gauge sites to include, based on length and proximity criteria, then
 % fit GP model to them in order to interpolate and take running averge.
 %
+% Specifically, from the site of all tide gauge sites with length of at least
+% minlength(3), identifies sites that fit one of the following criteria:
+%      1. are longer than minlength(1)
+%      2. are within maxdist degrees of one of the sites listed in targcoords
+%         and are longer than minlength(2)
+%      3. is the nearest tide gauge to one of the sites listed in targcoords
+%      4. has a PSMSL ID listed in addlsites
 %
+% Data are then smoothed and thinned by
+% 
+%      [TGdata2,thetL,TGmodellocal] = GPSmoothTideGauges(TGdata,winlength, ...
+%                             optimizemode,thinlength,thetL0);
+%
+% EXAMPLE:
+%
+%  [TG,TG0,thetL,TGmodellocal] = GPSmoothNearbyTideGauges(PX.sitecoords, ...
+%                           [],[],[],[],[150 75 20],1.0,psmsldir,'none');
+% 
 % Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Nov 06 21:04:21 EST 2014
 %
 

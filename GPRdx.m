@@ -5,6 +5,11 @@ function [dK,df,d2f,yoffset,f0,dV] = GPRdx(x0,y0,dx0,dy0,cvfunc0,Nderivs,spacex,
 % 
 % Calculates increment of training covariance matrix for noisy GP regression.
 %
+% Note that cvfunc should be specified has cvfunc(x1,x2) or cvfunc(x1,x2,r1,r2)
+% -- this is a different format than used in some other places in the code.
+% OptimizeHoloceneCovariance and RegressHoloceneDataSets handle this translation,
+% but if you access this function directly, please be aware.
+%
 % OUTPUTS
 %
 %     dK: term to add to diagonal = (df^2 .* dx0.^2) or (diag(df) * dx0 * diag(df))

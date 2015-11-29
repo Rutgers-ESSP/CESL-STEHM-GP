@@ -1,3 +1,5 @@
+% Create pseudo-GSL curve from North Carolina proxy data
+%
 % Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Tue Dec 02 09:37:23 EST 2014
 
 % extract the detrended North Carolina sea-level curve

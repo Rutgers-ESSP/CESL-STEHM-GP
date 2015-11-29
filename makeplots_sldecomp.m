@@ -1,5 +1,9 @@
 function makeplots_sldecomp(dataset,f2s,sd2s,V2s,testloc,labl,doplots,difftimestep,xlim0,maxdistfrom)
 
+% makeplots_sldecomp(dataset,f2s,sd2s,V2s,testloc,labl,doplots,difftimestep,xlim0,maxdistfrom)
+%
+% Make sea level plots.
+%
 % Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Nov 12
 % 2014
 

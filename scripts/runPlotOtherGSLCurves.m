@@ -1,3 +1,5 @@
+% Compare GSL from statistical model to other sources.
+%
 % Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Nov 30 21:28:04 EST 2014
 
 %% do comparsion plot

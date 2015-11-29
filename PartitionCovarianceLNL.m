@@ -1,5 +1,7 @@
 function [Vnl,Vconst,Vrate,t0,sigmaadj] = PartitionCovarianceLNL(slV,years)
 
+% [Vnl,Vconst,Vrate,t0,sigmaadj] = PartitionCovarianceLNL(slV,years)
+% 
 % Remove constant rate and constant terms from covariance
 %
 % Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri Feb 27 17:06:17 EST 2015

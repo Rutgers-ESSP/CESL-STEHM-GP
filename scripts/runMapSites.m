@@ -1,3 +1,5 @@
+% Generate maps of proxy and tide gauge data.
+%
 % Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri Nov 27 13:07:50 EST 2015
 
 wdataset=datasets{2};

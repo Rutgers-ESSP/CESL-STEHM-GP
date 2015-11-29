@@ -1,10 +1,14 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sat Nov 28 15:34:29 EST 2015
+% Master sea-level rise estimation script
+% for Kopp et al., "Temperature-driven global sea-level variability in the Common Era"
 %
+%
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sat Nov 28 20:46:33 EST 2015
 
-dosldecomp = 0;
+dosldecomp = 0; % make plots for each site?
+
+% set up  paths
 
 pd=pwd;
-%addpath('~/Dropbox/Code/TGAnalysis/MFILES');
 addpath([pd '/MFILES']);
 addpath([pd '/MFILES/scripts']);
 IFILES=[pd '/IFILES'];
@@ -19,16 +23,20 @@ cd(WORKDIR);
 
 GIAfiles=([pd '/../GIA/RSL4/rsl*.out.gz']);
 
-%
+% exclude all data before -2000 CE
 firsttime=-2000;
+
+% read in files and setup covariance model
 
 runImportHoloceneDataSets;
 runSetupHoloceneCovariance;
 runImportOtherGSLCurves;
 
+% set up and run hyperparameter optimization
+
 trainspecs=[1 2 3 4 5];
-trainsets = [2 2 2 2 2];
-trainfirsttime = -1000;
+trainsets = [2 2 2 2 2]; % use datasets{2}, which include TG, proxy, and flattener
+trainfirsttime = -1000; % don't use data before -1000 CE for training
 
 trainlabels={};
 for ii=1:length(trainsets)
@@ -76,8 +84,7 @@ testsitedef.youngest=2014;
 testsitedefGSL=testsitedef;
 
 dosub=find(wdataset.siteid>0);
-%dosub=[intersect(dosub,find(wdataset.siteid>=10000)) ; intersect(dosub,find(wdataset.siteid<10000))];
-avail=ones(length(wdataset.siteid),1);
+avail=ones(length(wdataset.siteid),1); % make more restrictive if you want to exclude some data sets
 for ii=dosub(:)'
     if avail(ii)
         sub=find((wdataset.datid==wdataset.siteid(ii)));
@@ -96,68 +103,71 @@ for ii=dosub(:)'
     end
     
 end
-% $$$ 
-% $$$ GISfpt.lat=GISfplat;
-% $$$ GISfpt.long=GISfplong;
-% $$$ GISfpt.fp=GISfp;
 
 ICE5G.lat=ICE5Glat;
 ICE5G.long=ICE5Glon;
 ICE5G.gia=ICE5Ggia;
 
 for ii=1:length(testsitedef.sites(:,1))
-% $$$     testsitedef.GISfp = interp2(GISfpt.long,GISfpt.lat,GISfpt.fp,testsitedef.sites(:,3),testsitedef.sites(:,2),'linear');
-% $$$     testsitedef.GISfp(find(testsitedef.sites(:,2)>100))=1;
 
     testsitedef.GIA = interp2(ICE5G.lat,ICE5G.long,ICE5G.gia,testsitedef.sites(:,2),testsitedef.sites(:,3),'linear');
     testsitedef.GIA(find(testsitedef.sites(:,2)>100))=0;
 
 end
 
-testt = [-1000:20:1800 1810:10:2010];
+testt = [-1000:20:1800 1810:10:2010]; % ages for regression
 
 % select regression parameters
 
-regressparams=[1 4 5 2 3];
-regresssets=[2 2 2 2 2];
+regressparams=[1 4 5 2 3]; % which trained hyperparameters to use
+regresssets=[2 2 2 2 2]; % which data set to use with each
 clear regresslabels;
 for i=1:length(regresssets)
     regresslabels{i} = [datasets{regresssets(i)}.label '_' trainlabels{regressparams(i)}];
 end
 
-% run predictions
+% generate predictions
 
 for iii=1:length(regresssets)
     ii=regresssets(iii);
     jj=regressparams(iii);
+    
+    wdataset=datasets{ii};
+
     wmodelspec = modelspec(trainspecs(jj));
 
-    noiseMasks = ones(1,length(thetTGG{jj}));iii
+    % create noiseMasks -- set to zero only for amplitudes of
+    % terms you want to exclude; if you set to zero for a non-amplitude
+    % term it is likely to create problems
+    
+    noiseMasks = ones(1,length(thetTGG{jj}));
     noiseMasks(1,[ wmodelspec.subampnoise ]  )=0; %without noise
     noiseMasklabels={'denoised'};
-
-    wdataset=datasets{ii};
 
     labls{iii}=['_' regresslabels{iii}];
     labl=labls{iii}; disp(labl);
 
     trainsub = find((wdataset.limiting==0)); % only index points
+    
+    % add error for compactions, based on compactcorr and the last element of thetTGG{jjj}
     wdataset.dY = sqrt(datasets{ii}.dY.^2 + (thetTGG{jj}(end)*wdataset.compactcorr).^2);
     wdataset.Ycv = datasets{ii}.Ycv + diag(thetTGG{jj}(end)*wdataset.compactcorr).^2;
-    subtimes=find(testt>=min(union(wdataset.time1,wdataset.time2)));
     
+    subtimes=find(testt>=min(union(wdataset.time1,wdataset.time2)));    
     collinear=wmodelspec.subamplinear(1);
     [f2s{iii},sd2s{iii},V2s{iii},testlocs{iii},logp(iii),passderivs,invcv]=RegressHoloceneDataSets(wdataset,testsitedef,wmodelspec,thetTGG{jj},trainsub,noiseMasks,testt(subtimes),refyear,collinear);
 
+    % extract linear rate terms
     noiseMasksLin = ones(2,length(thetTGG{jj}));
     noiseMasksLin(1,[setdiff(wmodelspec.subamp,union(wmodelspec.subamplinear,wmodelspec.subampoffset))])=0; %only linear
     noiseMasksLin(2,[setdiff(wmodelspec.subamp,wmodelspec.subampoffset)])=0; %only offset
     noiseMaskLinlabels={'linear','offset'};
     [f2slin{iii},sd2slin{iii},V2slin{iii},testlocslin{iii}]=RegressHoloceneDataSets(wdataset,testsitedef,wmodelspec,thetTGG{jj},trainsub,noiseMasksLin,[0 1800],refyear,collinear,passderivs,invcv);
-
     
+    % output table of all data
     runTableTGandProxyData;
     
+    % generate site plots if dosldecomp set
     if dosldecomp; makeplots_sldecomp(wdataset,f2s{iii},sd2s{iii},V2s{iii},testlocs{iii},labl,[1 2],0); end
     
     testreg=testlocs{iii}.reg;
@@ -167,11 +177,9 @@ for iii=1:length(regresssets)
     
     %%%%
     
-    runTableRates;
-    runOutputGSL;
-    % runFingerprintAnalysis;
-    % runGIARateComparison;
-    runPlotOtherGSLCurves;
+    runTableRates; % generate table of rates
+    runOutputGSL; % output plots and table of GSL
+    runPlotOtherGSLCurves; % plot tables of GSL curves from this and other sources
 
     %%%%
  
@@ -183,6 +191,8 @@ end
 
 runLatexTables;
 %runOutputForcingProxies;
+
+% for preferred models, do some additional calculations
 
 for iii=2
     ii=regresssets(iii);
@@ -199,12 +209,11 @@ for iii=2
     labls{iii}=['_' regresslabels{iii}];
     labl=labls{iii}; disp(labl);
  
-    runMapField;
-    runSiteSensitivityTests;
-    runLatexTablesSiteSens;
-    runFingerprintAnalysis;
+    runMapField; % map spatial field of rates
+    runSiteSensitivityTests; % perform calculations on sensitivity of prediction to site subsets
+    runLatexTablesSiteSens; % latex table
     
-    %peak-to-peak
+    %calculate distribution minimum-to-maximum value between 0 and 1900 CE
     sub=find(testreg==0);
     samps=lhsnorm(f2s{iii}(sub,1),V2s{iii}(sub,sub,1),1000);
     sub2=find((testt<1900).*(testt>=0));
@@ -212,6 +221,7 @@ for iii=2
     quantile(mxtomn,[.05 .95])
 end
 
+% map sites
 ii=1;
 wdataset=datasets{ii};
 runMapSites;

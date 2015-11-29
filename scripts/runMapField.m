@@ -1,12 +1,15 @@
+% Generate maps of rate fields.
+%
 % Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Wed Aug 12 23:41:02 EDT 2015
 
+% null data set for prior cvalues
 nulldataset=SubsetDataStructure(wdataset,1,1);
 nulldataset.meantime=2000; nulldataset.dt=0; nulldataset.dY=200e3; nulldataset.limiting=0;
 
 trainsub = find((wdataset.limiting==0));
 
-%    firstyears=[0   -500 1000 1500 1800 1900];
-%lastyears=[1800 1000 1500 1800 1900 2000];
+% calculate field of rates over 0-1700 CE
+
 qqq=1;
 firstyears=[0  ];
 lastyears=[1700];
@@ -121,6 +124,8 @@ title({[num2str(firstyears(qqq)) '-' num2str(lastyears(qqq)) ' (mm/y)'],['GSL: '
 pdfwrite(['fieldmap_' labl '_' num2str(firstyears(qqq)) '_' num2str(lastyears(qqq)) '_sd']);
 
 %%%%
+
+%%%% now calculate fields of rates after removal of 0--1700 CE average rate
 
 firstyears2=[ 0   400 800  1200 1600 1800 1900 0 300 700 1000 1400 0 700];
 lastyears2= [ 400 800 1200 1600 1800 1900 2000 300 700 1000 1400 1800 700 1400];

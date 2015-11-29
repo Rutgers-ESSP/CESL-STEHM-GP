@@ -1,5 +1,9 @@
 function A=MergeDataStructures(B,C)
 
+% A=MergeDataStructures(B,C)
+%
+% Merge data structures B and C.
+%
 % Last updated by  Bob Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Feb 17 23:28:43 EST 2014
 
 fnB=fieldnames(B);

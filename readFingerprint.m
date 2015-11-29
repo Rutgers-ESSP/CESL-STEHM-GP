@@ -1,5 +1,11 @@
 function [fp,fpname,lo,la] = readFingerprint(subdir,usessht)
 
+% [fp,fpname,lo,la] = readFingerprint(subdir,usessht)
+%
+% Read JXM-format fingerprint files from directory
+% subdir. If usessht, uses the SSHT library to speed
+% spherical harmonic calculations.
+%
 % Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Jun 15 22:08:21 EDT 2014
 
 defval('subdir','IFILES/slr/FPRINT');

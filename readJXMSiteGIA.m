@@ -2,6 +2,8 @@ function [testt,testsl,sites,icehist,solidearth] = readJXMSiteGIA(files,testt)
 
 % [testt,testsl,sites,icehist,solidearth] = readJXMSiteGIA(files,testt)
 %
+% Reads table of GIA projections from Jerry Mitrovica.
+%
 % Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun May 25 22:04:07 EDT 2014
 
 defval('testt',[]);

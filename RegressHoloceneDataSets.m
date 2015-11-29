@@ -1,6 +1,39 @@
 function [f2s,sd2s,V2s,testlocs,logp,passderivs,invcv]=RegressHoloceneDataSets(dataset,testsitedef,modelspec,thetTGG,trainsub,noiseMasks,testt,refyear,collinear,passderivs,invcv)
 
+% [f2s,sd2s,V2s,testlocs,logp,passderivs,invcv]=RegressHoloceneDataSets(dataset,
+%       testsitedef,modelspec,thetTGG,[trainsub],noiseMasks,testt,[refyear],
+%       [collinear],[passderivs],[invcv])
+%
+% INPUT:
+%    dataset - sea-level data structure dataset (with fields datid, istg,
+%              time1, time2, lat, long, Y, Ycv, limiting, compactcorr, and dY)
+%    testsitedef - site definition structure (with fields sites, names, names2,
+%                  and optionally firstage and GIA, where sites is a N x 3
+%                   matrix with columns corresponding to siteid, lat, and long)
+%    modelspec - model specification structure (with fields cvfunc and traincv,
+%                and optionally derivatives dcvfunc and ddcvfunc)
+%    thetTGG - hyperparameters
+%    trainsub - training subset indices
+%    noiseMasks - matrix of noise masks, which will be multiplied row-wise with
+%                 thetTGG
+%    testt - target ages
+%    refyear - reference year for GIA calculations (default = 2010)
+%    collinear - column of thetTGG corresponding to the amplitude of the linear
+%                rate term; if equal to zero or noiseMasks(i,collinear) = 1, the
+%                GIA rate will be subtracted before regression and then added
+%                back in; otherwise it will not be added back in
+%    passderivs - derivatives passed along to speed calculation
+%    invcv - inverse of covariance matrix, passed along to speed calculations
+%
+% OUTPUT:
+%    f2s - estimated levels (columns corresponding to rows of noiseMasks)
+%    sd2s - estimated standard deviaitons
+%    V2s - estimated covariance
+%    testlocs - site definition structure
+%    logp - log likelihood
+%
 % Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Oct 26 13:43:00 EDT 2014
+
 
 defval('testt',[-2010:20:2010]);
 defval('refyear',2010);

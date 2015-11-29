@@ -1,10 +1,14 @@
+% set up covariance structures
+%
 % Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sat Feb 28 08:17:40 EST 2015
 
-% 1. GLMW
+% Alternative covariance structures:
+%
+% 1. GLMW [known as ML22 in paper]
 % 2. GLMW-Grinsted - GLMW with global hyperparameters set to maximize likelihood of Grinsted curve
 % 3. GLMW-NC
-% 4. GLMW-1ts
-% 5. GLMW-1ts1amp
+% 4. GLMW-1ts [known as ML21 in paper]
+% 5. GLMW-1ts1amp [known as ML11 in paper]
 % 5. GLW
 % 6. GMW
 % 7. GW
@@ -222,7 +226,7 @@ modelspec(ii).traincv = @(t1,t2,dt1t2,thetas,errcv,ad,fp1fp2) modelspec(ii).cvfu
 %%%%
 
 
-% 3. Global Matern + Regional Linear + White Noise (GLW)
+% Global Matern + Regional Linear + White Noise (GLW)
 
 ii=ii+1;
 modelspec(ii) = modelspec(1);
@@ -235,7 +239,7 @@ modelspec(ii).thet0(turnoff)=0;
 modelspec(ii).subfixed=union(modelspec(ii).subfixed,freeze);
 
 %%
-% 4. GMW
+% GMW
 
 ii=ii+1;
 modelspec(ii) = modelspec(1);
@@ -247,7 +251,7 @@ modelspec(ii).label='GMW';
 modelspec(ii).thet0(turnoff)=0;
 modelspec(ii).subfixed=union(modelspec(ii).subfixed,freeze);
 
-% 5. GW
+% GW
 
 ii=ii+1;
 modelspec(ii) = modelspec(1);
@@ -261,7 +265,7 @@ modelspec(ii).subfixed=union(modelspec(ii).subfixed,freeze);
 
 
 
-% 6. Regional Linear + Regional Matern + White Noise (LMW)
+% Regional Linear + Regional Matern + White Noise (LMW)
 
 ii=ii+1;
 modelspec(ii) = modelspec(1);
@@ -277,7 +281,7 @@ modelspec(ii).subfixed=union(modelspec(ii).subfixed,freeze);
 
 %%%%%
 
-% 7. Regional Linear + White Noise (LW)
+% Regional Linear + White Noise (LW)
 
 ii=ii+1;
 modelspec(ii) = modelspec(1);
@@ -289,7 +293,7 @@ modelspec(ii).label='LW';
 modelspec(ii).thet0(turnoff)=0;
 modelspec(ii).subfixed=union(modelspec(ii).subfixed,freeze);
 
-% 7. MW
+% MW
 
 ii=ii+1;
 modelspec(ii) = modelspec(1);

@@ -1,11 +1,17 @@
 function [X1,Y,dY,regions,regionsu,sitenames,sitecoords,sitelen,sitecoastline]=ReadPSMSLData(cl1,cl2,minlen,psmsldir,gslfile,addlsites,exclusions)
 
-% [X1,Y,dY,regions,regionsu,sitenames,sitecoords,sitelen,sitecoastline]=ReadPSMSLData([cl1],[cl2],[minlen],[psmsldir],[gslfile],[addlsites],[exclusions])
+% [X1,Y,dY,regions,regionsu,sitenames,sitecoords,sitelen,sitecoastline]=
+%      ReadPSMSLData([cl1],[cl2],[minlen],psmsldir,gslfile,[addlsites],[exclusions])
 %
-% Last updated by  Bob Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Feb 17 12:56:07 EST 2014
+% Read PSMSL tide gauge data for coastlines between cl1 (default = 0) and cl2 (default = 1000),
+% with minimum length minlen (default = 30), from directory psmsldir, with GSL provided
+% in file gslfile. Additionally load sites specified in addlsites and exclude sites specified
+% in exclusions.
+%
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sat Nov 28 19:56:52 EST 2015
 
 defval('psmsldir','~/Dropbox/Code/TGAnalysis/IFILES/rlr_annual');
-defval('gslfile','~/Dropbox/Code/TGAnalysis/IFILES/CSIRO_Recons_gmsl_yr_2011.csv')
+defval('gslfile','none')
 defval('minlen',30);
 defval('baserslerror',3);
 defval('cl1',0);

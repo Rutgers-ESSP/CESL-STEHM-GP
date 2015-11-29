@@ -1,6 +1,9 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sat Nov 28 15:36:57 EST 2015
+% Optimize hyperparameters for different model structures.
+%
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sat Nov 28 16:23:56 EST 2015
 
-trainrange=[100 100 100];
+trainrange=[100 100 100]; % optimize only using data with age errors < 100 yrs
+
 clear thetTGG thethist trainsubsubset logp;
 for ii=1:length(trainspecs)
 
@@ -9,7 +12,7 @@ for ii=1:length(trainspecs)
     % first only fit ones without a compaction correction
     [thetTGG{ii},trainsubsubset{ii},logp(ii),thethist{ii}]= ...
         OptimizeHoloceneCovariance(datasets{trainsets(ii)}, ...
-                                   modelspec(ms,[2.4 3.4 3.0],trainfirsttime,trainrange,.01);
+                                   ms,[2.4 3.4 3.0],trainfirsttime,trainrange,.01);
 
     % now add compaction correction factor
     ms = modelspec(trainspecs(ii));

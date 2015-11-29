@@ -1,4 +1,5 @@
 function varargout=readjxm(fname,degres)
+
 % hmap=READJXM(fname,degres)
 % READJXM(fname,degres)
 % 

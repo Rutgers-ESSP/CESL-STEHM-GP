@@ -1,11 +1,14 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sat Nov 28 15:52:18 EST 2015
+% Read in data files
+%
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sat Nov 28 20:25:01 EST 2015
 
 defval('firsttime',-2000);
 
-thinyrs=10;
-minlen=50;
-minperstudy=1;
-refyear=2010;
+thinyrs=10; % how much to thin/smooth tide gauge data
+minperstudy=1; % minimum size of studies to include
+refyear=2010; % reference year for GIA hindcast
+optimizemode=1.0; % local optimization only for smoothing GPs
+psmsldir=fullfile(IFILES,'rlr_annual'); % location of PSMSL data files
 
 %%%%%%%%%%
 datid=[]; time1=[]; time2=[]; mediantime=[]; limiting=[]; Y=[]; dY = []; compactcorr = [];
@@ -157,16 +160,13 @@ TGold.Ycv=sparse(diag(TGold.dY.^2));
 TGoldS = GPSmoothTideGauges(TGold,11,1.0,10,[],1700);
 %%%%%%%%%%%%%%%
 
-% First load tide gauge data
-optimizemode=1.0;
-
-psmsldir=fullfile(IFILES,'rlr_annual');
+% Load tide gauge data
 
 [TG,TG0,thetL,TGmodellocal] = GPSmoothNearbyTideGauges(PX.sitecoords,[],[],[],[],[],optimizemode,psmsldir,'none');
 
-% account for additional uncertainties in GSL curve;
+% Hay et al 2015 GMSL curve
 
-gslfile=fullfile(IFILES,'Hay2014_KFandGP_GMSL.mat');
+gslfile=fullfile(IFILES,'Hay2015_KFandGP_GMSL.mat');
 
 Haydat=load(gslfile);
 Hay.Y=Haydat.KF_GMSL(:);
@@ -186,6 +186,7 @@ Hay.sitenames={'Hay_KF_GMSL'};
 Hay.sitecoords=[1e6 1e6];
 Hay.sitelen=length(Hay.Y);
 
+% smooth Hay et al curve
 Hayavgwin=10;
 Haystep=10;
 HayGSL=Hay;
@@ -205,6 +206,7 @@ HayGSL.istg=ones(size(HayGSL.Y));
 
 
 % add in GSL flattener
+% so that average rate of change between -100 to 100 CE and 1600-1800 CE is close to zero
 
 clear GSLflattener;
 GSLflattener.sigma=1e4;
@@ -230,6 +232,8 @@ GSLflattener.sitelen=length(GSLflattener.Y);
 
 % add in old tide gauges
 TG=MergeDataStructures(TG,TGoldS);
+
+% add in GMSL curve
 TGNOGSL=TG;
 TG=MergeDataStructures(TG,HayGSL);
 
@@ -247,6 +251,8 @@ sub=find(ICE5Glon>180); ICE5Glon(sub)=ICE5Glon(sub)-360;
 [ICE5Glon,si]=sort(ICE5Glon); ICE5Ggia=ICE5Ggia(si,:);
 
 %%%%%%%
+
+% load Grinsted et al 2009 GMSL hindcasts
 
 dat=importdata(fullfile(IFILES,'Grinsted2009_JonesA1B.txt'));
 Grinsted2009_Jones.year=dat.data(:,1);
@@ -278,6 +284,8 @@ Grinsted.sitecoords=[1e6 1e6];
 Grinsted.sitelen=length(Grinsted.Y);
 
 %%%%%%
+
+% create data structures
 
 clear datasets;
 datasets{1}=MergeDataStructures(TG,PX);
@@ -315,12 +323,10 @@ for ii=1:length(datasets)
 end
 
 
-
-% indices
+% load climatic indices and temperature records
 
 datNAO = importdata(fullfile(IFILES,'nao-trouet2009.txt'));
 
-%% comparison to temperature records
 impt=importdata(fullfile(IFILES,'Marcott2013_global.txt'));
 Marcottgl.yr = 1950-impt.data(:,1);
 Marcottgl.T = impt.data(:,2);

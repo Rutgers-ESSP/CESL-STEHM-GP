@@ -1,6 +1,41 @@
 function [fslopeavgF,sdslopeavgF,fsF,sdsF,fslopeavgdiffF,sdslopeavgdiffF,diffplusF,difflessF,passderivs,invcv] = RegressRateField(PX,modelspec,thetL,noiseMasks,Flat,Flong,firstyears,lastyears,trainsub,ICE5G,passderivs,invcv)
 
+%  [fslopeavgF,sdslopeavgF,fsF,sdsF,fslopeavgdiffF,sdslopeavgdiffF,diffplusF,difflessF,
+%       passderivs,invcv] = RegressRateField(PX,modelspec,thetL,[noiseMask],[Flat],[Flong],
+%       firstyear,lastyear,[trainsub],[GIA],[passderivs],[invcv])
 %
+% Run RegressHoloceneDataSets to calculate sea level on the grid specified
+% by Flat and Flong, from dataset PX with model specification modelspec,
+% hyperparameters thetL, noise mask noiseMask (default = no noise mask),
+% training subset trainsub (default = all data points), GIA rate structure GIA,
+% and optionally derivative structure passderiv and inverse covariance invcv,
+% then convert to a rate field based on the difference between firstyear and
+% lastyear.
+%
+% EXAMPLE:
+%
+%   Flat=-85:10:85;
+%   Flong=0:20:360;
+%
+%   [fslopeF,sdslopeF,~,~,~,~,~,~,passderivs,invcv] = ...
+%      RegressRateField(wdataset,wmodelspec,thetTGG{jj},noiseMasks(1,:), ...
+%                       Flat,Flong,0,1700,trainsub,[]);    
+%
+%   Flat1=min(Flat):max(Flat);
+%   Flong1=min(Flong):max(Flong);
+% 
+%   [FLONG,FLAT]=meshgrid(Flong,Flat);
+%   [FLONG1,FLAT1]=meshgrid(Flong1,Flat1);
+%   mapped = griddata(FLONG(:),FLAT(:),fslopeF,Flong1,Flat1(:),'linear');
+%   sdmapped = griddata(FLONG(:),FLAT(:),sdslopeF,Flong1,Flat1(:),'linear');
+%
+%   clf;
+%   ax = worldmap('World');
+%   setm(ax, 'Origin',[0 -90 0],'meridianlabel','off','parallellabel','off','flinewidth',3);
+%   land = shaperead('landareas', 'UseGeoCoords', true);
+%   geoshow(ax, land, 'FaceColor', [0.85 0.85 0.85]);
+%   hold on;
+%   hs1=scatterm(FLAT1(:),FLONG1(:),10,mapped(:),'filled','marker','s');
 %
 % Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Wed Nov 05 23:18:44 EST 2014
 

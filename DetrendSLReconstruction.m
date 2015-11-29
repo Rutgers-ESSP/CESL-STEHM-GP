@@ -1,8 +1,15 @@
 function [wf2,wV2,wsd2,sitespec]=DetrendSLReconstruction(wf,wV,testsites,testreg,testts,firstyears,lastyears,refyear)
 
+% [wf2,wV2,wsd2,sitespec]=DetrendSLReconstruction(wf,wV,testsites,testreg,testts,firstyear,lastyear,refyear)
 %
+% Detrend the sea-level reconstruction specified by wf and wV, relative to years
+% specified by firstyear and lastyear.
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri Sep 26 20:56:41 EDT 2014
+% Example:
+%
+% [GSL,GSLV,GSLsd]=DetrendSLReconstruction(GSL,GSLV,0,testreg,GSL_yrs,0,1800,2000);
+%
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sat Nov 28 16:23:20 EST 2015
 
 %%%
 

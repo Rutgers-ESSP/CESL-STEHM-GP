@@ -1,6 +1,8 @@
 function [fdiff,sddiff,Vdiff,diffpairs,diffplus,diffless,difft]=SLSiteCompare(wf,wV,testsites,testreg,testX)
 
-% Compare site-to-site differences.
+% [fdiff,sddiff,Vdiff,diffpairs,diffplus,diffless,difft]=SLSiteCompare(wf,wV,testsites,testreg,testX)
+%
+% Compare differences in sea levels between sites.
 %
 % Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Jul 16 10:45:11 EDT 2015
 

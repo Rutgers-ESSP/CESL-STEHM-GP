@@ -1,3 +1,5 @@
+% Generate assorted latex tables.
+%
 % Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Aug 20 22:29:31 EDT 2015
 
 % first do a table with rates for each of the models

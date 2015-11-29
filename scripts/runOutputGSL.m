@@ -1,5 +1,8 @@
+% Output table and plots of GSL.
+%
 % Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Aug 13 10:13:06 EDT 2015
 
+% operation matrices for zeroing to specific years
 
 refyear=2000;
 Mref = eye(size(testX,1));
@@ -22,7 +25,7 @@ for i=1:size(testsites,1)
     
     Mref2(sub1,sub2)=Mref2(sub1,sub2)-1;
 
-end
+endMref
 Mref2=sparse(Mref2);    
 
 % figure of GSL and rate of GSL change

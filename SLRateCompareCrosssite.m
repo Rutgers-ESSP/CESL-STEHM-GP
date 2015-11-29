@@ -1,5 +1,9 @@
 function [fslope,sdslope,Vslope,firstyear,lastyear,dosite,fslopediff,sdslopediff,Vslopediff,diffsite,diffplus,diffless]=SLRateCompareCrosssite(wf,wV,testsites,testreg,testX,firstyears,lastyears)
 
+% [fslope,sdslope,Vslope,firstyear,lastyear,dosite,fslopediff,sdslopediff,Vslopediff,diffsite,diffplus,diffless]=SLRateCompareCrosssite(wf,wV,testsites,testreg,testX,firstyears,lastyears)
+%
+% Compare sea-level rates between sites.
+%
 % Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Nov 16 18:07:06 EST 2014
 
 defval('firstyears',[0 1000]);

@@ -2,6 +2,10 @@ function [fp,lo,la] = readFingerprintInd(fpname,subdir)
 
 % [fp,lo,la] = readFingerprintInd(fpname,[subdir])
 %
+%
+% Read JXM-format fingerprint file with name fpname
+% from directory subdir.
+%
 % Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Nov 10 17:08:32 EST 2014
 
 defval('fpname','gis');

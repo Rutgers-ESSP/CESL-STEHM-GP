@@ -1,13 +1,17 @@
+% Calculate sensitivity of results to different data subsets.
+%
 % Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Aug 20 23:30:52 EDT 2015
 
 %% do data sensitivity tests
 
+% define intervals focused upon
 firstyears=[0 700 1000 1400 1600 1800 1900];
 lastyears= [700 1000 1400 1600 1800 1900 2000];
 trainrange=[100 100 2000 2000];
 
 wdat = datasets{ii};
 
+% define subsets
 sitesets0 = {'All','NWAtlantic','NEAtlantic','NAtlantic','SAmerica','AtlanticMediterranean'};
 latbounds = [ -90 90 ; 0 90 ; 0 90 ; 0 90 ; -90 0 ; -90 90];
 longbounds = [ -180 180 ; -125 -30 ; -30 30 ; -125 30 ; -125 0 ; -90 50];

@@ -1,6 +1,10 @@
 function [hmap,lo,la,age,hmapref]=readjxms_ssht(fnames,minage,maxage,ageref,L3)
 % [hmap,lo,la,age,hmapref]=readjxms_ssht(fnames,minage,maxage,ageref,L3)
 % 
+% Reads in spherical harmonics files from Jerry
+% Mitrovica and converts it to a full spatial map. Uses
+% SSHT library for faster spherical harmonic calculations.
+%
 % INPUT:
 %
 % fnames        String with path of files (wildcards allowed)
