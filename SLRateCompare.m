@@ -35,7 +35,7 @@ function [fslopeavg,sdslopeavg,fslopeavgdiff,sdslopeavgdiff,diffplus,diffless]=S
 %      SLRateCompare(f2s{1}(:,1),V2s{1}(:,:,1),testsites,testreg, ...
 %      testX(:,3),firstyears,lastyears);
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Wed Nov 05 22:41:45 EST 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Nov 29 16:40:36 EST 2015
 
 defval('firstyears',[0 1000]);
 defval('lastyears',[1800 1800]);
@@ -56,7 +56,10 @@ for kk=1:size(testsites,1)
     end
 
     fslope=M*wf(sub,1);
-    Vslope=M*wV(sub,sub,1)*M';
+    if ndims(wV)>2
+        wV=wV(:,:,1);
+    end
+    Vslope=M*wV(sub,sub)*M';
     sdslope=sqrt(diag(Vslope));
 
     notgood=find(sum(abs(M),2)==0);

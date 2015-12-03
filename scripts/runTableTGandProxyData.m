@@ -1,6 +1,6 @@
 % Output table of all data points, including model prediction at sites
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sat Nov 28 20:40:01 EST 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Nov 29 15:43:42 EST 2015
 
 % Get model prediction for sites
 
@@ -19,8 +19,8 @@ for pp=1:length(u)
         testsitedefp.names(pp)=wdataset.sitenames(subq);
         testsitedefp.names2(pp)=wdataset.sitenames(subq);
         testsitedefp.firstage(pp)=min(wdataset.meantime(subp));
-        testsitedefp.GISfp(pp)=wdataset.siteGISfp(subq);
-        testsitedefp.GIA(pp)=wdataset.siteGIA(subq);
+        %        testsitedefp.GISfp(pp)=wdataset.siteGISfp(subq);
+        % testsitedefp.GIA(pp)=wdataset.siteGIA(subq);
     end
     subps=[subps ; subp];
 end

@@ -225,3 +225,42 @@ end
 ii=1;
 wdataset=datasets{ii};
 runMapSites;
+
+% check for probability GSL is higher in 2000 than preceeding Common Era with 0.1 mm/yr linear trend
+
+
+refyear=2000;
+Mref = eye(size(testX,1));
+for i=1:size(testsites,1)
+    
+    sub1=find(testreg==testsites(i,1));
+    sub2=intersect(sub1,find(testX(:,3)==refyear));
+    
+    Mref(sub1,sub2)=Mref(sub1,sub2)-1;
+
+end
+Mref=sparse(Mref);
+
+selsitenames={'GSL'};
+sitesub=[];
+for kk=1:length(selsitenames)
+    q=find(strcmpi(selsitenames{kk},testsitedef.names));
+    if length(q)>0
+        sitesub=[sitesub q(1)];
+    end
+end
+datsub=find(ismember(testreg,testsites(sitesub,1)));
+selmask=1;
+
+trend=0.1; % added trend in mm/yr
+N=10000;
+sub=find((testX(datsub,3)>=0).*(testX(datsub,3)<2000));
+
+for iii=1:length(f2s)
+    %wf=Mref(datsub,datsub)*f2s{iii}(datsub,selmask);
+    %wV=Mref(datsub,datsub)*V2s{iii}(datsub,datsub,selmask)*Mref(datsub,datsub)';
+    wf=f2s{iii}(datsub,selmask);
+    wV=V2s{iii}(datsub,datsub,selmask);
+    u=mvnrnd(wf(sub)+trend*(testX(datsub(sub),3)-2000),wV(sub,sub),N);
+    sum(max(u,[],2)<0)/N
+end

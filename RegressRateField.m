@@ -37,7 +37,7 @@ function [fslopeavgF,sdslopeavgF,fsF,sdsF,fslopeavgdiffF,sdslopeavgdiffF,diffplu
 %   hold on;
 %   hs1=scatterm(FLAT1(:),FLONG1(:),10,mapped(:),'filled','marker','s');
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Wed Nov 05 23:18:44 EST 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Nov 29 16:41:41 EST 2015
 
 defval('firstyears',0);
 defval('lastyears',1800);
@@ -88,5 +88,5 @@ for qqq=1:1000:length(Fsite)
     testloct=[testloct ; testlocsF.X(:,3)];
 end
 
-[fslopeavgF,sdslopeavgF,fslopeavgdiffF,sdslopeavgdiffF,diffplusF,difflessF]=SLRateCompare(fsF,full(VsF),testlocsites,testlocreg,testloct,firstyears,lastyears);
+[fslopeavgF,sdslopeavgF,fslopeavgdiffF,sdslopeavgdiffF,diffplusF,difflessF]=SLRateCompare(fsF,VsF,testlocsites,testlocreg,testloct,firstyears,lastyears);
 
