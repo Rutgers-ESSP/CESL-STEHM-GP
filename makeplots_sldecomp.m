@@ -29,6 +29,10 @@ dDist=@(x1,x2)angd(repmat(x1(:,1),1,size(x2,1)),repmat(x1(:,2),1,size(x2,1)),rep
 
 testreg=testloc.reg;
 testsites=testloc.sites;
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Dec 06 09:45:02 EST 2015
+
+dosldecomp = 0; % make plots for each site?
+
 testnames=testloc.names;
 testnames2=testloc.names2;
 testX=testloc.X;

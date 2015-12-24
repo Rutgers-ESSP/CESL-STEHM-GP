@@ -2,7 +2,7 @@
 % for Kopp et al., "Temperature-driven global sea-level variability in the Common Era"
 %
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sat Nov 28 20:46:33 EST 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Wed Dec 23 23:22:12 EST 2015
 
 dosldecomp = 0; % make plots for each site?
 
@@ -15,7 +15,7 @@ IFILES=[pd '/IFILES'];
 addpath(pd)
 savefile='~/tmp/CESL';
 
-WORKDIR='151128';
+WORKDIR='151223';
 if ~exist(WORKDIR,'dir')
     mkdir(WORKDIR);
 end
@@ -85,7 +85,11 @@ testsitedefGSL=testsitedef;
 
 dosub=find(wdataset.siteid>0);
 avail=ones(length(wdataset.siteid),1); % make more restrictive if you want to exclude some data sets
-for ii=dosub(:)'
+[s,si]=sort(wdataset.sitelen(dosub));
+dosub=dosub(si(end:-1:1));
+
+for iii=1:length(dosub)
+    ii=dosub(iii);
     if avail(ii)
         sub=find((wdataset.datid==wdataset.siteid(ii)));
         if length(sub)>0

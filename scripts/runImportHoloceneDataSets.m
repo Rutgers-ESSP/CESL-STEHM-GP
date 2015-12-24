@@ -1,6 +1,6 @@
 % Read in data files
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sat Nov 28 20:25:01 EST 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Wed Dec 23 23:22:00 EST 2015
 
 defval('firsttime',-2000);
 
@@ -43,7 +43,7 @@ for ii=1:length(uStudy)
             wY1=wYmedian-datPX.data(sub2,5);
             wY2=wYmedian+datPX.data(sub2,4);
             wY=(wY1+wY2)/2;
-            wdY=abs(wY2-wY1)/4;
+            wdY=abs(wY2-wY1)/2;
             wcompactcorr=zeros(length(sub2),1);;
             wlat=datPX.data(sub2,1);
             wlong=datPX.data(sub2,2);

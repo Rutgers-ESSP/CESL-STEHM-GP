@@ -1,4 +1,4 @@
-function [TGdata2s,thetL,TGmodellocal] = GPSmoothTideGauges(TGdata,winlengths,optimizemode,thinlengths,thetL0,thinyrstart)
+function [TGdata2s,thetL,TGmodellocal] = GPSmoothTideGauges(TGdata,winlengths,optimizemode,thinlengths,thetL0,thinyrstart,noiseMask)
 
 % TGdata2 = GPSmoothTideGauges(TGdata,[winlength],[optimizemode],[thinlength],[thetL0])
 %
@@ -10,7 +10,7 @@ function [TGdata2s,thetL,TGmodellocal] = GPSmoothTideGauges(TGdata,winlengths,op
 %   thinlength: spacing of data to output, same length as winlength (default = winlength - 1)
 %   thetL0: hyperparameters of GP model (default optimizes)
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Nov 17 20:58:14 EST 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Dec 10 10:54:33 EST 2015
 %
 
 defval('thetL0',[]);
@@ -18,6 +18,7 @@ defval('winlengths',11);
 defval('thinlengths',max(1,winlengths));
 defval('optimizemode',1.1); % set to 1.0 for local optimization only
 defval('thinyrstart',[]);
+defval('noiseMask',[]);
 
 CESLDefineCovFuncs;
 
@@ -82,7 +83,12 @@ for nn=1:length(TGdata.siteid)
         TGtestsitedef.t = floor(min(min(TGdata.time1(sub)-max(winlengths)/2),thinyrstart)):min([thinlengths 1]):ceil(max(TGdata.time1(sub)+max(winlengths)/2));
     end
     
-    noiseMasks = ones(1,size(thetL,2));
+    if length(noiseMask)==0
+        noiseMasks = ones(1,size(thetL,2));
+    else
+        noiseMasks=noiseMask;
+    end
+    
     noiseMasklabels={'full'};
     trainsub=find(TGdatasub.limiting==0);
     [TGf,TGsd,TGV,TGtestlocs]=RegressHoloceneDataSets(TGdatasub,TGtestsitedef,TGmodellocal,thetL(nn,:),trainsub,noiseMasks,TGtestsitedef.t);
