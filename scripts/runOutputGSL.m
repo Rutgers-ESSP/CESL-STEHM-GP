@@ -1,6 +1,6 @@
 % Output table and plots of GSL.
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Aug 13 10:13:06 EDT 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Dec 24 08:07:30 EST 2015
 
 % operation matrices for zeroing to specific years
 
@@ -25,7 +25,8 @@ for i=1:size(testsites,1)
     
     Mref2(sub1,sub2)=Mref2(sub1,sub2)-1;
 
-endMref
+end
+
 Mref2=sparse(Mref2);    
 
 % figure of GSL and rate of GSL change
@@ -106,8 +107,8 @@ for dodetrend=[0]
             
             subplot(2,1,1);
             plot([-1000 2010],[0 0],'k-'); hold on;
-             [hl,hk]=PlotWithShadedErrors(plotdat,rgb,[],[],[],[-1000 2010]);
-           ylabel([num2str(timesteps) '-year avg. GSL rate (mm/y, \pm 1\sigma)']);
+            [hl,hk]=PlotWithShadedErrors(plotdat,rgb,[],[],[],[-1000 2010]);
+            ylabel([num2str(timesteps) '-year avg. GSL rate (mm/y, \pm 1\sigma)']);
             pdfwrite(['GSLrate_' num2str(timesteps) 'y_' labl2]);
         end
         

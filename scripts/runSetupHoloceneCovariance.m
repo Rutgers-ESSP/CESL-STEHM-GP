@@ -1,6 +1,6 @@
 % set up covariance structures
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sat Feb 28 08:17:40 EST 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Dec 24 08:39:43 EST 2015
 
 % Alternative covariance structures:
 %
@@ -63,13 +63,13 @@ modelspec(ii).traincv = @(t1,t2,dt1t2,thetas,errcv,ad,fp1fp2) modelspec(ii).cvfu
 tluTGG = [
 
 100 1 1e4 % global non-GIS amplitude
-1e3 1 3e4 % time scale
+1e3 100 3e4 % time scale
 
 .5 1e-3 100 % linear regional amplitude
 5 .5 50 %  linear regional length scale
 
 100 1 1e4 % regional amplitude
-1e3 1 3e3 % time scale
+1e3 100 3e3 % time scale
 5 1 20 % geographic length scale
 
 10 1e-2 1e4 % white noise

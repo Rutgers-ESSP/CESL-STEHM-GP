@@ -2,7 +2,7 @@
 % for Kopp et al., "Temperature-driven global sea-level variability in the Common Era"
 %
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Wed Dec 23 23:22:12 EST 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Dec 24 08:39:07 EST 2015
 
 dosldecomp = 0; % make plots for each site?
 
@@ -15,7 +15,7 @@ IFILES=[pd '/IFILES'];
 addpath(pd)
 savefile='~/tmp/CESL';
 
-WORKDIR='151223';
+WORKDIR='151224';
 if ~exist(WORKDIR,'dir')
     mkdir(WORKDIR);
 end
