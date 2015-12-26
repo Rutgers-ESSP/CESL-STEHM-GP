@@ -66,5 +66,5 @@ if multiplyamplitudes ~= 1
         thetTGG{ii}(toamp)= thetTGG{ii}(toamp)*multiplyamplitudes;
     end   
 end
-runPreditCESL;
+runPredictCESL;
 cd('..');
