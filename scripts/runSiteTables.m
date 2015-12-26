@@ -15,6 +15,7 @@ wtestlocs=testlocs{iii};
 % 100002 Louisiana-Lydia
 
 dosites=find(ismember(wtestlocs.sites,[120006 140007 110004 100002]));
+dosites=dosites(:)';
 
 for kkk=dosites
 

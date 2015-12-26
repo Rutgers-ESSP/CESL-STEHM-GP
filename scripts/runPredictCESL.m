@@ -135,7 +135,7 @@ for iii=1:length(regresssets)
     runTableRates; % generate table of rates
     runOutputGSL; % output plots and table of GSL
     runPlotOtherGSLCurves; % plot tables of GSL curves from this and other sources
-
+  
     %%%%
  
    save(savefile,'datasets','modelspec','f2s','sd2s','V2s', ...
@@ -144,6 +144,7 @@ for iii=1:length(regresssets)
 end
 
 
+runTableMaxToMin;
 runLatexTables;
 runPlotGSLsWithDifferentPriors;
 %runOutputForcingProxies;
@@ -168,22 +169,14 @@ for iii=2
     runSitePlotArray; % demonstrate fits
     runSiteTables;
  
-    runMapField; % map spatial field of rates
+    if doMapField
+        runMapField; % map spatial field of rates
+    end
+    
     runSiteSensitivityTests; % perform calculations on sensitivity of prediction to site subsets
     runLatexTablesSiteSens; % latex table
     
-    %calculate distribution minimum-to-maximum value between 0 and 1900 CE
-    sub=find(testreg==0);
-    samps=lhsnorm(f2s{iii}(sub,1),V2s{iii}(sub,sub,1),1000);
-    sub2=find((testt<1900).*(testt>=0));
-    mxtomn=max(samps(:,sub2),[],2)-min(samps(:,sub2),[],2);
-    quantile(mxtomn,[.05 .95])
 end
-
-% map sites
-ii=1;
-wdataset=datasets{ii};
-runMapSites;
 
 % check for probability GSL is higher in 2000 than preceeding Common Era with 0.1 mm/yr linear trend
 

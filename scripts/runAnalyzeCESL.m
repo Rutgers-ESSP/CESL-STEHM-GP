@@ -50,12 +50,22 @@ save(savefile);
 
 thetTGG0=thetTGG;
 
+% map sites
+runMapSites;
+
+
+
 %% now do a regression
 % define prediction sites
 
+doMapField = 1;
 runPredictCESL
 
-mkdir('scaledamps');
+doMapField = 0;
+if ~exist('scaledamps','dir')
+    mkdir('scaledamps');
+end
+
 cd('scaledamps');
 % for sensitivity tests in which we scale prior for regional and global non-linear variability
 multiplyamplitudes=3;

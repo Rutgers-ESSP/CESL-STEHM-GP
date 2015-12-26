@@ -259,3 +259,30 @@ if exist('datLH')
 end
 
     fclose(fid);
+
+    % now do a table with half max to min rates
+    
+    
+
+% now do a table with the hyperparameters
+
+clear mxtomnq2;
+qlevsmm=[.5 .05 .95];
+for iii=1:length(regresssets)
+   %calculate distribution minimum-to-maximum value between 0 and 1900 CE
+    sub=find(testreg==0);
+    samps=lhsnorm(f2s{iii}(sub,1),V2s{iii}(sub,sub,1),1000);
+    sub2=find((testt<1900).*(testt>=0));
+    mxtomn=max(samps(:,sub2),[],2)-min(samps(:,sub2),[],2);
+    mxtomnq2(iii,:) = quantile(mxtomn,qlevsmm);
+end
+    
+fid=fopen('variabilityamplitude_0_1900.tex','w');
+
+fprintf(fid,'Model & \\\\ \n');
+for qqq=1:length(regresssets)
+    fprintf(fid,labls{qqq});
+    fprintf(fid,' & %0.0f (%0.0f--%0.0f)',mxtomnq2(qqq,:)/2/10);
+    fprintf(fid,' \\\\ \n');
+end
+fclose(fid);
