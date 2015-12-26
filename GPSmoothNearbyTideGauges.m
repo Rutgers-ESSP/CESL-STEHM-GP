@@ -1,8 +1,8 @@
-function [TGdata2,TGdata,thetL,TGmodellocal] = GPSmoothNearbyTideGauges(targcoords,addlsites,thetL0,winlength,thinlength,minlength,optimizemode,psmsldir,gslfile,maxdist)
+function [TGdata2,TGdata,thetL,TGmodellocal] = GPSmoothNearbyTideGauges(targcoords,addlsites,thetL0,winlength,thinlength,minlength,optimizemode,psmsldir,gslfile,maxdist,noiseMask)
 
 % [TGdata2,TGdata,thetL,TGmodellocal] = GPSmoothNearbyTideGauges(targcoords,
 %             [addlsites],[thetL0],[winlength],[thinlength],[minlength],[optimizemode],
-%             psmsldir,gslfile,[maxdist])
+%             psmsldir,gslfile,[maxdist],[noiseMask])
 %
 % Find tide gauge sites to include, based on length and proximity criteria, then
 % fit GP model to them in order to interpolate and take running averge.
@@ -35,6 +35,7 @@ defval('thinlength',winlength-1);
 defval('optimizemode',1.1); % set to 1.0 for local optimization only
 defval('maxdist',5);
 defval('thinyrstart',1700);
+defval('noiseMask',[]);
 
 defval('targcoords',[
 34.97  -76.38; %Tump Point, NC
@@ -101,4 +102,4 @@ TGdata.sitelen=sitelen(sitesub);
 
 %%%%%%%%%%
 
-[TGdata2,thetL,TGmodellocal] = GPSmoothTideGauges(TGdata,winlength,optimizemode,thinlength,thetL0,thinyrstart);
+[TGdata2,thetL,TGmodellocal] = GPSmoothTideGauges(TGdata,winlength,optimizemode,thinlength,thetL0,thinyrstart,noiseMask);

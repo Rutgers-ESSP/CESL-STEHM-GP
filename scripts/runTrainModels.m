@@ -1,12 +1,12 @@
 % Optimize hyperparameters for different model structures.
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sat Nov 28 16:23:56 EST 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri Dec 25 08:28:55 EST 2015
 
 trainrange=[100 100 100]; % optimize only using data with age errors < 100 yrs
 
 clear thetTGG thethist trainsubsubset logp;
 for ii=1:length(trainspecs)
-
+    disp(trainlabels{ii});
     ms = modelspec(trainspecs(ii));
     
     % first only fit ones without a compaction correction

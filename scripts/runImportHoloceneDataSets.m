@@ -1,6 +1,6 @@
 % Read in data files
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Wed Dec 23 23:22:00 EST 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri Dec 25 08:26:40 EST 2015
 
 defval('firsttime',-2000);
 
@@ -15,7 +15,7 @@ datid=[]; time1=[]; time2=[]; mediantime=[]; limiting=[]; Y=[]; dY = []; compact
 istg = []; lat=[]; long=[];
 siteid=[]; sitenames={}; sitecoords=[];
 
-datPX = importdata(fullfile(IFILES,'RSL_All_Nov2015.csv'));
+datPX = importdata(fullfile(IFILES,'RSL_All_Dec2015.csv'));
 datPX.textdata=datPX.textdata(2:end,:);
 
 % catch entries without age errors
@@ -157,12 +157,13 @@ TGold.compactcorr = zeros(size(TGold.datid));
 TGold.istg = ones(size(TGold.datid));
 TGold.Ycv=sparse(diag(TGold.dY.^2));
 
-TGoldS = GPSmoothTideGauges(TGold,11,1.0,10,[],1700);
+TGnoisemask = [];
+TGoldS = GPSmoothTideGauges(TGold,11,1.0,10,[],1700,TGnoisemask);
 %%%%%%%%%%%%%%%
 
 % Load tide gauge data
 
-[TG,TG0,thetL,TGmodellocal] = GPSmoothNearbyTideGauges(PX.sitecoords,[],[],[],[],[],optimizemode,psmsldir,'none');
+[TG,TG0,thetL,TGmodellocal] = GPSmoothNearbyTideGauges(PX.sitecoords,[],[],[],[],[],optimizemode,psmsldir,'none',[],TGnoisemask);
 
 % Hay et al 2015 GMSL curve
 
@@ -291,10 +292,12 @@ clear datasets;
 datasets{1}=MergeDataStructures(TG,PX);
 datasets{2}=MergeDataStructures(MergeDataStructures(TG,PX),GSLflattener);
 datasets{3}=PX;
+datasets{4}=MergeDataStructures(TGNOGSL,PX);
 
 datasets{1}.label='TG+GSL+PX';
 datasets{2}.label='TG+GSL+PX+flat';
 datasets{3}.label='PX';
+datasets{4}.label='TG+PX';
 
 
 for ii=1:length(datasets)

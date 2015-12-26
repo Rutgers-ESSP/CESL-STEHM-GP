@@ -1,6 +1,6 @@
 % Generate maps of rate fields.
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Nov 29 23:54:43 EST 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Dec 24 18:12:12 EST 2015
 
 % null data set for prior cvalues
 nulldataset=SubsetDataStructure(wdataset,1,1);
@@ -35,7 +35,7 @@ land = shaperead('landareas', 'UseGeoCoords', true);
 
 covered=[];
 for sss=1:length(land)
-covered=union(covered,find(inpolygon(FLAT1(:),FLONG1(:),land(sss).Lat,land(sss).Lon)));
+    covered=union(covered,find(inpolygon(FLAT1(:),FLONG1(:),land(sss).Lat,land(sss).Lon)));
     disp(sprintf('%0.0f: %0.0f',[sss length(covered)]));     
 end
 uncovered=setdiff(1:length(FLAT1(:)),covered);
@@ -96,7 +96,12 @@ caxis([-1.1 3.1]);
 tl=get(hcb,'ticks');
 tlab=get(hcb,'ticklabels');
 for sss=1:length(tl)
-    tlab{sss}=sprintf(' %0.1f',tl(sss));
+    if abs((tl(sss)*10)-round(tl(sss)*10))>.01
+        tlab{sss}='';
+    else
+        tlab{sss}=sprintf(' %0.1f',tl(sss));
+    end
+    
 end
 set(hcb,'ticklabels',tlab);
 
@@ -165,7 +170,7 @@ for qqq=1:length(firstyears2)
     
     [~,~,~,~,fslopediffF,sdslopediffF,diffplusF,difflessF] = RegressRateField(wdataset,wmodelspec,thetTGG{jj},noiseMasks(1,:),Flat,Flong,firstyears,lastyears,trainsub,ICE5G,passderivs,invcv);    
     [~,~,fslopeGSL,sdslopeGSL]=SLRateCompare(f2s{iii}(GSLdatsub,1),V2s{iii}(GSLdatsub,GSLdatsub,1),testsites(GSLsitesub),testreg(GSLdatsub),testX(GSLdatsub,3),firstyears,lastyears);
- 
+    
     
     clf;
     ax = worldmap('World');
@@ -184,7 +189,7 @@ for qqq=1:length(firstyears2)
     cmap(:,1)=.5*cmap(:,2)+cmap(:,1); cmap(:,3)=.5*cmap(:,2)+cmap(:,3);
     cmap=min(1,cmap); colormap(cmap);
     
-   hs1=scatterm(FLAT1(uncovered),FLONG1(uncovered),10,mapped(uncovered),'filled','marker','s');
+    hs1=scatterm(FLAT1(uncovered),FLONG1(uncovered),10,mapped(uncovered),'filled','marker','s');
     %hs2=plotm(FLAT1(subbad),FLONG1(subbad),'o','color',[1 1 1],'markersize',4,'markerfacecolor','w','markeredgecolor','w')
     hold on;
     
@@ -223,26 +228,30 @@ for qqq=1:length(firstyears2)
     
     tlab=get(hcb,'ticklabels');
     for sss=1:length(tl)
-        tlab{sss}=sprintf(' %0.1f',tl(sss));
+        if abs((tl(sss)*10)-round(tl(sss)*10))>.01
+            tlab{sss}='';
+        else
+            tlab{sss}=sprintf(' %0.1f',tl(sss));
+        end
     end
     set(hcb,'ticklabels',tlab);
     %    title({[num2str(firstyears2(qqq)) '-' num2str(lastyears2(qqq)) ' relative to 0-1700 (mm/y)'],['GSL: ' sprintf('%0.2f \\pm %0.2f mm/y',[fslopeGSL(1) 2*sdslopeGSL(1)]) ]});
     ht=title([letrs(qqq) ') ' num2str(firstyears2(qqq)) '-' num2str(lastyears2(qqq)) ' CE']);
-set(ht,'fontsize',16);
+    set(ht,'fontsize',16);
 
     umap=geoshow(ax, land, 'FaceColor', [0.85 0.85 0.85]);
 
-hcbpos=get(hcb,'Position');
-htt = annotation('textbox');
-htt.String=sprintf('GSL: %0.1f \\pm %0.1f mm/yr',[fslopeGSL 2*sdslopeGSL]);
-htt.FontSize=13;
-htt.BackgroundColor=[1 1 1];
-htt.Margin=1;
-htt.VerticalAlignment='bottom';
-pstn=htt.Position;
-pstn(1)=[.30];
-pstn(2)=hcbpos(2)+.005;
-htt.Position=pstn;
+    hcbpos=get(hcb,'Position');
+    htt = annotation('textbox');
+    htt.String=sprintf('GSL: %0.1f \\pm %0.1f mm/yr',[fslopeGSL 2*sdslopeGSL]);
+    htt.FontSize=13;
+    htt.BackgroundColor=[1 1 1];
+    htt.Margin=1;
+    htt.VerticalAlignment='bottom';
+    pstn=htt.Position;
+    pstn(1)=[.30];
+    pstn(2)=hcbpos(2)+.005;
+    htt.Position=pstn;
 
     
     pdfwrite(['fieldmap_rel01700_' labl '_' num2str(firstyears2(qqq)) '_' num2str(lastyears2(qqq))]);

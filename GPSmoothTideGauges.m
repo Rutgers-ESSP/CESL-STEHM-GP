@@ -10,7 +10,7 @@ function [TGdata2s,thetL,TGmodellocal] = GPSmoothTideGauges(TGdata,winlengths,op
 %   thinlength: spacing of data to output, same length as winlength (default = winlength - 1)
 %   thetL0: hyperparameters of GP model (default optimizes)
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Dec 10 10:54:33 EST 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Dec 24 11:53:13 EST 2015
 %
 
 defval('thetL0',[]);
@@ -22,16 +22,18 @@ defval('noiseMask',[]);
 
 CESLDefineCovFuncs;
 
-TGmodellocal.cvfunc=@(t1,t2,dt1t2,thetas,dy1y2,fp1fp2) kDP(t1,t2,thetas(1)) + kMatG(dt1t2,thetas(2:4)) + kDELTAG(dy1y2,thetas(5));
+TGmodellocal.cvfunc=@(t1,t2,dt1t2,thetas,dy1y2,fp1fp2) kDP(t1,t2,thetas(1)) + kMatG(dt1t2,thetas(2:4)) + kDELTA(dt1t2,thetas(5)) + kCONST(thetas(6));
 TGmodellocal.traincv = @(t1,t2,dt1t2,thetas,errcv,ad,fp1fp2) TGmodellocal.cvfunc(t1,t2,dt1t2,thetas,ad,fp1fp2) + errcv;
 
 tluL = [
 1   0.1    100 % DP
 
 5   0.1   1e3   % MatG
-1   .1  300
+10   1  300
 1.5  .5  5.5
 
+    
+5  0.1 1e3 % annual variability    
 1  0  1e4 % offset
 
 ];

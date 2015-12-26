@@ -1,6 +1,6 @@
 % Plot array elements for site plot.
 
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Dec 24 08:21:33 EST 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri Dec 25 09:54:13 EST 2015
 
 
 subsite=find((wdataset.siteid>10000));
@@ -10,6 +10,7 @@ wtestlocs=testlocs{iii};
 
 % now array
 
+% Cape May Court House, New Jersey 120003
 % East River Marsh, Connecticut 20003
 % Sand Point, North Carolina 140007
 % Vioarholmi, Iceland 70001
@@ -22,8 +23,8 @@ wtestlocs=testlocs{iii};
 
 letrs='abcdefgh';
 
-sitesub = [20003 140007 70001 190002 60003 90001 10001 210002];
-sitesubtitle={'East River Marsh, Connecticut','Sand Point, North Carolina','Vioarholmi, Iceland','Loch Laxford, Scotland','Sissimut, Greenland','Caesarea, Israel','Christmas Island, Kiribati',['Kariega Estuary, South Africa']};
+sitesub = [120003 140007 70001 190002 60003 90001 10001 210002];
+sitesubtitle={'Cape May, New Jersey','Sand Point, North Carolina','Vioarholmi, Iceland','Loch Laxford, Scotland','Sissimut, Greenland','Caesarea, Israel','Christmas Island, Kiribati',['Kariega Estuary, South Africa']};
 
 
 
@@ -54,7 +55,7 @@ end
 fE=fE/10;
 sdE=sdE/10;
 
-
+figure;
 for vvv=1:length(sitesub)
     kkk=find(testlocsE.sites(:,1)==sitesub(vvv));
     disp(sitesubtitle{vvv});
@@ -98,6 +99,6 @@ for vvv=1:length(sitesub)
     else
         xlabel('   ');
     end
-    pdfwrite(['siteplotarray-' letrs(vvv) '-' testlocsE.names{kkk}]);
+    pdfwrite(['siteplotarray-' labl '-' letrs(vvv) '-' testlocsE.names{kkk}]);
     
 end

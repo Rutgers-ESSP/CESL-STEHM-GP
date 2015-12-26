@@ -8,12 +8,12 @@ function [X1,Y,dY,regions,regionsu,sitenames,sitecoords,sitelen,sitecoastline]=R
 % in file gslfile. Additionally load sites specified in addlsites and exclude sites specified
 % in exclusions.
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sat Nov 28 19:56:52 EST 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Dec 24 11:50:09 EST 2015
 
 defval('psmsldir','~/Dropbox/Code/TGAnalysis/IFILES/rlr_annual');
 defval('gslfile','none')
 defval('minlen',30);
-defval('baserslerror',3);
+defval('baserslerror',5);
 defval('cl1',0);
 defval('cl2',1000);
 defval('addlsites',[]);
