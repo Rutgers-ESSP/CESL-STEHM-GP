@@ -20,7 +20,7 @@ This code is intended to be used to generate Gaussian process-based, spatio-temp
 
 This code requires MATLAB with the Statistics, Optimization, and Global Optimization Toolboxes. It is known to run with MATLAB 2015b.
 
-The MFILES directory contains the core functions of this code. The scripts directory contains the scripts that used these core functions to generate the analyses described in Kopp et al. (2016).
+The MFILES directory contains the core functions of this code. The scripts-KoppEtAl2016 directory contains the scripts using these core functions to generate the analyses described in Kopp et al. (2016).
 
 We recommend using these scripts as a template for other applications.   The master script for these applications is runAnalyzeCESL, which calls various subsidiary scripts. Particularly attention should be paid to runSetupHoloceneCovariance, which defines the covariance functions with characterize the different priors, including the hyperparameter bounds used by the optimization code. 
 

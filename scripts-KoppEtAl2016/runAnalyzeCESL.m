@@ -14,8 +14,8 @@ dosldecomp = 0; % make plots for each site?
 
 pd=pwd;
 addpath([pd '/MFILES']);
-addpath([pd '/scripts']);
-IFILES=[pd '/IFILES'];
+addpath([pd '/scripts-KoppEtAl2016']);
+IFILES=[pd '/IFILES-KoppEtAl2016'];
 addpath(pd)
 savefile='~/tmp/CESL';
 
