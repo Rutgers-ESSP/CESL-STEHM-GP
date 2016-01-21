@@ -17,9 +17,9 @@ addpath([pd '/MFILES']);
 addpath([pd '/scripts-KoppEtAl2016']);
 IFILES=[pd '/IFILES-KoppEtAl2016'];
 addpath(pd)
-savefile='~/tmp/CESL';
+savefile='~/tmp/CESL-KoppEtAl2016';
 
-WORKDIR='~/tmp/workdir-151230';
+WORKDIR='~/tmp/workdir-KoppEtAl2016-151230';
 if ~exist(WORKDIR,'dir')
     mkdir(WORKDIR);
 end
