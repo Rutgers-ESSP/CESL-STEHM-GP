@@ -1,6 +1,6 @@
 % Read in data files
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri Dec 25 08:26:40 EST 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Wed Dec 30 14:26:33 EST 2015
 
 defval('firsttime',-2000);
 
@@ -15,7 +15,7 @@ datid=[]; time1=[]; time2=[]; mediantime=[]; limiting=[]; Y=[]; dY = []; compact
 istg = []; lat=[]; long=[];
 siteid=[]; sitenames={}; sitecoords=[];
 
-datPX = importdata(fullfile(IFILES,'RSL_All_Dec2015.csv'));
+datPX = importdata(fullfile(IFILES,'RSL_All_30Dec2015.csv'));
 datPX.textdata=datPX.textdata(2:end,:);
 
 % catch entries without age errors
@@ -23,6 +23,13 @@ sub=find(isnan(datPX.data(:,8))); datPX.data(sub,8)=100;
 sub=find(isnan(datPX.data(:,7))); datPX.data(sub,7)=100;
 
 study=datPX.textdata(:,1);
+for www=1:length(study)
+    txtsub=strfind(study{www},',');
+    if length(txtsub)>0
+        study{www}=study{www}(1:txtsub(1)-1);
+    end
+end
+
 uStudy = unique(study);
 for ii=1:length(uStudy)
     sub=find(strcmpi(uStudy{ii},study));

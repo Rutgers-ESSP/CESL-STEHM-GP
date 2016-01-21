@@ -1,15 +1,27 @@
 % Generate assorted latex tables.
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Aug 20 22:29:31 EDT 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Jan 04 17:00:00 EST 2016
 
 % first do a table with rates for each of the models
 
 regresssetorder = [2 1 3 5 4];
 
-firstyears=[-800 0    0   400 800 1200 1600 1200 1800 1860 1900 0 300 700 1000 1400 1400 1600 0 700];
-lastyears= [0 1700 400 800 1200 1600 1800 1800 1900 1900 2000 300 700 1000 1400 1800 1600 1800 700 1400];
+firstyears=[0    0   300 700  1000 1400 1800 1860 1900 0 700 1400 1600 1860];
+lastyears= [1700 300 700 1000 1400 1800 1900 1900 2000 700 2000 1600 1800 1960];
 datsub=find(testreg==0); sitesub=find(testsites==0);
 
+
+clear mxtomnq2;
+qlevsmm=[.5 .05 .95];
+for iii=1:length(regresssets)
+   %calculate distribution minimum-to-maximum value between 0 and 1900 CE
+    sub=find(testreg==0);
+    samps=lhsnorm(f2s{iii}(sub,1),V2s{iii}(sub,sub,1),1000);
+    sub2=find((testt<1900).*(testt>=0));
+    mxtomn=max(samps(:,sub2),[],2)-min(samps(:,sub2),[],2);
+    mxtomnq2(iii,:) = quantile(mxtomn,qlevsmm);
+end
+    
 fid=fopen('bymodel_GSLrates.tex','w');
 fprintf(fid,'Model');
 
@@ -23,7 +35,12 @@ for iii=regresssetorder
     fprintf(fid,trainlabels{regressparams(iii)});
     for qqq=1:length(firstyears)
         fprintf(fid,' & $%0.2f \\pm %0.2f$',[fslopeavg(qqq) 2*sdslopeavg(qqq)]);
-        P=normcdf([fslopeavgdiff(qqq)./sdslopeavgdiff(qqq)]);
+        if qqq==1
+        P=normcdf([fslopeavg(qqq)./sdslopeavg(qqq)]);
+            else
+        P=normcdf([fslopeavgdiff(qqq-1)./sdslopeavgdiff(qqq-1)]);
+        end
+        
         if abs(P-.5)>=.49
             fprintf(fid,'***');
         elseif abs(P-.5)>=.45
@@ -74,6 +91,12 @@ for qqq=1:length(firstyears)
 
     end
 end
+fprintf(fid,'\\\\ \n Amplitude (0--1900)');
+
+for iii=regresssetorder
+     fprintf(fid,' & $\\pm %0.0f$ (n%0.0f--%0.0f)',mxtomnq2(iii,:)/2/10);
+end
+
 fprintf(fid,'\nAll probabilities except 0--1700 CE are with respect to differences from 0--1700 CE.');
 
 
@@ -262,9 +285,6 @@ end
 
     % now do a table with half max to min rates
     
-    
-
-% now do a table with the hyperparameters
 
 clear mxtomnq2;
 qlevsmm=[.5 .05 .95];

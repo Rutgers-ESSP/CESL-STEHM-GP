@@ -1,85 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sat Dec 26 10:10:49 EST 2015
-
-clear oldest oldestnear youngest testsitedef;
-wdataset = datasets{1};
-distfrom = dDist(wdataset.sitecoords,wdataset.sitecoords);
-for ii=1:length(wdataset.sitenames)
-    sub = find(wdataset.datid==wdataset.siteid(ii));
-    if length(sub)>0
-        oldest(ii)=min(union(wdataset.time1(sub),wdataset.time2(sub)));
-        youngest(ii)=max(union(wdataset.time1(sub),wdataset.time2(sub)));
-    else
-        oldest(ii)=2000;
-        youngest(ii)=2014;
-    end
-end
-for ii=1:length(wdataset.sitenames)
-    sub=find(distfrom(ii,:)<.5);
-    if wdataset.sitecoords(ii,1)>360
-        sub=ii;
-    end
-    oldestnear(ii) = min(oldest(sub));
-end
-
-clear testsitedef;
-testsitedef.sites=[0 1e6 1e6];
-testsitedef.names={'GSL'};
-testsitedef.names2={'GSL'};
-testsitedef.firstage=min(oldest);
-testsitedef.oldest=min(oldest);
-testsitedef.youngest=2014;
-
-testsitedefGSL=testsitedef;
-
-dosub=find(wdataset.siteid>0);
-avail=ones(length(wdataset.siteid),1); % make more restrictive if you want to exclude some data sets
-wsitelen=wdataset.sitelen;
-wsitelen(find(wdataset.siteid<9000))=wsitelen(find(wdataset.siteid<9000))/10;
-[s,si]=sort(wsitelen(dosub));
-dosub=dosub(si(end:-1:1));
-dosub=dosub([find(wdataset.siteid(dosub)>9000)' find(wdataset.siteid(dosub)<=9000)']); 
-
-for iii=1:length(dosub)
-    ii=dosub(iii);
-    if avail(ii)
-        sub=find((wdataset.datid==wdataset.siteid(ii)));
-        if length(sub)>0
-            testsitedef.sites(end+1,:)=mean([wdataset.datid(sub) wdataset.lat(sub) wdataset.long(sub)],1);
-            wdist = dDist(testsitedef.sites(end,2:3),wdataset.sitecoords);
-            avail=avail.*(wdist>.2); % keep sites at least .2 degrees apart
-            testsitedef.names2={testsitedef.names2{:}, wdataset.sitenames{ii}};
-            
-            sublett=setdiff(1:length(wdataset.sitenames{ii}),strfind(wdataset.sitenames{ii},' '));
-            testsitedef.names={testsitedef.names{:}, wdataset.sitenames{ii}(sublett)};
-            testsitedef.firstage = [testsitedef.firstage oldestnear(ii)];
-            testsitedef.oldest = [testsitedef.oldest oldest(ii)];
-            testsitedef.youngest = [testsitedef.youngest youngest(ii)];
-        end
-    end
-    
-end
-
-ICE5G.lat=ICE5Glat;
-ICE5G.long=ICE5Glon;
-ICE5G.gia=ICE5Ggia;
-
-for ii=1:length(testsitedef.sites(:,1))
-
-    testsitedef.GIA = interp2(ICE5G.lat,ICE5G.long,ICE5G.gia,testsitedef.sites(:,2),testsitedef.sites(:,3),'linear');
-    testsitedef.GIA(find(testsitedef.sites(:,2)>100))=0;
-
-end
-
-testt = [-1000:20:1800 1810:10:2010]; % ages for regression
-
-% select regression parameters
-
-regressparams=[1 4 5 2 3]; % which trained hyperparameters to use
-regresssets=[2 2 2 2 2]; % which data set to use with each
-clear regresslabels;
-for i=1:length(regresssets)
-    regresslabels{i} = [datasets{regresssets(i)}.label '_' trainlabels{regressparams(i)}];
-end
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Dec 31 08:59:36 EST 2015
 
 % generate predictions
 
@@ -178,20 +97,21 @@ for iii=2
     
 end
 
-% check for probability GSL is higher in 2000 than preceeding Common Era with 0.1 mm/yr linear trend
+% check for probability GSL is higher in 2000 than preceeding Common Era with added linear trend
 
 
-refyear=2000;
-Mref = eye(size(testX,1));
-for i=1:size(testsites,1)
-    
-    sub1=find(testreg==testsites(i,1));
-    sub2=intersect(sub1,find(testX(:,3)==refyear));
-    
-    Mref(sub1,sub2)=Mref(sub1,sub2)-1;
+refyear2=2000;
 
-end
-Mref=sparse(Mref);
+% $$$ Mref = eye(size(testX,1));
+% $$$ for i=1:size(testsites,1)
+% $$$     
+% $$$     sub1=find(testreg==testsites(i,1));
+% $$$     sub2=intersect(sub1,find(testX(:,3)==refyear2));
+% $$$     
+% $$$     Mref(sub1,sub2)=Mref(sub1,sub2)-1;
+% $$$ 
+% $$$ end
+% $$$ Mref=sparse(Mref);
 
 selsitenames={'GSL'};
 sitesub=[];
@@ -204,9 +124,9 @@ end
 datsub=find(ismember(testreg,testsites(sitesub,1)));
 selmask=1;
 
-trend=0.1; % added trend in mm/yr
+trend=0.0; % added trend in mm/yr
 N=10000;
-sub=find((testX(datsub,3)>=0).*(testX(datsub,3)<2000));
+sub=find((testX(datsub,3)>=0).*(testX(datsub,3)<=refyear2));
 
 for iii=1:length(f2s)
     %wf=Mref(datsub,datsub)*f2s{iii}(datsub,selmask);
@@ -214,5 +134,6 @@ for iii=1:length(f2s)
     wf=f2s{iii}(datsub,selmask);
     wV=V2s{iii}(datsub,datsub,selmask);
     u=mvnrnd(wf(sub)+trend*(testX(datsub(sub),3)-2000),wV(sub,sub),N);
+    u=bsxfun(@minus,u(:,1:end-1),u(:,end));
     sum(max(u,[],2)<0)/N
 end

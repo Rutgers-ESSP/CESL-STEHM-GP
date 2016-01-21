@@ -2,7 +2,7 @@
 % for Kopp et al., "Temperature-driven global sea-level variability in the Common Era"
 %
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri Dec 25 09:52:09 EST 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Wed Dec 30 14:24:23 EST 2015
 
 dosldecomp = 0; % make plots for each site?
 
@@ -15,7 +15,7 @@ IFILES=[pd '/IFILES'];
 addpath(pd)
 savefile='~/tmp/CESL';
 
-WORKDIR='151225';
+WORKDIR='151230';
 if ~exist(WORKDIR,'dir')
     mkdir(WORKDIR);
 end
@@ -58,23 +58,27 @@ runMapSites;
 %% now do a regression
 % define prediction sites
 
+testt = [-1000:20:1800 1810:10:2010]; % ages for regression
+runSelectPredictionSites;
+
+% select regression parameters
+
+regressparams=[1 4 5 2 3]; % which trained hyperparameters to use
+regresssets=[2 2 2 2 2]; % which data set to use with each
+clear regresslabels;
+for i=1:length(regresssets)
+    regresslabels{i} = [datasets{regresssets(i)}.label '_' trainlabels{regressparams(i)}];
+end
+
+
+runCalculatePriorRates;
+runTablePriors;
+runLatexTablePriors;
+
+
 doMapField = 1;
 runPredictCESL
 
-doMapField = 0;
-if ~exist('scaledamps','dir')
-    mkdir('scaledamps');
-end
+doMapField=0;
+runScaledAmpSensitivityTest
 
-cd('scaledamps');
-% for sensitivity tests in which we scale prior for regional and global non-linear variability
-multiplyamplitudes=3;
-if multiplyamplitudes ~= 1
-    for ii=1:length(trainsets)
-        wms=modelspec(trainspecs(ii));
-        toamp = [wms.subampglobal wms.subampregmat];
-        thetTGG{ii}(toamp)= thetTGG{ii}(toamp)*multiplyamplitudes;
-    end   
-end
-runPredictCESL;
-cd('..');

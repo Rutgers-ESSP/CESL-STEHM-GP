@@ -1,4 +1,4 @@
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu May 21 15:39:23 EDT 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Jan 04 17:17:36 EST 2016
 
 % figure of alternate GSL curves
 
@@ -42,7 +42,7 @@ for ii=1:length(ordr)
     ylabel('GSL (mm)');
     box on;
     xlim([-500 2010]);
-    ylim([-285 140]);
+    ylim([-250 50]);
     yl=ylim;
     ht(ii)=text(-475,yl(end)-.1*diff(yl),[ltrs(ii) '    ' wlabls{ii}]);
     

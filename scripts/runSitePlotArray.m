@@ -1,6 +1,6 @@
 % Plot array elements for site plot.
 
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri Dec 25 09:54:13 EST 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Dec 31 10:09:13 EST 2015
 
 
 subsite=find((wdataset.siteid>10000));
@@ -23,10 +23,15 @@ wtestlocs=testlocs{iii};
 
 letrs='abcdefgh';
 
-sitesub = [120003 140007 70001 190002 60003 90001 10001 210002];
-sitesubtitle={'Cape May, New Jersey','Sand Point, North Carolina','Vioarholmi, Iceland','Loch Laxford, Scotland','Sissimut, Greenland','Caesarea, Israel','Christmas Island, Kiribati',['Kariega Estuary, South Africa']};
+targets={'Connecticut-East River Marsh','North Carolina-Sand Point','Iceland-Vioarholmi','Scotland-Loch Laxford','Greenland-Sisimiut','Israel-Casesarea','Christmas Island-Multiple',['South ' ...
+                    'Africa-Kariega Estuary']};
+sitesubtitle={'East River Marsh, Connecticut','Sand Point, North Carolina','Vioarholmi, Iceland','Loch Laxford, Scotland','Sissimut, Greenland','Caesarea, Israel','Christmas Island, Kiribati',['Kariega Estuary, South Africa']};
 
-
+clear sitesub;
+for www=1:length(targets)
+    txtsub=find(strcmpi(targets{www},wdataset.sitenames));
+    sitesub(www)=wdataset.siteid(txtsub(1));
+end
 
 clear testsitedefE;
 testsitedefE.sites=[0 1e6 1e6];
