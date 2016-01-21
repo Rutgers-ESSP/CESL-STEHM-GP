@@ -1,6 +1,6 @@
+% Output latex table of prior rates
+%
 % Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Jan 04 16:44:47 EST 2016
-
-% Table of Prior Rates
 
 fid=fopen('priorrates.tex','w');
 

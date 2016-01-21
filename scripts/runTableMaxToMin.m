@@ -1,3 +1,5 @@
+% Output table of max-to-min differences
+%
 % Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sat Dec 26 12:19:07 EST 2015
 
 clear mxtomnq;

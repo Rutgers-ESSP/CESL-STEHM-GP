@@ -1,3 +1,5 @@
+% Identify sites for prediction
+% 
 % Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Dec 31 09:02:52 EST 2015
 
 clear oldest oldestnear youngest testsitedef;

@@ -260,39 +260,6 @@ sub=find(ICE5Glon>180); ICE5Glon(sub)=ICE5Glon(sub)-360;
 
 %%%%%%%
 
-% load Grinsted et al 2009 GMSL hindcasts
-
-dat=importdata(fullfile(IFILES,'Grinsted2009_JonesA1B.txt'));
-Grinsted2009_Jones.year=dat.data(:,1);
-Grinsted2009_Jones.quantiles=[5 16 50 84 95];
-Grinsted2009_Jones.y=dat.data(:,2:end)*1000;
-
-dat=importdata(fullfile(IFILES,'Grinsted2009_MobergA1B.txt'));
-Grinsted2009_Moberg.year=dat.data(:,1);
-Grinsted2009_Moberg.quantiles=[5 16 50 84 95];
-Grinsted2009_Moberg.y=dat.data(:,2:end)*1000;
-
-sub=find(mod(Grinsted2009_Moberg.year,20)==0);
-sub=intersect(sub,find(Grinsted2009_Moberg.year<=2010));
-Grinsted.Y=Grinsted2009_Moberg.y(sub,3);
-Grinsted.dY=(Grinsted2009_Moberg.y(sub,5)-Grinsted2009_Moberg.y(sub,1))/norminv(.95)/2;
-Grinsted.Ycv=(diag(Grinsted.dY)).^2;
-Grinsted.datid=0*Grinsted.Y;
-Grinsted.time1=Grinsted2009_Moberg.year(sub);
-Grinsted.time2=Grinsted.time1;
-Grinsted.meantime=Grinsted.time1;
-Grinsted.lat=ones(size(Grinsted.Y))*1e6;
-Grinsted.long=Grinsted.lat;
-Grinsted.compactcorr=0*Grinsted.Y;
-Grinsted.limiting=0*Grinsted.Y;
-Grinsted.istg=ones(size(Grinsted.Y));
-Grinsted.siteid=0;
-Grinsted.sitenames={'Grinsted_Moberg'};
-Grinsted.sitecoords=[1e6 1e6];
-Grinsted.sitelen=length(Grinsted.Y);
-
-%%%%%%
-
 % create data structures
 
 clear datasets;
@@ -332,57 +299,42 @@ for ii=1:length(datasets)
     datasets{ii}.Y=datasets{ii}.Y0-GIAproj;
 end
 
+%%%%%
 
-% load climatic indices and temperature records
-
-datNAO = importdata(fullfile(IFILES,'nao-trouet2009.txt'));
-
-impt=importdata(fullfile(IFILES,'Marcott2013_global.txt'));
-Marcottgl.yr = 1950-impt.data(:,1);
-Marcottgl.T = impt.data(:,2);
-Marcottgl.dT = impt.data(:,3);
-
-impt=importdata(fullfile(IFILES,'Marcott2013_regional.txt'));
-Marcottr.yr=1950-impt.data(:,1);
-Marcott.Next_T=impt.data(:,2);
-Marcott.Next_dT=impt.data(:,3);
-Marcott.eq_T=impt.data(:,4);
-Marcott.eq_dT=impt.data(:,5);
-Marcott.Sext_T=impt.data(:,6);
-Marcott.Sext_dT=impt.data(:,7);
-
-impt=importdata(fullfile(IFILES,'HadCRUT4-gl.dat'));
-HadCRUT.yr=impt(1:2:end,1);
-HadCRUT.T=impt(1:2:end,end);
-
-Mann.T=importdata(fullfile(IFILES,'glglfulihad_smxx.txt'));
-Mann.yr = [[1:length(Mann.T)]-1]';
-
-impt=importdata(fullfile(IFILES,'Lund2006_transport.csv'));
-Lundtransport.yr=impt.data(:,1);
-Lundtransport.Sv=impt.data(:,2);
-Lundtransport.dSv=impt.data(:,3);
-
-
-impt=importdata(fullfile(IFILES,'Cronin2010_ChesapeakeT.txt'));
-Chesapeake.yr = impt(:,1);
-Chesapeake.T = impt(:,2);
-
-impt=importdata(fullfile(IFILES,'Richey2007_GulfOfMexico.csv'));
-GOM.yr = 1950-impt.data(:,1);
-GOM.T = impt.data(:,4);
-
-impt=importdata(fullfile(IFILES,'RothJoos2013TSI.csv'));
-RothJoos.yr = impt.data(:,1);
-RothJoos.TSI = impt.data(:,2);
-RothJoos.TSIerr = impt.data(:,3);
-
-impt=importdata(fullfile(IFILES,'haug2001_cariaco_ti.txt'));
-haug.yr = 1950-impt.data(:,1);
-haug.Ti = impt.data(:,2);
-
+% load Church & White curve
 
 dat=importdata(fullfile(IFILES,'CSIRO_Recons_gmsl_yr_2011.csv'));
 CW2011.year=dat.data(:,1);
 CW2011.y=dat.data(:,2);
 CW2011.dy=dat.data(:,3);
+
+% load Grinsted et al 2009 GMSL hindcasts
+
+dat=importdata(fullfile(IFILES,'Grinsted2009_JonesA1B.txt'));
+Grinsted2009_Jones.year=dat.data(:,1);
+Grinsted2009_Jones.quantiles=[5 16 50 84 95];
+Grinsted2009_Jones.y=dat.data(:,2:end)*1000;
+
+dat=importdata(fullfile(IFILES,'Grinsted2009_MobergA1B.txt'));
+Grinsted2009_Moberg.year=dat.data(:,1);
+Grinsted2009_Moberg.quantiles=[5 16 50 84 95];
+Grinsted2009_Moberg.y=dat.data(:,2:end)*1000;
+
+sub=find(mod(Grinsted2009_Moberg.year,20)==0);
+sub=intersect(sub,find(Grinsted2009_Moberg.year<=2010));
+Grinsted.Y=Grinsted2009_Moberg.y(sub,3);
+Grinsted.dY=(Grinsted2009_Moberg.y(sub,5)-Grinsted2009_Moberg.y(sub,1))/norminv(.95)/2;
+Grinsted.Ycv=(diag(Grinsted.dY)).^2;
+Grinsted.datid=0*Grinsted.Y;
+Grinsted.time1=Grinsted2009_Moberg.year(sub);
+Grinsted.time2=Grinsted.time1;
+Grinsted.meantime=Grinsted.time1;
+Grinsted.lat=ones(size(Grinsted.Y))*1e6;
+Grinsted.long=Grinsted.lat;
+Grinsted.compactcorr=0*Grinsted.Y;
+Grinsted.limiting=0*Grinsted.Y;
+Grinsted.istg=ones(size(Grinsted.Y));
+Grinsted.siteid=0;
+Grinsted.sitenames={'Grinsted_Moberg'};
+Grinsted.sitecoords=[1e6 1e6];
+Grinsted.sitelen=length(Grinsted.Y);

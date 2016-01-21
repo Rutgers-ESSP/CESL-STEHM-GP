@@ -1,6 +1,6 @@
+% Generate and output predictions
+%
 % Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Dec 31 08:59:36 EST 2015
-
-% generate predictions
 
 for iii=1:length(regresssets)
     ii=regresssets(iii);

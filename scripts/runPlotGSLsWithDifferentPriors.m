@@ -1,7 +1,6 @@
+% Plot figure comparing our results to with alternate GSL curves.
+%
 % Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Jan 04 17:17:36 EST 2016
-
-% figure of alternate GSL curves
-
 
 
 selsitenames={'GSL'};

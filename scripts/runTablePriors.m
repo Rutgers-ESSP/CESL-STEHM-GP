@@ -1,3 +1,5 @@
+% Output table of prior rates and amplitudes.
+%
 % Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sat Dec 26 13:04:14 EST 2015
 
 % Table of Prior Rates

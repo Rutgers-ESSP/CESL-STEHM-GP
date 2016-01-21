@@ -1,3 +1,5 @@
+% Calculate rates from priors
+%
 % Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Jan 04 16:50:49 EST 2016
 
 

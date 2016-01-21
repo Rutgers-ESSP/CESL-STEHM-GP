@@ -1,3 +1,5 @@
+% Run a set of sensitivity tests.
+%
 % Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Nov 06 14:59:29 EST 2014
 
 %% do data sensitivity tests
