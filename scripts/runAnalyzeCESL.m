@@ -15,13 +15,11 @@ IFILES=[pd '/IFILES'];
 addpath(pd)
 savefile='~/tmp/CESL';
 
-WORKDIR='151230';
+WORKDIR='~/tmp/workdir-151230';
 if ~exist(WORKDIR,'dir')
     mkdir(WORKDIR);
 end
 cd(WORKDIR);
-
-GIAfiles=([pd '/../GIA/RSL4/rsl*.out.gz']);
 
 % exclude all data before -2000 CE
 firsttime=-2000;
@@ -74,7 +72,6 @@ end
 runCalculatePriorRates;
 runTablePriors;
 runLatexTablePriors;
-
 
 doMapField = 1;
 runPredictCESL

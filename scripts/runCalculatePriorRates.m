@@ -16,6 +16,16 @@ for qqq=1:length(thetTGG)
     ms = modelspec(trainspecs(qqq));
     wdat = datasets{trainsets(qqq)};
     dothet=thetTGG{qqq};
+    
+    % create noiseMasks -- set to zero only for amplitudes of
+    % terms you want to exclude; if you set to zero for a non-amplitude
+    % term it is likely to create problems
+    
+    noiseMasks = ones(1,length(thetTGG{qqq}));
+    noiseMasks(1,[ ms.subampnoise ]  )=0; %without noise
+    noiseMasklabels={'denoised'};
+    collinear=ms.subamplinear(1);
+
 
     flattenersub=find((wdat.datid==0).*(wdat.dY>1e3));
 

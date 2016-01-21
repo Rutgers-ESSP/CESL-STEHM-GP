@@ -5,6 +5,7 @@ if ~exist('scaledamps','dir')
     mkdir('scaledamps');
 end
 
+thetTGG00=thetTGG;
 cd('scaledamps');
 % for sensitivity tests in which we scale prior for regional and global non-linear variability
 multiplyamplitudes=3;
@@ -20,5 +21,5 @@ runCalculatePriorRates;
 runTablePriors;
 runLatexTablePriors;
 runPredictCESL;
-cd('..'); thetTGG=thetTGG0;
+cd('..'); thetTGG=thetTGG00;
 
