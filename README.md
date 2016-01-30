@@ -4,7 +4,7 @@ README file last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu
 
 ## Citation
 
-Version 1.0 of this code was released on 21 January 2016 to accompany
+Version 1.0 of this code was released on 30 January 2016 to accompany
 
 	Kopp, R. E., A. C. Kemp, K. Bittermann, J. P. Donnelly, W. R. Gehrels, 
 	C. C. Hay, J. X. Mitrovica, E. D. Morrow, S. Rahmstorf, and B. P. Horton 
