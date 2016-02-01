@@ -1,6 +1,6 @@
 % Create pseudo-GSL curve from North Carolina proxy data
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Tue Dec 02 09:37:23 EST 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Feb 01 14:28:34 EST 2016
 
 % extract the detrended North Carolina sea-level curve
 
@@ -23,7 +23,7 @@ wtestsitedef.sites(:,2:3)=mean(wdataset.sitecoords(sitesub,:),1);
 [NC_pseudoGSL,NC_pseudoGSLsd,NC_pseudoGSLV,NClocs]=RegressHoloceneDataSets(wdataset,wtestsitedef,ms,thetNC,datsub,nmms,testtNC,refyear,3);
 NC_yrs=NClocs.X(:,3);
 
-[NC_pseudoGSL,NC_pseudoGSLV,NC_pseudoGSLsd]=DetrendSLReconstruction(NC_pseudoGSL,NC_pseudoGSLV+ eye(size(NC_pseudoGSLV))*50^2,NClocs.sites,NClocs.reg,NC_yrs,0,1800,2000);
+[NC_pseudoGSL,NC_pseudoGSLV,NC_pseudoGSLsd]=DetrendSLReconstruction(NC_pseudoGSL,NC_pseudoGSLV+ eye(size(NC_pseudoGSLV))*50^2,NClocs.sites,NClocs.reg,NC_yrs,0,1700,2000,100);
 Mrefms=eye(length(NC_pseudoGSL));
 subms=find((NC_yrs<=1800).*(NC_yrs>=0));
 Mrefms(:,subms)=Mrefms(:,subms)-1/length(subms);

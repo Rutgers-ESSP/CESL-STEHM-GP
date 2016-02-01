@@ -152,7 +152,6 @@ for reoptimize=[0]
 
          sitesub=find(wloc.sites==0);
          datsub=find(wloc.reg==0);
-         [wfslope,wsdslope,wfslopediff,wsdslopediff,wdiffplus,wdiffless]=SLRateCompare(wf,wV,wloc.sites,wloc.reg,wloc.X(:,3),firstyears,lastyears);
          [hp,hl,hl2,dGSL,dGSLsd,dGSLV,outtable,difftimes,diffreg]=PlotPSLOverlay(wloc.X(datsub,3),wloc.reg(datsub),testsites(sitesub,1),wf,wV,colrs,wloc.X(datsub(1),3),testt(end),0,timesteps,{'GSL'});
 
          fid=fopen(['GSL_' labl '_sitesens_' sitesets{qqq,rrr} '.tsv'],'w');
