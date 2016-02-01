@@ -9,7 +9,7 @@ function [wf2,wV2,wsd2,sitespec]=DetrendSLReconstruction(wf,wV,testsites,testreg
 %
 % [GSL,GSLV,GSLsd]=DetrendSLReconstruction(GSL,GSLV,0,testreg,GSL_yrs,0,1800,2000);
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Feb 01 14:27:49 EST 2016
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Feb 01 14:35:58 EST 2016
 
 %%%
 
@@ -35,7 +35,7 @@ for kk=1:size(testsites,1)
     end
     sub2=find(abs(testts(sub)-lastyears(1))<=winwidth);
     if (length(sub1)>=1)&&(length(sub2)>=1)
-        M(sub,sub(sub1(1)))=-1/length(sub1); M(sub,sub(sub2(1)))=1/length(sub2);
+        M(sub,sub(sub1))=-1/length(sub1); M(sub,sub(sub2))=1/length(sub2);
         M(sub,sub)=M(sub,sub)/(mean(testts(sub(sub2)))-mean(testts(sub(sub1))));
         selfirstyear(kk) = firstyears(pp);
     end
