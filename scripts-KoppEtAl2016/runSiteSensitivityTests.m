@@ -1,8 +1,10 @@
 % Calculate sensitivity of results to different data subsets.
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Aug 20 23:30:52 EDT 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Feb 01 11:25:39 EST 2016
 
 %% do data sensitivity tests
+
+outputGSLcurves=0;
 
 % define intervals focused upon
 firstyears=[0 700 1000 1400 1600 1800 1900];
@@ -138,13 +140,49 @@ for reoptimize=[0]
             sitesensfslopediff{iii,qqq,rrr,reoptimize+1}=wfslopediff(1,:);
             sitesenssdslopediff{iii,qqq,rrr,reoptimize+1}=wsdslopediff(1,:);
             sitesensthet{iii,qqq,rrr,reoptimize+1}=dothet;
+
+            
+            %%%%%%%%%%%%%%%
+            if outputGSLcurves
+                timesteps=100;
+
+           sitesub=find(wloc.sites==0);
+           datsub=find(wloc.reg==0);
+            [wfslope,wsdslope,wfslopediff,wsdslopediff,wdiffplus,wdiffless]=SLRateCompare(wf,wV,wloc.sites,wloc.reg,wloc.X(:,3),firstyears,lastyears);
+                 [hp,hl,hl2,dGSL,dGSLsd,dGSLV,outtable,difftimes,diffreg]=PlotPSLOverlay(wloc.X(datsub,3),wloc.reg(datsub),testsites(sitesub,1),wf,wV,colrs,wloc.X(datsub(1),3),testt(end),0,timesteps,{'GSL'});
+
+                fid=fopen(['GSL_' labl2 '_sitesens_' sitesets{qqq,rrr} '.tsv'],'w');
+                fprintf(fid,outtable);
+
+                
+                fclose(fid);
+                
+                
+                % output GSL covariance
+
+                fid=fopen(['GSL'  labl2 '_sitesens_' sitesets{qqq,rrr} '_cov.tsv'],'w');
+                fprintf(fid,'mm^2');
+                fprintf(fid,'\t%0.0f',testX(datsub,3));
+                fprintf(fid,'\n');
+                for ppp=1:length(datsub)
+                    fprintf(fid,'%0.0f',testX(datsub(ppp),3));
+                    fprintf(fid,'\t%0.8e',wV(datsub(ppp),datsub));
+                    fprintf(fid,'\n');
+                end
+
+                fclose(fid);
+                
+                
+            end
+            
+            
             
         end
     end
 end
 
-    fclose(fid1);
-    fclose(fid2);
-    
-    sitesensfirstyears=firstyears;
-    sitesenslastyears=lastyears;
+fclose(fid1);
+fclose(fid2);
+
+sitesensfirstyears=firstyears;
+sitesenslastyears=lastyears;
