@@ -1,6 +1,6 @@
 % Calculate sensitivity of results to different data subsets.
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Feb 01 11:25:39 EST 2016
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Feb 01 11:41:15 EST 2016
 
 %% do data sensitivity tests
 
@@ -89,94 +89,98 @@ for reoptimize=[0]
             wdef.sites=[0 1e6 1e6];
             wdef.names={'GSL'};
             wdef.names2={'GSL'};
-            wdef.firstage=0;
-            wdef.oldest=0;
+            wdef.firstage=min(firstyears);
+            wdef.oldest=min(firstyears);
             wdef.youngest=2014;
             trainsub=find(wd.limiting==0);
-            wtestt=0:100:2000;
-            [wf,wsd,wV,wloc]=RegressHoloceneDataSets(wd,wdef,ms,dothet,trainsub,noiseMasks(1,:),wtestt,refyear,collinear);        
+	    if outputGSLcurves
+                wtestt=testt;
+	    else
+                wtestt=min(firstyears):100:2000;
+     end
+     [wf,wsd,wV,wloc]=RegressHoloceneDataSets(wd,wdef,ms,dothet,trainsub,noiseMasks(1,:),wtestt,refyear,collinear);        
 
-            [wfslope,wsdslope,wfslopediff,wsdslopediff,wdiffplus,wdiffless]=SLRateCompare(wf,wV,wloc.sites,wloc.reg,wloc.X(:,3),firstyears,lastyears);
-            
-            
-            if (qqq==1) && (rrr==1)
+     [wfslope,wsdslope,wfslopediff,wsdslopediff,wdiffplus,wdiffless]=SLRateCompare(wf,wV,wloc.sites,wloc.reg,wloc.X(:,3),firstyears,lastyears);
+     
+     
+     if (qqq==1) && (rrr==1)
 
-                fprintf(fid1,'Trainset');
-                fprintf(fid2,'Trainset');
+         fprintf(fid1,'Trainset');
+         fprintf(fid2,'Trainset');
 
-                for pp=1:length(firstyears)
-                    fprintf(fid2,'\tRate (avg, %0.0f-%0.0f)\t2s',[firstyears(pp) lastyears(pp)]);
-                end
-                for pp=1:length(wdiffplus)
-                    fprintf(fid2,['\tRate Diff. (avg, %0.0f-%0.0f minus ' ...
-                                  '%0.0f-%0.0f)\t2s'],[firstyears(wdiffplus(pp)) ...
-                                        lastyears(wdiffplus(pp)) firstyears(wdiffless(pp)) lastyears(wdiffless(pp))]);
-                end
-                fprintf(fid2,'\n');
-            end
-            
-            
-            fprintf(fid1,sitesets{qqq,rrr});
-            fprintf(fid2,sitesets{qqq,rrr});
-            if reoptimize
-                fprintf(fid1,'*');
-                fprintf(fid2,'*');
-            end
-            
-            for pp=1:length(firstyears)
-                fprintf(fid2,'\t%0.2f',[wfslope(1,pp) 2*wsdslope(1,pp)]);
-            end
-            for pp=1:length(wdiffplus)
-                fprintf(fid2,'\t%0.2f',[wfslopediff(1,pp) 2*wsdslopediff(1,pp)]);
-            end
-            
-            fprintf(fid1,'\t%0.2f',dothet);
-            
-            fprintf(fid1,'\n');
-            fprintf(fid2,'\n');
-            
-            sitesensfslope{iii,qqq,rrr,reoptimize+1}=wfslope(1,:);
-            sitesenssdslope{iii,qqq,rrr,reoptimize+1}=wsdslope(1,:);
-            sitesensfslopediff{iii,qqq,rrr,reoptimize+1}=wfslopediff(1,:);
-            sitesenssdslopediff{iii,qqq,rrr,reoptimize+1}=wsdslopediff(1,:);
-            sitesensthet{iii,qqq,rrr,reoptimize+1}=dothet;
+         for pp=1:length(firstyears)
+             fprintf(fid2,'\tRate (avg, %0.0f-%0.0f)\t2s',[firstyears(pp) lastyears(pp)]);
+         end
+         for pp=1:length(wdiffplus)
+             fprintf(fid2,['\tRate Diff. (avg, %0.0f-%0.0f minus ' ...
+                           '%0.0f-%0.0f)\t2s'],[firstyears(wdiffplus(pp)) ...
+                                 lastyears(wdiffplus(pp)) firstyears(wdiffless(pp)) lastyears(wdiffless(pp))]);
+         end
+         fprintf(fid2,'\n');
+     end
+     
+     
+     fprintf(fid1,sitesets{qqq,rrr});
+     fprintf(fid2,sitesets{qqq,rrr});
+     if reoptimize
+         fprintf(fid1,'*');
+         fprintf(fid2,'*');
+     end
+     
+     for pp=1:length(firstyears)
+         fprintf(fid2,'\t%0.2f',[wfslope(1,pp) 2*wsdslope(1,pp)]);
+     end
+     for pp=1:length(wdiffplus)
+         fprintf(fid2,'\t%0.2f',[wfslopediff(1,pp) 2*wsdslopediff(1,pp)]);
+     end
+     
+     fprintf(fid1,'\t%0.2f',dothet);
+     
+     fprintf(fid1,'\n');
+     fprintf(fid2,'\n');
+     
+     sitesensfslope{iii,qqq,rrr,reoptimize+1}=wfslope(1,:);
+     sitesenssdslope{iii,qqq,rrr,reoptimize+1}=wsdslope(1,:);
+     sitesensfslopediff{iii,qqq,rrr,reoptimize+1}=wfslopediff(1,:);
+     sitesenssdslopediff{iii,qqq,rrr,reoptimize+1}=wsdslopediff(1,:);
+     sitesensthet{iii,qqq,rrr,reoptimize+1}=dothet;
 
-            
-            %%%%%%%%%%%%%%%
-            if outputGSLcurves
-                timesteps=100;
+     
+     %%%%%%%%%%%%%%%
+     if outputGSLcurves
+         timesteps=100;
 
-           sitesub=find(wloc.sites==0);
-           datsub=find(wloc.reg==0);
-            [wfslope,wsdslope,wfslopediff,wsdslopediff,wdiffplus,wdiffless]=SLRateCompare(wf,wV,wloc.sites,wloc.reg,wloc.X(:,3),firstyears,lastyears);
-                 [hp,hl,hl2,dGSL,dGSLsd,dGSLV,outtable,difftimes,diffreg]=PlotPSLOverlay(wloc.X(datsub,3),wloc.reg(datsub),testsites(sitesub,1),wf,wV,colrs,wloc.X(datsub(1),3),testt(end),0,timesteps,{'GSL'});
+         sitesub=find(wloc.sites==0);
+         datsub=find(wloc.reg==0);
+         [wfslope,wsdslope,wfslopediff,wsdslopediff,wdiffplus,wdiffless]=SLRateCompare(wf,wV,wloc.sites,wloc.reg,wloc.X(:,3),firstyears,lastyears);
+         [hp,hl,hl2,dGSL,dGSLsd,dGSLV,outtable,difftimes,diffreg]=PlotPSLOverlay(wloc.X(datsub,3),wloc.reg(datsub),testsites(sitesub,1),wf,wV,colrs,wloc.X(datsub(1),3),testt(end),0,timesteps,{'GSL'});
 
-                fid=fopen(['GSL_' labl2 '_sitesens_' sitesets{qqq,rrr} '.tsv'],'w');
-                fprintf(fid,outtable);
+         fid=fopen(['GSL_' labl '_sitesens_' sitesets{qqq,rrr} '.tsv'],'w');
+         fprintf(fid,outtable);
 
-                
-                fclose(fid);
-                
-                
-                % output GSL covariance
+         
+         fclose(fid);
+         
+         
+         % output GSL covariance
 
-                fid=fopen(['GSL'  labl2 '_sitesens_' sitesets{qqq,rrr} '_cov.tsv'],'w');
-                fprintf(fid,'mm^2');
-                fprintf(fid,'\t%0.0f',testX(datsub,3));
-                fprintf(fid,'\n');
-                for ppp=1:length(datsub)
-                    fprintf(fid,'%0.0f',testX(datsub(ppp),3));
-                    fprintf(fid,'\t%0.8e',wV(datsub(ppp),datsub));
-                    fprintf(fid,'\n');
-                end
+         fid=fopen(['GSL'  labl '_sitesens_' sitesets{qqq,rrr} '_cov.tsv'],'w');
+         fprintf(fid,'mm^2');
+         fprintf(fid,'\t%0.0f',testX(datsub,3));
+         fprintf(fid,'\n');
+         for ppp=1:length(datsub)
+             fprintf(fid,'%0.0f',testX(datsub(ppp),3));
+             fprintf(fid,'\t%0.8e',wV(datsub(ppp),datsub));
+             fprintf(fid,'\n');
+         end
 
-                fclose(fid);
-                
-                
-            end
-            
-            
-            
+         fclose(fid);
+         
+         
+     end
+     
+     
+     
         end
     end
 end
