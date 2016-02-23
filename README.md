@@ -6,8 +6,8 @@ README file last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu
 
 Version 1.0 of this code was released on 30 January 2016 to accompany
 
-	Kopp, R. E., A. C. Kemp, K. Bittermann, J. P. Donnelly, W. R. Gehrels, 
-	C. C. Hay, J. X. Mitrovica, E. D. Morrow, S. Rahmstorf, and B. P. Horton 
+	Kopp, R. E., A. C. Kemp, K. Bittermann, B. P. Horton, J. P. Donnelly,
+	W. R. Gehrels,  C. C. Hay, J. X. Mitrovica, E. D. Morrow, and S. Rahmstorf 
 	(2016). Temperature-driven global sea-level variability in the Common Era.
 	Proceedings of the National Academy of Sciences.
 	doi: 10.1073/pnas.1517056113.

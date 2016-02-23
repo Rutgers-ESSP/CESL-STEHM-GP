@@ -1,6 +1,6 @@
 % Create pseudo-GSL curve from North Carolina proxy data
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Feb 01 14:28:34 EST 2016
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Wed Feb 03 10:23:39 EST 2016
 
 % extract the detrended North Carolina sea-level curve
 
@@ -11,7 +11,7 @@ datsub=find(ismember(wdataset.datid,wdataset.siteid(sitesub)));
 
 nmms=ones(size(thetNC)); nmms(3)=0;
 
-testtNC = [-1000:20:2000 2010];
+testtNC = testt;
 
 wtestsitedef.names={'NC_GSL'};
 wtestsitedef.names2={'NC_GSL'};
