@@ -1,6 +1,6 @@
 % Create pseudo-GSL curve from North Carolina proxy data
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Wed Feb 03 10:23:39 EST 2016
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri Mar 04 08:03:35 EST 2016
 
 % extract the detrended North Carolina sea-level curve
 
@@ -32,7 +32,7 @@ NC_pseudoGSL=Mrefms*NC_pseudoGSL;
 NC_pesudoGSLsd=sqrt(diag(Mrefms*NC_pseudoGSLV*Mrefms'));
 
 % output NC_pseudoGSL
-[hp,hl,hl2,dGSL,dGSLsd,dGSLV,outtable,difftimes,diffreg]=PlotPSLOverlay(NClocs.X(:,3),NClocs.reg,0,NC_pseudoGSL,NC_pseudoGSLV,colrs,NClocs.X(:,3),testt(end),0,100,{'NC_GSL'});
+[hp,hl,hl2,dGSL,dGSLsd,dGSLV,outtable,difftimes,diffreg]=PlotPSLOverlay(NClocs.X(:,3),NClocs.reg,0,NC_pseudoGSL,NC_pseudoGSLV,{'k'},NClocs.X(:,3),testt(end),0,100,{'NC_GSL'});
 
 fid=fopen(['NCpseudoGSL.tsv'],'w');
 fprintf(fid,outtable);
