@@ -1,8 +1,8 @@
 # CESL-STEHM-GP: Spatio-Temporal Empirical Hierarchical Modeling of sea-level data with Gaussian Processes 
 
-README file last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Jan 30 16:49:08 EST 2016
+README file last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri Jul 01 12:12:34 EDT 2016
 
-## Citation
+## Citation and Acknowledgements
 
 Version 1.0 of this code was released on 30 January 2016 to accompany
 
@@ -13,6 +13,8 @@ Version 1.0 of this code was released on 30 January 2016 to accompany
 	of the National Academy of Sciences. doi: 10.1073/pnas.1517056113.
 	
 Please cite this source when using this code.
+
+The development of this code was supported in part by the US National Science Foundation (grants ARC-1203415), the National Oceanic and Atmospheric Administration (grant NA14OAR4170085) and the New Jersey Sea Grant Consortium.
 
 ## Overview
 
