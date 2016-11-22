@@ -1,8 +1,7 @@
 % Read in data files
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Nov 21 21:18:17 EST 2016
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Nov 21 21:59:10 EST 2016
 
-PXdatafile=fullfile(IFILES,'RSL_All_30Dec2015.csv'); % data file being imported
 minperstudy=1; % minimum size of studies to include
 
 loadNearbyTG=1; % load nearby tide gauge sites?
@@ -106,7 +105,7 @@ PX0=PX;
 
 % if you want to subset in any way, do it here
 % currently just subsetting those with latitude <= 90 (i.e., everything)
-sub=intersect(sub,find(abs(PX.lat)<=90));
+sub=find(abs(PX.lat)<=90);
 subS=find(abs(PX.sitecoords(:,1))<=90);
 
 PX=SubsetDataStructure(PX,sub,subS);
@@ -114,7 +113,7 @@ PX=SubsetDataStructure(PX,sub,subS);
 %%%%%%%
 
 % Load nearby tide gauge data
-
+TGnoisemask = [];
 if loadNearbyTG
     [TG,TG0,thetL,TGmodellocal] = GPSmoothNearbyTideGauges(PX.sitecoords,[],[],[],[],[],optimizemode,psmsldir,'none',[],TGnoisemask);
 end

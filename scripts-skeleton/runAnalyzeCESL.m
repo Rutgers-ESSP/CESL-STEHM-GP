@@ -1,6 +1,6 @@
 % Skeleton sea-level rise estimation script for CESL-STEHM-GP 
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Nov 21 21:09:44 EST 2016
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Nov 21 21:58:51 EST 2016
 
 % set up  paths
 
@@ -17,15 +17,19 @@ if ~exist(WORKDIR,'dir')
 end
 cd(WORKDIR);
 
-%%%%
-% map sites
-runMapSites;
+PXdatafile=fullfile(IFILES,'RSL_All_19Feb2016.csv');
 
 %%%%
 % read in files and setup covariance model
 
 runImportCESLDataSets; % this script handles importing data files into the expected structure
 runSetupCESLCovariance; % this script sets up the prior covariance structure
+
+%%%%
+% map sites
+runMapSites;
+
+%%%%
 
 % set up and run hyperparameter optimization
 
@@ -67,6 +71,9 @@ dosldecomp = 0; % make plots for each site?
 doMapField = 1; % make maps of the field?
 
 runPredictCESL
+
+%%%%%%%%%%
+% SUPPLEMENTARY ANALYSES
 
 %%%
 % run a sensitivity test on the amplitude hyperparameters
