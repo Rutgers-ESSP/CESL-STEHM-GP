@@ -1,6 +1,6 @@
 % set up covariance structures
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri Dec 25 09:51:59 EST 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, 2017-06-30 15:26:23 -0400
 
 % Alternative covariance structures:
 %
@@ -54,7 +54,7 @@ ddcvfunc.f0 = 0;
 
 ii=1;
 
-% 1. Global Matern + Regional Linear + Regional Matern + GIS +  White Noise (GLMIW)
+% 1. Global Matern + Regional Linear + Regional Matern +  White Noise (GLMW)
 
 modelspec(ii).label = 'GLMW';
 
