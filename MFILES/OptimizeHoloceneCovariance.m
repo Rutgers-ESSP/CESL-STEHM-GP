@@ -52,7 +52,7 @@ function [thetTGG,trainsub,logp,thethist]=OptimizeHoloceneCovariance(dataset,mod
 %        3.3 - genetic algorithm
 %        3.4 - simulated annealing
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Dec 29 09:45:39 EST 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, 2017-07-17 09:39:38 -0400
 
 defval('optimizesteps',[1.1 2.11]);
 defval('mintime',-Inf);
@@ -124,6 +124,7 @@ for nnn=1:length(optimizesteps)
 
     if floor(optimizesteps(nnn))==1
         % first optimize only tide gauge data
+        disp('Tide gauge data only');
 
         subnotfixed=setdiff(1:length(thetTGG),subfixed);
         Mfixed=sparse(length(subnotfixed),length(thetTGG));
@@ -161,6 +162,7 @@ for nnn=1:length(optimizesteps)
 
     elseif floor(optimizesteps(nnn))>=2
 
+        disp('Ignoring geochronological uncertainty');
         % optimize ignoring geochronological uncertainty
         %        if donetg
         %            lbTGG(1:5) = thetTGG(1:5); % set lower bound of amplitudes and temporal scale
@@ -230,6 +232,7 @@ for nnn=1:length(optimizesteps)
         end
 
         if floor(optimizesteps(nnn))==3
+            disp('Including geochronological uncertainty');
             dt = abs(time2-time1)/4;
             for doglob=doglobs
                 

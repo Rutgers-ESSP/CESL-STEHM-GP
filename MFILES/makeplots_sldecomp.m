@@ -4,8 +4,7 @@ function makeplots_sldecomp(dataset,f2s,sd2s,V2s,testloc,labl,doplots,difftimest
 %
 % Make sea level plots.
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Nov 12
-% 2014
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, 2017-06-30 20:21:46 -0400
 
 
 
@@ -52,7 +51,7 @@ dY=dataset.dY;
 for i=1:size(testsites,1)
     wxlim=[];
 
-	figure;
+	%figure;
 	subA = find(testreg == testsites(i,1));
 	distfrom=dDist(testsites(i,2:3),[lat long]);
 	subB=find(distfrom<maxdistfrom);

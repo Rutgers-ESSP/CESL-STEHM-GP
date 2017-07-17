@@ -68,7 +68,7 @@ modelspec(ii).traincv = @(t1,t2,dt1t2,thetas,errcv,ad,fp1fp2) modelspec(ii).cvfu
 
 tluTGG = [
 
-100 1 1e4 % global non-GIS amplitude
+100 1 1e4 % global amplitude
 500 100 3e4 % time scale
 
 .5 1e-3 100 % linear regional amplitude
