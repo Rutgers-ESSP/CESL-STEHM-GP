@@ -52,7 +52,7 @@ function [thetTGG,trainsub,logp,thethist]=OptimizeHoloceneCovariance(dataset,mod
 %        3.3 - genetic algorithm
 %        3.4 - simulated annealing
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, 2017-07-17 09:39:38 -0400
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, 2017-07-17 09:42:27 -0400
 
 defval('optimizesteps',[1.1 2.11]);
 defval('mintime',-Inf);
@@ -162,7 +162,6 @@ for nnn=1:length(optimizesteps)
 
     elseif floor(optimizesteps(nnn))>=2
 
-        disp('Ignoring geochronological uncertainty');
         % optimize ignoring geochronological uncertainty
         %        if donetg
         %            lbTGG(1:5) = thetTGG(1:5); % set lower bound of amplitudes and temporal scale
@@ -258,7 +257,7 @@ for nnn=1:length(optimizesteps)
                 disp(sprintf('%0.3f ',thetTGG));
             end
         else
-            
+            disp('Ignoring geochronological uncertainty');
             for doglob=doglobs
                 [thetTGG(subnotfixed),logp] = SLGPOptimize(Y(trainsub),@(x) traincvTGG(meantime(trainsub),meantime(trainsub),dt1t1,x(1:end-1)*Mfixed+fixedvect,Ycv(trainsub,trainsub)+diag(x(end)*compactcorr(trainsub)).^2,dy1y1,fp1fp1),thetTGG(subnotfixed),lbTGG(subnotfixed),ubTGG(subnotfixed),doglob);
                 disp(sprintf('%0.3f ',thetTGG));
