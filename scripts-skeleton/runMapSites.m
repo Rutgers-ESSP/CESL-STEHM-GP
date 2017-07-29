@@ -1,6 +1,6 @@
 % Generate maps of proxy and tide gauge data.
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Fri Nov 27 13:07:50 EST 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, 2017-07-25 18:12:27 -0400
 
 wdataset=datasets{2};
 
@@ -10,11 +10,13 @@ wdataset=datasets{2};
 firstyears=[0];
 lastyears=[2000];
 
+latlim=[-90 90];
+longlim=[-180 180];
 for www=1:length(firstyears)
 
     clf;
-    ax = worldmap('World');
-    setm(ax, 'Origin',[0 -90 0],'meridianlabel','off','parallellabel','off' );
+    ax = worldmap(latlim,longlim);
+    setm(ax,meridianlabel','off','parallellabel','off' );
     land = shaperead('landareas', 'UseGeoCoords', true);
     geoshow(ax, land, 'FaceColor', [0.85 0.85 0.85]);
     hold on;
@@ -36,8 +38,8 @@ for www=1:length(firstyears)
 
 
     clf;
-    ax = worldmap('World');
-    setm(ax, 'Origin',[0 -90 0],'meridianlabel','off','parallellabel','off' );
+    ax = worldmap(latlim,longlim);
+    setm(ax,meridianlabel','off','parallellabel','off' );
     land = shaperead('landareas', 'UseGeoCoords', true);
     geoshow(ax, land, 'FaceColor', [0.85 0.85 0.85]);
     hold on;

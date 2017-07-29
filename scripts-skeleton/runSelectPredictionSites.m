@@ -1,6 +1,6 @@
 % Identify sites for prediction
 % 
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Dec 31 09:02:52 EST 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, 2017-07-26 12:23:39 -0400
 
 clear oldest oldestnear youngest testsitedef;
 wdataset = datasets{1};
@@ -61,10 +61,15 @@ for iii=1:length(dosub)
     
 end
 
-ICE5G.lat=ICE5Glat;
-ICE5G.long=ICE5Glon;
-ICE5G.gia=ICE5Ggia;
+testsitedef.GIA=zeros(size(testsitedef.sites(:,2)));
+if exist('ICE5G','var')
+    ICE5G.lat=ICE5Glat;
+    ICE5G.long=ICE5Glon;
+    ICE5G.gia=ICE5Ggia;
 
-testsitedef.GIA = interp2(ICE5G.lat,ICE5G.long,ICE5G.gia,testsitedef.sites(:,2),testsitedef.sites(:,3),'linear');
-testsitedef.GIA(find(testsitedef.sites(:,2)>100))=0;
-testsitedef.GIA(find(isnan(testsitedef.GIA)))=0;
+    if length(ICE5G.gia)>1
+        testsitedef.GIA = interp2(ICE5G.lat,ICE5G.long,ICE5G.gia,testsitedef.sites(:,2),testsitedef.sites(:,3),'linear');
+        testsitedef.GIA(find(testsitedef.sites(:,2)>100))=0;
+        testsitedef.GIA(find(isnan(testsitedef.GIA)))=0;
+    end
+end

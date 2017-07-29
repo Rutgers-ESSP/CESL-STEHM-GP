@@ -1,11 +1,12 @@
 % For each site, make a plot
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Dec 06 09:14:43 EST 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, 2017-07-26 11:47:24 -0400
 
-subsite=find((wdataset.siteid>10000));
 maxdistfrom=0.1;
 maxerror=1000;
 wtestlocs=testlocs{iii};
+doNoiseMask=1;
+doPlotData=1;
 for kkk=1:size(wtestlocs.sites,1)
     
     disp(wtestlocs.names{kkk});
@@ -24,15 +25,17 @@ for kkk=1:size(wtestlocs.sites,1)
     
 
     plotdat.x=wtestlocs.X(sub,3);
-    plotdat.y=f2s{iii}(sub);
-    plotdat.dy=sd2s{iii}(sub)*2;
+    plotdat.y=f2s{iii}(sub,doNoiseMask);
+    plotdat.dy=sd2s{iii}(sub,doNoiseMask)*2;
     
     PlotWithShadedErrors(plotdat,[0 0 0]);
-    for uuu=subD(:)'
-        plot([wdataset.time1(uuu) wdataset.time2(uuu)],wdataset.Y0(uuu)-2*wdataset.dY(uuu)*[1 1],'r'); hold on;
-        plot([wdataset.time1(uuu) wdataset.time2(uuu)],wdataset.Y0(uuu)+2*wdataset.dY(uuu)*[1 1],'r');
-        plot([wdataset.time1(uuu) wdataset.time1(uuu)],wdataset.Y0(uuu)+2*wdataset.dY(uuu)*[-1 1],'r');
-        plot([wdataset.time2(uuu) wdataset.time2(uuu)],wdataset.Y0(uuu)+2*wdataset.dY(uuu)*[-1 1],'r');
+    if doPlotData
+        for uuu=subD(:)'
+            plot([wdataset.time1(uuu) wdataset.time2(uuu)],wdataset.Y0(uuu)-2*wdataset.dY(uuu)*[1 1],'r'); hold on;
+            plot([wdataset.time1(uuu) wdataset.time2(uuu)],wdataset.Y0(uuu)+2*wdataset.dY(uuu)*[1 1],'r');
+            plot([wdataset.time1(uuu) wdataset.time1(uuu)],wdataset.Y0(uuu)+2*wdataset.dY(uuu)*[-1 1],'r');
+            plot([wdataset.time2(uuu) wdataset.time2(uuu)],wdataset.Y0(uuu)+2*wdataset.dY(uuu)*[-1 1],'r');
+        end
     end
     plot(plotdat.x,plotdat.y,'k','linew',2);
     plot(plotdat.x,plotdat.y-plotdat.dy,'k--','linew',1);
@@ -44,6 +47,6 @@ for kkk=1:size(wtestlocs.sites,1)
     xlim(xl);
     ylabel('Sea level (mm)');
     xlabel('Year (CE)');
-    pdfwrite(['siteplot-' wtestlocs.names{kkk}]);
+    pdfwrite(['siteplot-' wtestlocs.names{kkk} labl '_' noiseMasklabels{doNoiseMask}]);
     
 end

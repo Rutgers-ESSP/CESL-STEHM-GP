@@ -1,6 +1,6 @@
 % Generate and output predictions
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Thu Dec 31 08:59:36 EST 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, 2017-07-25 18:19:06 -0400
 
 for iii=1:length(regresssets)
     ii=regresssets(iii);
@@ -27,8 +27,11 @@ for iii=1:length(regresssets)
     wdataset.dY = sqrt(datasets{ii}.dY.^2 + (thetTGG{jj}(end)*wdataset.compactcorr).^2);
     wdataset.Ycv = datasets{ii}.Ycv + diag(thetTGG{jj}(end)*wdataset.compactcorr).^2;
     
-    subtimes=find(testt>=min(union(wdataset.time1,wdataset.time2)));    
-    collinear=wmodelspec.subamplinear(1);
+    subtimes=find(testt>=min(union(wdataset.time1,wdataset.time2)));
+    collinear=[];
+    if length(wmodelspec.subamplinear)>0
+        collinear=wmodelspec.subamplinear(1);
+    end
     [f2s{iii},sd2s{iii},V2s{iii},testlocs{iii},logp(iii),passderivs,invcv]=RegressHoloceneDataSets(wdataset,testsitedef,wmodelspec,thetTGG{jj},trainsub,noiseMasks,testt(subtimes),refyear,collinear);
 
     % extract linear rate terms
@@ -42,7 +45,7 @@ for iii=1:length(regresssets)
     runTableTGandProxyData;
     
     % generate site plots if dosldecomp set
-    if dosldecomp; makeplots_sldecomp(wdataset,f2s{iii},sd2s{iii},V2s{iii},testlocs{iii},labl,[1 2],0); end
+    if dosldecomp; makeplots_sldecomp(wdataset,f2s{iii},sd2s{iii},V2s{iii},testlocs{iii},labl,1:size(noiseMasks,1),0); end
     
     testreg=testlocs{iii}.reg;
     testsites=testlocs{iii}.sites;
@@ -51,15 +54,21 @@ for iii=1:length(regresssets)
     
     %%%%
     
-    runTableRates; % generate table of rates
-    runOutputGSL; % output plots and table of GSL
-    runPlotOtherGSLCurves; % plot tables of GSL curves from this and other sources
-  
+    %runTableRates; % generate table of rates
+    %runOutputGSL; % output plots and table of GSL
+    runTableDecomp;
+
     %%%%
  
    save(savefile,'datasets','modelspec','f2s','sd2s','V2s', ...
          'testlocs','logp','testsitedef','trainspecs','thetTGG','ICE5G','noiseMasks','testt','refyear');
 
+    if doMapField
+        runMapField; % map spatial field of rates
+    end
+    runSitePlots;
+    runSiteTables;
+    
 end
 
 

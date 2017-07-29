@@ -1,6 +1,6 @@
 % Output table of all data points, including model prediction at sites
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Dec 06 16:10:51 EST 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, 2017-07-17 15:27:04 -0400
 
 % Get model prediction for sites
 
@@ -20,7 +20,11 @@ for pp=1:length(u)
         testsitedefp.names2(pp)=wdataset.sitenames(subq);
         testsitedefp.firstage(pp)=min(wdataset.meantime(subp));
         %        testsitedefp.GISfp(pp)=wdataset.siteGISfp(subq);
-        testsitedefp.GIA(pp)=wdataset.siteGIA(subq);
+        if isfield(wdataset,'sitegia')
+            testsitedefp.GIA(pp)=wdataset.siteGIA(subq);
+        else
+            testsitedefp.GIA(pp)=0;
+        end
     end
     subps=[subps ; subp];
 end
@@ -48,7 +52,11 @@ for i=1:size(wdataset.datid,1)
     fprintf(fid,'%d\t',wdataset.istg(i));
     fprintf(fid,'%0.2f\t',wdataset.lat(i));
     fprintf(fid,'%0.2f\t',wdataset.long(i));
-    fprintf(fid,'%0.2f\t',wdataset.siteGIA(subq(1)));
+    if isfield(wdataset,'sitegia')
+        fprintf(fid,'%0.2f\t',wdataset.siteGIA(subq(1)));
+    else
+        fprintf(fid,'%0.2f\t',0);
+    end
     fprintf(fid,'%0.1f\t',wdataset.meantime(i));
     fprintf(fid,'%0.2f\t',sqrt(derivsp.dK(i)));
     fprintf(fid,'%0.2f\t',fp(i));

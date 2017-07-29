@@ -1,6 +1,6 @@
 % Skeleton sea-level rise estimation script for CESL-STEHM-GP 
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Nov 21 21:58:51 EST 2016
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, 2017-07-25 18:16:47 -0400
 
 % set up  paths
 
@@ -71,18 +71,3 @@ dosldecomp = 0; % make plots for each site?
 doMapField = 1; % make maps of the field?
 
 runPredictCESL
-
-%%%%%%%%%%
-% SUPPLEMENTARY ANALYSES
-
-%%%
-% run a sensitivity test on the amplitude hyperparameters
-doMapField=0;
-runScaledAmpSensitivityTest
-
-%%%%
-% calculate prior rates for each trained model
-runCalculatePriorRates;
-runTablePriors;
-runLatexTablePriors;
-

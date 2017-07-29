@@ -1,18 +1,6 @@
 % set up covariance structures
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, 2017-06-30 15:26:23 -0400
-
-% Alternative covariance structures:
-%
-% 1. GLMW [known as ML22 in paper]
-% 2. GLMW-1ts [known as ML21 in paper]
-% 3. GLMW-1amp1ts [known as ML11 in paper]
-% 4. GLW
-% 5. GMW
-% 6. GW
-% 7. LMW
-% 8. LW
-% 9. MW
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, 2017-07-25 18:13:30 -0400
 
 clear modelspec;
 
@@ -54,7 +42,136 @@ ddcvfunc.f0 = 0;
 
 ii=1;
 
-% 1. Global Matern + Regional Linear + Regional Matern +  White Noise (GLMW)
+% 1. Global + Linear + Long-Wave Matern + Short-Wave Matern + local offset
+
+modelspec(ii).label = 'GLMM';
+
+modelspec(ii).cvfunc =  @(t1,t2,dt1t2,thetas,ad,fp1fp2) cvfunc.G(dt1t2,thetas(1:2)) + cvfunc.L(t1,t2,ad,thetas(3:4)) + cvfunc.M(dt1t2,ad,thetas(5:7)) + cvfunc.M(dt1t2,ad,thetas(8:10)) +  cvfunc.f0(ad,thetas(11));
+
+modelspec(ii).dcvfunc =  @(t1,t2,dt1t2,thetas,ad,fp1fp2) dcvfunc.G(t1,t2,dt1t2,thetas(1:2)) + dcvfunc.L(t1,t2,ad,thetas(3:4)) + dcvfunc.M(t1,t2,dt1t2,ad,thetas(5:7)) + dcvfunc.M(t1,t2,dt1t2,ad,thetas(8:10));
+
+modelspec(ii).ddcvfunc =  @(t1,t2,dt1t2,thetas,ad,fp1fp2) ddcvfunc.G(dt1t2,thetas(1:2)) + ddcvfunc.L(t1,t2,ad,thetas(3:4)) + ddcvfunc.M(dt1t2,ad,thetas(5:7)) + ddcvfunc.M(dt1t2,ad,thetas(8:10));
+
+modelspec(ii).traincv = @(t1,t2,dt1t2,thetas,errcv,ad,fp1fp2) modelspec(ii).cvfunc(t1,t2,dt1t2,thetas,ad,fp1fp2) + errcv;
+
+tluTGG = [
+
+100 1 1e4 % global amplitude
+500 100 3e4 % time scale
+
+1 1e-3 100 % linear regional amplitude
+5 .5 50 %  linear regional length scale
+
+100 1 1e4 % regional amplitude
+500 100 3e3 % time scale
+5 .5 20 % geographic length scale
+
+100 1 1e4 % regional amplitude
+500 10 3e3 % time scale
+.1 .01 .5 % geographic length scale
+
+100 1e-2 1e4 % local offset
+
+];
+
+modelspec(ii).thet0=tluTGG(:,1)';
+modelspec(ii).lb = tluTGG(:,2)';
+modelspec(ii).ub = tluTGG(:,3)';
+
+modelspec(ii).subfixed=[];
+modelspec(ii).sublength=[4 7 10];
+
+modelspec(ii).subamp = [1 3 5 8 11];
+modelspec(ii).subamplinear = [3];
+modelspec(ii).subampglobal = [1];
+modelspec(ii).subampoffset = [11];
+modelspec(ii).subampregmat = [5 8];
+modelspec(ii).subampregmat1 = [5];
+modelspec(ii).subampregmat2 = [8];
+modelspec(ii).subampnoise = [];
+
+modelspec(ii).subHPlinear = [3 4];
+modelspec(ii).subHPglobal = [1 2];
+modelspec(ii).subHPoffset = [11];
+modelspec(ii).subHPregmat = [5 6 7 8 9 10];
+modelspec(ii).subHPregmat1 = [5 6 7];
+modelspec(ii).subHPregmat2 = [8 9 10];
+modelspec(ii).subHPnoise = [];
+modelspec(ii).subHPtsregmat = [6 9];
+modelspec(ii).subHPtsglobal = [2];
+
+%%%%%
+
+%%%%
+
+ii=ii+1;
+
+% 1. Global + Linear + Long-Wave Matern + Short-Wave Matern (same time scale) + white noise + local offset
+
+
+modelspec(ii).label = 'GLMmW';
+
+modelspec(ii).cvfunc =  @(t1,t2,dt1t2,thetas,ad,fp1fp2) cvfunc.G(dt1t2,thetas(1:2)) + cvfunc.L(t1,t2,ad,thetas(3:4)) + cvfunc.M(dt1t2,ad,thetas(5:7)) + cvfunc.M(dt1t2,ad,thetas([8 6 9])) + cvfunc.W(dt1t2,ad,thetas(10)) + cvfunc.f0(ad,thetas(11));
+
+modelspec(ii).dcvfunc =  @(t1,t2,dt1t2,thetas,ad,fp1fp2) dcvfunc.G(t1,t2,dt1t2,thetas(1:2)) + dcvfunc.L(t1,t2,ad,thetas(3:4)) + dcvfunc.M(t1,t2,dt1t2,ad,thetas(5:7)) + dcvfunc.M(t1,t2,dt1t2,ad,thetas([8 6 9]));
+
+modelspec(ii).ddcvfunc =  @(t1,t2,dt1t2,thetas,ad,fp1fp2) ddcvfunc.G(dt1t2,thetas(1:2)) + ddcvfunc.L(t1,t2,ad,thetas(3:4)) + ddcvfunc.M(dt1t2,ad,thetas(5:7)) + ddcvfunc.M(dt1t2,ad,thetas([8 6 9]));
+
+modelspec(ii).traincv = @(t1,t2,dt1t2,thetas,errcv,ad,fp1fp2) modelspec(ii).cvfunc(t1,t2,dt1t2,thetas,ad,fp1fp2) + errcv;
+
+tluTGG = [
+
+100 1 1e4 % global amplitude
+500 100 3e4 % time scale
+
+1 1e-3 100 % linear regional amplitude
+5 .5 50 %  linear regional length scale
+
+100 1 1e4 % regional amplitude
+500 100 3e3 % time scale
+5 .5 20 % geographic length scale
+
+100 1 1e4 % regional amplitude
+.1 .01 .5 % geographic length scale
+
+10 1e-2 1e4 % white noise
+    
+100 1e-2 1e4 % local offset
+
+];
+
+modelspec(ii).thet0=tluTGG(:,1)';
+modelspec(ii).lb = tluTGG(:,2)';
+modelspec(ii).ub = tluTGG(:,3)';
+
+modelspec(ii).subfixed=[];
+modelspec(ii).sublength=[4 7];
+
+modelspec(ii).subamp = [1 3 5 8 10 11];
+modelspec(ii).subamplinear = [3];
+modelspec(ii).subampglobal = [1];
+modelspec(ii).subampoffset = [11];
+modelspec(ii).subampregmat = [5 8];
+modelspec(ii).subampregmat1 = [5];
+modelspec(ii).subampregmat2 = [8];
+modelspec(ii).subampnoise = [10];
+
+modelspec(ii).subHPlinear = [3 4];
+modelspec(ii).subHPglobal = [1 2];
+modelspec(ii).subHPoffset = [11];
+modelspec(ii).subHPregmat = [5 6 7 8 9];
+modelspec(ii).subHPregmat1 = [5 6 7];
+modelspec(ii).subHPregmat2 = [8 9];
+modelspec(ii).subHPnoise = [10];
+modelspec(ii).subHPtsregmat = [6];
+modelspec(ii).subHPtsglobal = [2];
+
+
+%%%%%
+
+ii=ii+1;
+
+% 3. Global Matern + Regional Linear + Regional Matern + White Noise (GLMW)
 
 modelspec(ii).label = 'GLMW';
 
@@ -71,12 +188,12 @@ tluTGG = [
 100 1 1e4 % global amplitude
 500 100 3e4 % time scale
 
-.5 1e-3 100 % linear regional amplitude
+1 1e-3 100 % linear regional amplitude
 5 .5 50 %  linear regional length scale
 
 100 1 1e4 % regional amplitude
 500 100 3e3 % time scale
-5 1 20 % geographic length scale
+5 .5 20 % geographic length scale
 
 10 1e-2 1e4 % white noise
     
@@ -107,132 +224,58 @@ modelspec(ii).subHPnoise = [8];
 modelspec(ii).subHPtsregmat = [6];
 modelspec(ii).subHPtsglobal = [2];
 
-
 %%%%%
 
+ii = ii+1;
 
-% Single timescale prior
+% Regional LF Matern + Regional MF Matern + Regional HF Matern +  White Noise (LMHW)
 
-ii=ii+1;
-modelspec(ii) = modelspec(1);
+modelspec(ii).label = 'LMHW';
 
-turnoff= [modelspec(ii).subHPtsregmat ];
-freeze= [modelspec(ii).subHPtsregmat ];
+modelspec(ii).cvfunc =  @(t1,t2,dt1t2,thetas,ad,fp1fp2) cvfunc.M(dt1t2,ad,thetas(1:3)) + cvfunc.M(dt1t2,ad,thetas(4:6)) + cvfunc.M(dt1t2,ad,thetas([7 8 6])) + cvfunc.W(dt1t2,ad,thetas(9)) + cvfunc.f0(ad,thetas(10));
 
-modelspec(ii).label='GLMW-1ts';
-modelspec(ii).thet0(turnoff)=0;
-modelspec(ii).subfixed=union(modelspec(ii).subfixed,freeze);
+modelspec(ii).dcvfunc =  @(t1,t2,dt1t2,thetas,ad,fp1fp2) dcvfunc.M(t1,t2,dt1t2,ad,thetas(1:3)) + dcvfunc.M(t1,t2,dt1t2,ad,thetas(4:6)) + dcvfunc.M(t1,t2,dt1t2,ad,thetas([7 8 6]));
 
-modelspec(ii).cvfunc =  @(t1,t2,dt1t2,thetas,ad,fp1fp2) cvfunc.G(dt1t2,thetas(1:2)) + cvfunc.L(t1,t2,ad,thetas(3:4)) + cvfunc.M(dt1t2,ad,thetas([5 2 7])) + cvfunc.W(dt1t2,ad,thetas(8)) + cvfunc.f0(ad,thetas(9)) +thetas(10)^2;
-
-modelspec(ii).dcvfunc =  @(t1,t2,dt1t2,thetas,ad,fp1fp2) dcvfunc.G(t1,t2,dt1t2,thetas(1:2)) + dcvfunc.L(t1,t2,ad,thetas(3:4)) + dcvfunc.M(t1,t2,dt1t2,ad,thetas([5 2 7]));
-
-modelspec(ii).ddcvfunc =  @(t1,t2,dt1t2,thetas,ad,fp1fp2) ddcvfunc.G(dt1t2,thetas(1:2)) + ddcvfunc.L(t1,t2,ad,thetas(3:4)) + ddcvfunc.M(dt1t2,ad,thetas([5 2 7]));
+modelspec(ii).ddcvfunc =  @(t1,t2,dt1t2,thetas,ad,fp1fp2) ddcvfunc.M(dt1t2,ad,thetas(1:3)) + ddcvfunc.M(dt1t2,ad,thetas(4:6)) + ddcvfunc.M(dt1t2,ad,thetas([7 8 6]));
 
 modelspec(ii).traincv = @(t1,t2,dt1t2,thetas,errcv,ad,fp1fp2) modelspec(ii).cvfunc(t1,t2,dt1t2,thetas,ad,fp1fp2) + errcv;
 
-%%%%%
+tluTGG = [
 
+5000 1 1e6 % regional amplitude
+5000 2000 3e4 % time scale
+5 .1 25 % geographic length scale
 
-% Single timescale and amplitude prior
+2000 1 1e6 % regional amplitude
+500 100 2e3 % time scale
+5 .1 25 % geographic length scale
 
-ii=ii+1;
-modelspec(ii) = modelspec(1);
+2000 1 1e6 % regional amplitude
+30 5 100 % time scale
 
-turnoff= [modelspec(ii).subampregmat modelspec(ii).subHPtsregmat ];
-freeze= [modelspec(ii).subampregmat modelspec(ii).subHPtsregmat ];
+100 1e-2 1e4 % white noise    
+100 1e-2 1e4 % local offset
 
-modelspec(ii).label='GLMW-1amp1ts';
-modelspec(ii).thet0(turnoff)=0;
-modelspec(ii).subfixed=union(modelspec(ii).subfixed,freeze);
+];
 
-modelspec(ii).cvfunc =  @(t1,t2,dt1t2,thetas,ad,fp1fp2) cvfunc.G(dt1t2,thetas(1:2)) + cvfunc.L(t1,t2,ad,thetas(3:4)) + cvfunc.M(dt1t2,ad,thetas([1 2 7])) + cvfunc.W(dt1t2,ad,thetas(8)) + cvfunc.f0(ad,thetas(9))  + thetas(10)^2;;
+modelspec(ii).thet0=tluTGG(:,1)';
+modelspec(ii).lb = tluTGG(:,2)';
+modelspec(ii).ub = tluTGG(:,3)';
 
-modelspec(ii).dcvfunc =  @(t1,t2,dt1t2,thetas,ad,fp1fp2) dcvfunc.G(t1,t2,dt1t2,thetas(1:2)) + dcvfunc.L(t1,t2,ad,thetas(3:4)) + dcvfunc.M(t1,t2,dt1t2,ad,thetas([1 2 7]));
+modelspec(ii).subfixed=[];
+modelspec(ii).sublength=[3 6];
 
-modelspec(ii).ddcvfunc =  @(t1,t2,dt1t2,thetas,ad,fp1fp2) ddcvfunc.G(dt1t2,thetas(1:2)) + ddcvfunc.L(t1,t2,ad,thetas(3:4)) + ddcvfunc.M(dt1t2,ad,thetas([1 2 7]));
+modelspec(ii).subamp = [1 4 7 9 10];
+modelspec(ii).subamplinear = [];
+modelspec(ii).subampglobal = [];
+modelspec(ii).subampoffset = [9];
+modelspec(ii).subampregmat = [1 4 7];
+modelspec(ii).subampnoise = [9];
 
-modelspec(ii).traincv = @(t1,t2,dt1t2,thetas,errcv,ad,fp1fp2) modelspec(ii).cvfunc(t1,t2,dt1t2,thetas,ad,fp1fp2) + errcv;
-
-%%%%
-
-
-% Global Matern + Regional Linear + White Noise (GLW)
-
-ii=ii+1;
-modelspec(ii) = modelspec(1);
-
-turnoff= [modelspec(ii).subampregmat ];
-freeze= [modelspec(ii).subHPregmat ];
-
-modelspec(ii).label='GLW';
-modelspec(ii).thet0(turnoff)=0;
-modelspec(ii).subfixed=union(modelspec(ii).subfixed,freeze);
-
-%%
-% GMW
-
-ii=ii+1;
-modelspec(ii) = modelspec(1);
-
-turnoff= [modelspec(ii).subamplinear ];
-freeze= [modelspec(ii).subHPlinear ];
-
-modelspec(ii).label='GMW';
-modelspec(ii).thet0(turnoff)=0;
-modelspec(ii).subfixed=union(modelspec(ii).subfixed,freeze);
-
-% GW
-
-ii=ii+1;
-modelspec(ii) = modelspec(1);
-
-turnoff= [modelspec(ii).subampregmat modelspec(ii).subamplinear ];
-freeze= [modelspec(ii).subHPregmat modelspec(ii).subHPlinear ];
-
-modelspec(ii).label='GW';
-modelspec(ii).thet0(turnoff)=0;
-modelspec(ii).subfixed=union(modelspec(ii).subfixed,freeze);
-
-
-
-% Regional Linear + Regional Matern + White Noise (LMW)
-
-ii=ii+1;
-modelspec(ii) = modelspec(1);
-
-turnoff= [modelspec(ii).subampglobal ];
-freeze= [modelspec(ii).subHPglobal ];
-
-modelspec(ii).label='LMW';
-modelspec(ii).thet0(turnoff)=0;
-modelspec(ii).subfixed=union(modelspec(ii).subfixed,freeze);
-
-modelspec(ii).lb(modelspec(ii).subampregmat) = 1; % reduce lower bound so can assess where the optimum is with minimal constraint
-
-%%%%%
-
-% Regional Linear + White Noise (LW)
-
-ii=ii+1;
-modelspec(ii) = modelspec(1);
-
-turnoff= [modelspec(ii).subampglobal modelspec(ii).subampregmat ];
-freeze= [modelspec(ii).subHPglobal modelspec(ii).subHPregmat ];
-
-modelspec(ii).label='LW';
-modelspec(ii).thet0(turnoff)=0;
-modelspec(ii).subfixed=union(modelspec(ii).subfixed,freeze);
-
-% MW
-
-ii=ii+1;
-modelspec(ii) = modelspec(1);
-
-turnoff= [modelspec(ii).subampglobal modelspec(ii).subamplinear ];
-freeze= [modelspec(ii).subHPglobal modelspec(ii).subHPlinear ];
-
-modelspec(ii).label='MW';
-modelspec(ii).thet0(turnoff)=0;
-modelspec(ii).subfixed=union(modelspec(ii).subfixed,freeze);
-
+modelspec(ii).subHPlinear = [];
+modelspec(ii).subHPglobal = [];
+modelspec(ii).subHPoffset = [10];
+modelspec(ii).subHPregmat = [1:8];
+modelspec(ii).subHPnoise = [9];
+modelspec(ii).subHPtsregmat = [2 5 8];
+modelspec(ii).subHPtsglobal = [];
