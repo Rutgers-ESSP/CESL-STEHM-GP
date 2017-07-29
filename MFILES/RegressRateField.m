@@ -1,4 +1,4 @@
-function [fslopeavgF,sdslopeavgF,fsF,sdsF,fslopeavgdiffF,sdslopeavgdiffF,diffplusF,difflessF,passderivs,invcv] = RegressRateField(PX,modelspec,thetL,noiseMasks,Flat,Flong,firstyears,lastyears,trainsub,ICE5G,passderivs,invcv)
+function [fslopeavgF,sdslopeavgF,fsF,sdsF,fslopeavgdiffF,sdslopeavgdiffF,diffplusF,difflessF,passderivs,invcv,testlocsFcum] = RegressRateField(PX,modelspec,thetL,noiseMasks,Flat,Flong,firstyears,lastyears,trainsub,ICE5G,passderivs,invcv)
 
 %  [fslopeavgF,sdslopeavgF,fsF,sdsF,fslopeavgdiffF,sdslopeavgdiffF,diffplusF,difflessF,
 %       passderivs,invcv] = RegressRateField(PX,modelspec,thetL,[noiseMask],[Flat],[Flong],
@@ -37,7 +37,7 @@ function [fslopeavgF,sdslopeavgF,fsF,sdsF,fslopeavgdiffF,sdslopeavgdiffF,diffplu
 %   hold on;
 %   hs1=scatterm(FLAT1(:),FLONG1(:),10,mapped(:),'filled','marker','s');
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Nov 29 16:41:41 EST 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, 2017-07-28 10:33:05 -0400
 
 defval('firstyears',0);
 defval('lastyears',1800);
@@ -62,6 +62,7 @@ VsF=sparse(lpt*length(Fsite),lpt*length(Fsite));
 testlocsites=[];
 testlocreg=[];
 testloct=[];
+testlocX=[];
 counter=1;
 for qqq=1:1000:length(Fsite)
     dosub=qqq:min(qqq+999,length(Fsite));
@@ -82,11 +83,24 @@ for qqq=1:1000:length(Fsite)
     end
 
     testtF = union(firstyears,lastyears);
-    [fsF(dosub2),sdsF(dosub2),VsF(dosub2,dosub2),testlocsF,~,passderivs,invcv]=RegressHoloceneDataSets(PX,testsitedefF,modelspec,thetL,trainsub,noiseMasks,testtF,[],[],passderivs,invcv);
+
+    collinear=[];
+    if isfield(modelspec,'subamplinear')
+        if length(modelspec.subamplinear)>0
+            collinear=modelspec.subamplinear(1);
+        end
+    end
+    [fsF(dosub2),sdsF(dosub2),VsF(dosub2,dosub2),testlocsF,~,passderivs,invcv]=RegressHoloceneDataSets(PX,testsitedefF,modelspec,thetL,trainsub,noiseMasks,testtF,[],collinear,passderivs,invcv);
     testlocsites=[testlocsites ; testlocsF.sites];
     testlocreg=[testlocreg ; testlocsF.reg];
     testloct=[testloct ; testlocsF.X(:,3)];
+    testlocX=[testlocX ; testlocsF.X];
 end
+
+testlocsFcum.sites=testlocsites;
+testlocsFcum.reg=testlocreg;
+testlocsFcum.t=testloct;
+testlocsFcum.X=testlocX;
 
 [fslopeavgF,sdslopeavgF,fslopeavgdiffF,sdslopeavgdiffF,diffplusF,difflessF]=SLRateCompare(fsF,VsF,testlocsites,testlocreg,testloct,firstyears,lastyears);
 
