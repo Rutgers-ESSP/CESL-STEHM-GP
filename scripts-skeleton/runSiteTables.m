@@ -1,13 +1,13 @@
 % For each site, make a plot
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, 2017-07-25 14:17:13 -0400
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, 2017-10-29 23:31:43 -0400
 
 
 subsite=find((wdataset.siteid>10000));
 maxdistfrom=0.1;
 maxerror=1000;
 wtestlocs=testlocs{iii};
-dosites=wtestlocs.sites(:)';
+dosites=1:length(wtestlocs.sites);
 doNoiseMask=1;
 
 for kkk=dosites
