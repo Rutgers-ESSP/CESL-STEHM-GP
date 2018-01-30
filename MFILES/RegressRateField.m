@@ -37,7 +37,7 @@ function [fslopeavgF,sdslopeavgF,fsF,sdsF,fslopeavgdiffF,sdslopeavgdiffF,diffplu
 %   hold on;
 %   hs1=scatterm(FLAT1(:),FLONG1(:),10,mapped(:),'filled','marker','s');
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, 2017-07-28 10:33:05 -0400
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, 2017-12-03 09:58:29 -0500
 
 defval('firstyears',0);
 defval('lastyears',1800);
@@ -75,7 +75,7 @@ for qqq=1:1000:length(Fsite)
         testsitedefF.names=testsitedefF.names2;
     end
 
-    if length(ICE5G)>0
+    if length(ICE5G)>1
         ux=mod(ICE5G.long,360);
         [sux,suxi]=sort(ux);
         testsitedefF.GIA = interp2(ICE5G.lat,sux,ICE5G.gia(suxi,:),testsitedefF.sites(:,2),mod(testsitedefF.sites(:,3),360),'linear');
