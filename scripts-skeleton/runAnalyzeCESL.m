@@ -1,11 +1,14 @@
 % Skeleton sea-level rise estimation script for CESL-STEHM-GP 
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, 2017-07-25 18:16:47 -0400
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, 2018-01-29 19:00:41 -0500
 
 % set up  paths
 
+corepath = '~/Dropbox/Code/CESL-STEHM-GP';
+coreIFILES=[corepath '/IFILES-working']; % point to the directory with the data files that aren't particular to this site, like the tide-gauge data set
+addpath([corepath '/MFILES']); % add the path with the core MFILES
+
 pd=pwd; % script expects to start in a directory that contains MFILES and IFILES as a subdir
-addpath([pd '/MFILES']); % add the path with the core MFILES
 addpath([pd '/scripts-KoppEtAl2016']); % add the path with the script files
 IFILES=[pd '/IFILES-KoppEtAl2016']; % point to the directory with the data files
 addpath(pd)

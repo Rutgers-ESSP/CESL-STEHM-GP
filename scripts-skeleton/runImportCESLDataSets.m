@@ -1,11 +1,11 @@
 % Read in data files
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Mon Nov 21 21:59:10 EST 2016
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, 2018-01-29 19:01:59 -0500
 
 minperstudy=1; % minimum size of studies to include
 
 loadNearbyTG=1; % load nearby tide gauge sites?
-psmsldir=fullfile(IFILES,'rlr_annual'); % location of PSMSL data files
+psmsldir=fullfile(coreIFILES,'rlr_annual'); % location of PSMSL data files
 thinyrs=10; % how much to thin/smooth tide gauge data
 optimizemode=1.0; % local optimization only for smoothing GPs for tide gauges
 
