@@ -1,6 +1,6 @@
 % Generate and output predictions
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, 2017-07-25 18:19:06 -0400
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, 2018-01-31 19:49:27 -0500
 
 for iii=1:length(regresssets)
     ii=regresssets(iii);
@@ -42,7 +42,7 @@ for iii=1:length(regresssets)
     [f2slin{iii},sd2slin{iii},V2slin{iii},testlocslin{iii}]=RegressHoloceneDataSets(wdataset,testsitedef,wmodelspec,thetTGG{jj},trainsub,noiseMasksLin,[0 1800],refyear,collinear,passderivs,invcv);
     
     % output table of all data
-    runTableTGandProxyData;
+    % runTableTGandProxyData;
     
     % generate site plots if dosldecomp set
     if dosldecomp; makeplots_sldecomp(wdataset,f2s{iii},sd2s{iii},V2s{iii},testlocs{iii},labl,1:size(noiseMasks,1),0); end

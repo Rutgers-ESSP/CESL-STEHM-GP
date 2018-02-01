@@ -28,6 +28,9 @@ PXdatafile=fullfile(IFILES,'RSL_All_19Feb2016.csv');
 runImportCESLDataSets; % this script handles importing data files into the expected structure
 runSetupCESLCovariance; % this script sets up the prior covariance structure
 
+% quick plot for sanity check
+plot(datasets{2}.meantime,datasets{2}.Y,'x');
+
 %%%%
 % map sites
 runMapSites;
