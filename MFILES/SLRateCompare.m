@@ -1,4 +1,4 @@
-function [fslopeavg,sdslopeavg,fslopeavgdiff,sdslopeavgdiff,diffplus,diffless]=SLRateCompare(wf,wV,testsites,testreg,testts,firstyears,lastyears)
+function [fslopeavg,sdslopeavg,fslopeavgdiff,sdslopeavgdiff,diffplus,diffless,Vslopeavg,Vslopeavgdiff]=SLRateCompare(wf,wV,testsites,testreg,testts,firstyears,lastyears)
 
 % [fslopeavg,sdslopeavg,fslopeavgdiff,sdslopeavgdiff,diffplus,diffless]=SLRateCompare(wf,wV,testsites,testreg,testts,firstyears,lastyears)
 %
@@ -35,11 +35,12 @@ function [fslopeavg,sdslopeavg,fslopeavgdiff,sdslopeavgdiff,diffplus,diffless]=S
 %      SLRateCompare(f2s{1}(:,1),V2s{1}(:,:,1),testsites,testreg, ...
 %      testX(:,3),firstyears,lastyears);
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sun Nov 29 16:40:36 EST 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, 2019-01-28 14:28:12 -0500
 
 defval('firstyears',[0 1000]);
 defval('lastyears',[1800 1800]);
 dodiff=((nargout>2)*(length(firstyears)>1));
+dostoreV=(nargout>6);
 
 for kk=1:size(testsites,1)
     
@@ -85,6 +86,10 @@ for kk=1:size(testsites,1)
         
         fslopeavgdiff(kk,:) = fslopediff(:)';
         sdslopeavgdiff(kk,:)= sdslopediff(:)';
+
+        if dostoreV
+            Vslopeavgdiff(:,:,kk) = Vslopediff;
+        end
     end
     
     fslope(find(sdslope>1e4))=NaN;
@@ -92,6 +97,9 @@ for kk=1:size(testsites,1)
     
     fslopeavg(kk,:) = fslope(:)';
     sdslopeavg(kk,:) = sdslope(:)';
+    if dostoreV
+        Vslopeavg(:,:,kk) = Vslope;
+    end
 
 
 end
