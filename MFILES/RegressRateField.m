@@ -1,4 +1,4 @@
-function [fslopeavgF,sdslopeavgF,fsF,sdsF,fslopeavgdiffF,sdslopeavgdiffF,diffplusF,difflessF,passderivs,invcv,testlocsFcum] = RegressRateField(PX,modelspec,thetL,noiseMasks,Flat,Flong,firstyears,lastyears,trainsub,ICE5G,passderivs,invcv)
+function [fslopeavgF,sdslopeavgF,fsF,sdsF,fslopeavgdiffF,sdslopeavgdiffF,diffplusF,difflessF,passderivs,invcv,testlocsFcum] = RegressRateField(PX,modelspec,thetL,noiseMasks,Flat,Flong,firstyears,lastyears,trainsub,ICE5G,passderivs,invcv,chunksize)
 
 %  [fslopeavgF,sdslopeavgF,fsF,sdsF,fslopeavgdiffF,sdslopeavgdiffF,diffplusF,difflessF,
 %       passderivs,invcv] = RegressRateField(PX,modelspec,thetL,[noiseMask],[Flat],[Flong],
@@ -37,7 +37,7 @@ function [fslopeavgF,sdslopeavgF,fsF,sdsF,fslopeavgdiffF,sdslopeavgdiffF,diffplu
 %   hold on;
 %   hs1=scatterm(FLAT1(:),FLONG1(:),10,mapped(:),'filled','marker','s');
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, 2017-12-03 09:58:29 -0500
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, 2019-11-27 11:08:29 -0500
 
 defval('firstyears',0);
 defval('lastyears',1800);
@@ -48,13 +48,14 @@ defval('noiseMasks',ones(length(thetL)));
 defval('trainsub',[]);
 defval('passderivs',[]);
 defval('invcv',[]);
+defval('chucksize',1000)
 
 clear testsitedefF;
 [FLONG,FLAT]=meshgrid(Flong,Flat);
 Fsite=[1:length(FLAT(:))]';
 allsites = [Fsite FLAT(:) FLONG(:)];
 
-% partition into groups of 1000 points
+% partition into groups of chunksize points
 lpt = length(unique(union(firstyears,lastyears)));
 fsF=zeros(lpt*length(Fsite),1);
 sdsF=zeros(lpt*length(Fsite),1);
@@ -64,8 +65,8 @@ testlocreg=[];
 testloct=[];
 testlocX=[];
 counter=1;
-for qqq=1:1000:length(Fsite)
-    dosub=qqq:min(qqq+999,length(Fsite));
+for qqq=1:chunksize:length(Fsite)
+    dosub=qqq:min(qqq+(chunksize-1),length(Fsite));
     dosub2=counter:(counter-1+length(dosub)*lpt);
     counter=dosub2(end)+1;
     clear testsitedefF;
