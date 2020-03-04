@@ -10,7 +10,7 @@ function [thet,logp,hessin,hessin2]=SLGPOptimize(y0,traincv,thet0,lb,ub,globl,ba
 % algorithm), and 3 (simulated annealing). Sequential optimization methods
 % can be specified as a vector.
 %
-% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, Sat Nov 28 18:16:54 EST 2015
+% Last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, 2020-03-04 10:56:13 -0500
 
     defval('globl',0)
 
@@ -18,6 +18,7 @@ function [thet,logp,hessin,hessin2]=SLGPOptimize(y0,traincv,thet0,lb,ub,globl,ba
     defval('lb',[0 5 0 1e-3 0 0 0 0 0 1e-3 0]);
     defval('ub',[Inf Inf Inf 10 Inf Inf Inf Inf Inf Inf Inf]);
     defval('basisX',[]);
+    defval('maxtime',7200);
 
     lb=max(1e-12,lb);
     ub=max(1e-12,ub);
@@ -30,8 +31,8 @@ function [thet,logp,hessin,hessin2]=SLGPOptimize(y0,traincv,thet0,lb,ub,globl,ba
 
 	problem = createOptimProblem('fmincon','x0',log(thet0),'objective',(@(x) -logprob(y0,traincv,exp(x),basisX)),'lb',log(lb),'ub',log(ub),'options',fitoptions);
 	[x fval eflag output] = fmincon(problem);
-	%ms=MultiStart('TolX',1e-2,'MaxTime',3000,'Display','iter');
-	gs=GlobalSearch('TolX',1e-2,'MaxTime',4000,'Display','iter');
+	%ms=MultiStart('TolX',1e-2,'MaxTime',maxtime,'Display','iter');
+	gs=GlobalSearch('TolX',1e-2,'MaxTime',maxtime,'Display','iter');
 	[optm1.coeffs,optm1.fval,optm1.exitflag,optm1.output,optm1.manymin] = run(gs,problem);
 	if nargout>1
             hessin = optm1.manymin;
@@ -49,7 +50,7 @@ function [thet,logp,hessin,hessin2]=SLGPOptimize(y0,traincv,thet0,lb,ub,globl,ba
     elseif globl==3
         disp('GP Optimization - Simulated Annealing');
         rng(10,'twister') % for reproducibility
-        fitoptions=saoptimset('Display','iter','MaxFunEval',8000,'TolFun',2e-2,'TemperatureFcn',@temperaturefast,'TimeLimit',4000,'StallIterLimit',1000);
+        fitoptions=saoptimset('Display','iter','MaxFunEval',8000,'TolFun',2e-2,'TemperatureFcn',@temperaturefast,'TimeLimit',maxtime,'StallIterLimit',1000);
         [optm1.coeffs,optm1.fval] = simulannealbnd(@(x) -logprob(y0,traincv,exp(x),basisX),log(thet0),log(lb),log(ub),fitoptions);
     else
         disp('GP Optimization - FMinCon');
