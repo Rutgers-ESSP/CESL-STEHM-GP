@@ -23,7 +23,7 @@ function [thet,logp,hessin,hessin2]=SLGPOptimize(y0,traincv,thet0,lb,ub,globl,ba
     lb=max(1e-12,lb);
     ub=max(1e-12,ub);
 
-    fitoptions=optimset('Display','iter','MaxFunEval',8000,'Algorithm','sqp','UseParallel','always','TolX',1e-3);
+    fitoptions=optimset('Display','iter','MaxFunEval',8000,'Algorithm','sqp','TolX',1e-3);
     hessin=[];
 
     if globl==1
@@ -45,7 +45,7 @@ function [thet,logp,hessin,hessin2]=SLGPOptimize(y0,traincv,thet0,lb,ub,globl,ba
         disp('GP Optimization - Genetic Algorithm');
         rng(10,'twister') % for reproducibility
 
-        fitoptions=gaoptimset('Display','iter','useparallel','always');
+        fitoptions=gaoptimset('Display','iter');
         [optm1.coeffs,optm1.fval] = ga(@(x) -logprob(y0,traincv,exp(x),basisX),length(thet0),[],[],[],[],log(lb),log(ub),[],fitoptions);	
     elseif globl==3
         disp('GP Optimization - Simulated Annealing');
@@ -58,7 +58,7 @@ function [thet,logp,hessin,hessin2]=SLGPOptimize(y0,traincv,thet0,lb,ub,globl,ba
             [optm1.coeffs,optm1.fval,optm1.exitflag,optm1.output,optm1.lambda,optm1.grad,hessin] = fmincon(@(x) -logprob(y0,traincv,exp(x),basisX),log(thet0),[],[],[],[],log(lb),log(ub),[],fitoptions);
 
 	else
-            [optm1.coeffs,optm1.fval] = fmincon(@(x) -logprob(y0,traincv,exp(x),basisX),log(thet0),[],[],[],[],log(lb),log(ub),[],fitoptions);
+            [optm1.coeffs,optm1.fval] = fmincon(@(x) -logprob(y0,traincv,transpose(exp(x)), transpose(basisX)),transpose(log(thet0)),[],[],[],[],transpose(log(lb)),transpose(log(ub)),[],fitoptions);
 
  end	
     end
