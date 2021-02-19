@@ -243,3 +243,80 @@ modelspec(ii).label = 'GMML-2tsx3ss_lb';
 modelspec(ii).lb([2 4])=[2 105];
 modelspec(ii).ub(2)=105;
 
+
+ii=9;
+
+modelspec(ii).label = 'GMML-2tsx3ss_globalconstant';
+
+modelspec(ii).cvfunc =  @(t1,t2,dt1t2,thetas,ad,fp1fp2) cvfunc.G(dt1t2,thetas(1:2)) + cvfunc.G(dt1t2,thetas(3:4)) + cvfunc.M(dt1t2,ad,thetas([5 2 6])) + cvfunc.M(dt1t2,ad,thetas([7 4 6])) + ...
+    cvfunc.M(dt1t2,ad,thetas([8 2 9])) + cvfunc.M(dt1t2,ad,thetas([10 4 9])) + cvfunc.L(t1,t2,ad,thetas(11:12)) + cvfunc.W(dt1t2,ad,thetas(13)) + cvfunc.f0(ad,thetas(14)) + thetas(15)^2;
+
+modelspec(ii).dcvfunc =  @(t1,t2,dt1t2,thetas,ad,fp1fp2) dcvfunc.G(t1,t2,dt1t2,thetas(1:2)) + dcvfunc.G(t1,t2,dt1t2,thetas(3:4)) + dcvfunc.M(t1,t2,dt1t2,ad,thetas([5 2 6])) + dcvfunc.M(t1,t2,dt1t2,ad,thetas([7 4 6])) + ...
+    dcvfunc.M(t1,t2,dt1t2,ad,thetas([8 2 9])) + dcvfunc.M(t1,t2,dt1t2,ad,thetas([10 4 9])) + dcvfunc.L(t1,t2,ad,thetas(11:12));
+
+modelspec(ii).ddcvfunc =  @(t1,t2,dt1t2,thetas,ad,fp1fp2) ddcvfunc.G(dt1t2,thetas(1:2)) + ddcvfunc.G(dt1t2,thetas(3:4)) + ddcvfunc.M(dt1t2,ad,thetas([5 2 6])) + ddcvfunc.M(dt1t2,ad,thetas([7 4 6])) + ...
+    ddcvfunc.M(dt1t2,ad,thetas([8 2 9])) + ddcvfunc.M(dt1t2,ad,thetas([10 4 9])) + ddcvfunc.L(t1,t2,ad,thetas(11:12));
+
+modelspec(ii).traincv = @(t1,t2,dt1t2,thetas,errcv,ad,fp1fp2) modelspec(ii).cvfunc(t1,t2,dt1t2,thetas,ad,fp1fp2) + errcv;
+
+
+tluTGG = [
+
+50 1 1e4 % global amplitude 1
+150 100 400 % time scale 1
+
+100 1 1e4 % global amplitude 2
+600 400 3e4 % time scale 2
+
+50 1 1e4 % regional amplitude 1a
+5 1 40 % geographic length scale 1
+100 1 1e4 % regional amplitude 1b
+
+50 1 1e4 % regional amplitude 2a
+.5 .01 1 % geographic length scale 2
+100 1 1e4 % regional amplitude 2b
+
+1 1e-3 100 % linear regional amplitude
+5 .5 50 %  linear regional length scale
+
+10 1e-2 1e4 % white noise
+    
+100 1e-2 1e4 % local offset
+100 1e-3 1e4 % global constant
+
+];
+
+modelspec(ii).thet0=tluTGG(:,1)';
+modelspec(ii).lb = tluTGG(:,2)';
+modelspec(ii).ub = tluTGG(:,3)';
+
+modelspec(ii).subfixed=[];
+modelspec(ii).sublength=[6 9 12];
+
+modelspec(ii).subamp = [1 3 5 7 8 10 11 13 14 15];
+modelspec(ii).subamplinear = [11];
+modelspec(ii).subampglobal = [1 3 15];
+modelspec(ii).subampoffset = [14];
+modelspec(ii).subampregmat = [5 7 8 10];
+modelspec(ii).subampregmat1 = [5 7];
+modelspec(ii).subampregmat2 = [8 10];
+modelspec(ii).subampnoise = [13];
+
+modelspec(ii).subHPlinear = [11 12];
+modelspec(ii).subHPglobal = [1 2 3 4 15];
+modelspec(ii).subHPoffset = [14];
+modelspec(ii).subHPregmat = [5 6 7 8 9 10];
+modelspec(ii).subHPregmat1 = [5 6 7];
+modelspec(ii).subHPregmat2 = [8 9 10];
+modelspec(ii).subHPnoise = [14];
+modelspec(ii).subHPtsregmat = [2 4];
+modelspec(ii).subHPtsglobal = [2 4];
+
+ii=9;
+
+modelspec(ii)=modelspec(8);
+modelspec(ii).label = 'GMML-2tsx3ss_lb';
+
+modelspec(ii).lb([2 4])=[2 105];
+modelspec(ii).ub(2)=105;
+
