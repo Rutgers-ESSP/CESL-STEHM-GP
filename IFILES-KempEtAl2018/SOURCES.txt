@@ -1,0 +1,9 @@
+Sources of IFILES
+-------------
+
+RSL_All_29Mar2018.tsv
+
+    Kemp, A. C., Wright, A. J., Edwards, R. J., Barnett, R. L., Brain, M. J., Kopp, R. E.,
+	Cahill, N., Horton, B. P., Charman, D. J., Hawkes, A. D., Hill, T. D, & van de Plassche,
+	O. (2018). Relative sea-level change in Newfoundland, Canada during the past ~3000 years.
+	Quaternary Science Reviews, 201, 89-110.

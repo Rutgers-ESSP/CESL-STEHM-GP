@@ -1,0 +1,8 @@
+Sources of IFILES
+-------------
+
+RSL_All_17Mar2020.tsv
+
+    Walker, J. S., R. E. Kopp, C. M. Little, and B. P. Horton (2022).
+	Timing of emergence of modern rates of sea-level rise by 1863.
+	Nature Communications. https://doi.org/10.1038/s41467-022-28564-6
