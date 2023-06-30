@@ -1,8 +1,8 @@
 # CESL-STEHM-GP: Spatio-Temporal Empirical Hierarchical Modeling of sea-level data with Gaussian Processes 
 
-README file last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, 2022-02-09 20:42:00 -0500
+README file last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, 2023-06-30
 
-## Citation and Acknowledgements
+## Citation
 
 Version 1.0 of this code was released on 30 January 2016 to accompany
 
@@ -14,14 +14,11 @@ Version 1.0 of this code was released on 30 January 2016 to accompany
 	
 Please cite this source when using this code.
 
-The development of version 1.0 of this code was supported in part by the US National Science Foundation (grants ARC-1203415), the National Oceanic and Atmospheric Administration (grant NA14OAR4170085) and the New Jersey Sea Grant Consortium.
-
 Version 2.0 of this code was updated to accompany
 
     Kemp, A. C., Wright, A. J., Edwards, R. J., Barnett, R. L., Brain, M. J.,
     Kopp, R. E., Cahill, N., Horton, B. P., Charman, D. J., Hawkes, A. D.,
-    Hill, T. D, & van de Plassche, O. (2018). Relative sea-level change 
-    in Newfoundland, Canada during the past ~3000 years. Quaternary
+    Hill, T. D, & van de Plassche, O. (2018). . Quaternary
     Science Reviews, 201, 89-110.
 	
 Version 2.1 of this code was updated to accompany
@@ -39,6 +36,14 @@ This code requires MATLAB with the Statistics, Optimization, and Global Optimiza
 The MFILES directory contains the core functions of this code. The scripts-KoppEtAl2016 directory contains the scripts using these core functions to generate the analyses described in Kopp et al. (2016). The scripts-KempEtAl2018 directory contains the scripts associated with Kemp et al. (2018). The scripts-WalkerEtAl2022 directory contains the scripts associated with Walker et al. (2022). The scripts-skeleton directory contains a template that can be used for regional applications.
 
 The master script for these applications is runAnalyzeCESL, which calls various subsidiary scripts. Particularly attention should be paid to runSetupHoloceneCovariance, which defines the covariance functions with characterize the different priors, including the hyperparameter bounds used by the optimization code. This is the most intellectually challenging part of the exercise, as it is effectively the model specification step. Attention should also be paid to runImportCESLDataSets, which imports the data files. 
+
+## Current status
+
+This code is no longer being actively developed. Please see the [PaleoSTeHM project](https://github.com/radical-collaboration/PaleoSTeHM/) for new developments.
+
+## Acknowledgements
+
+The development of version 1.0 of this code was supported in part by the US National Science Foundation (grants ARC-1203415), the National Oceanic and Atmospheric Administration (grant NA14OAR4170085) and the New Jersey Sea Grant Consortium. Subsequent developmentGP was supported by the National Science Foundation (awards 1458904, 1702587, 1804999, and 2002437).
 
 ----
 
