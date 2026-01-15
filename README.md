@@ -1,6 +1,6 @@
 # CESL-STEHM-GP: Spatio-Temporal Empirical Hierarchical Modeling of sea-level data with Gaussian Processes 
 
-README file last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, 2023-06-30
+README file last updated by Robert Kopp, robert-dot-kopp-at-rutgers-dot-edu, 2026-01-15
 
 ## Citation
 
@@ -27,6 +27,9 @@ Version 2.1 of this code was updated to accompany
 	Timing of emergence of modern rates of sea-level rise by 1863.
 	Nature Communications. https://doi.org/10.1038/s41467-022-28564-6
 	
+Note that this code base is not actively maintained. 
+New users are encouraged to instead employ [PaleoSTeHM](https://github.com/radical-collaboration/PaleoSTeHM).
+
 ## Overview
 
 This code is intended to be used to generate Gaussian process-based, spatio-temporal empirical hierarchical models of sea-level data with both vertical and temporal uncertainty. It assumes uncertainties are normally distributed, and uses the noisy-input Gaussian process method of McHutchon and Ramussen (2011) to translate temporal uncertainties into comparable vertical uncertainties.    
