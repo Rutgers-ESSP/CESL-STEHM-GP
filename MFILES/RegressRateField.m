@@ -48,7 +48,7 @@ defval('noiseMasks',ones(length(thetL)));
 defval('trainsub',[]);
 defval('passderivs',[]);
 defval('invcv',[]);
-defval('chucksize',1000)
+defval('chunksize',1000)
 
 clear testsitedefF;
 [FLONG,FLAT]=meshgrid(Flong,Flat);
